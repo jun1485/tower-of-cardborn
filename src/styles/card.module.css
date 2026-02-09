@@ -1,0 +1,172 @@
+/* 카드 스타일 */
+
+.card {
+  width: 142px;
+  min-height: 266px;
+  border-radius: 8px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-text);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.22s ease,
+              border-color 0.22s ease;
+  flex-shrink: 0;
+  position: relative;
+  /* 겹침 배치: 카드끼리 -16px 겹침 */
+  margin: 0 -10px;
+  /* 핸드 등장 애니메이션 */
+  animation: cardDealIn 0.35s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+@keyframes cardDealIn {
+  from {
+    opacity: 0;
+    transform: translateY(60px) scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.card:hover:not(.cardDisabled):not(.cardDragging) {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+  z-index: 10;
+}
+
+/* 드래그 시작된 원본 카드 → 반투명, 등장 애니메이션 제거 */
+.cardDragging {
+  opacity: 0.3;
+  transform: scale(0.95);
+  pointer-events: none;
+  animation: none;
+}
+
+/* 커서 따라다니는 고스트 카드 — 등장 애니메이션 제거 */
+.cardGhost {
+  position: fixed;
+  transform: translate(-50%, -50%) rotate(-5deg) scale(1.08);
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.5);
+  opacity: 0.92;
+  animation: none;
+}
+
+.cardAttack {
+  background: linear-gradient(135deg, #b71c1c 0%, #c62828 50%, #8e0000 100%);
+}
+
+.cardSkill {
+  background: linear-gradient(135deg, #0d47a1 0%, #1565c0 50%, #002171 100%);
+}
+
+.cardPower {
+  background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 50%, #004d00 100%);
+}
+
+.cardDisabled {
+  filter: brightness(0.5) saturate(0.3);
+  cursor: not-allowed;
+}
+
+.card:not(.cardDisabled) {
+  cursor: url('/assets/ui/cursor-hero.svg') 11 10, grab;
+}
+
+.card:not(.cardDisabled):active {
+  cursor: url('/assets/ui/cursor-hero.svg') 11 10, grabbing;
+}
+
+.cardCost {
+  position: absolute;
+  top: -13px;
+  left: -13px;
+  width: 42px;
+  height: 42px;
+  background:
+    radial-gradient(circle at 30% 25%, #fff4d0 0 24%, transparent 25%),
+    linear-gradient(155deg, #ffe082 0%, #ffca28 45%, #fb8c00 100%);
+  border: 2px solid #ffd54f;
+  clip-path: polygon(50% 0%, 88% 24%, 88% 76%, 50% 100%, 12% 76%, 12% 24%);
+  color: #2f1b00;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+.cardName {
+  font-size: 13px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 9px;
+}
+
+.cardArtwork {
+  width: 100%;
+  height: 112px;
+  border-radius: 7px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.12), transparent 45%),
+    rgba(0, 0, 0, 0.28);
+}
+
+.cardArtworkImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cardDescription {
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.85);
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.cardType {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 1px;
+}
+
+/* 카드 키워드 툴팁 — 우측에 세로 나열 */
+.cardTooltip {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: calc(100% + 8px);
+  padding: 8px 10px;
+  background: var(--color-surface);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--color-text);
+  z-index: 200;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  line-height: 1.8;
+}
+
+.card:hover:not(.cardDragging) .cardTooltip {
+  display: block;
+}

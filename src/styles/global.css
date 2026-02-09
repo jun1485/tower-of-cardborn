@@ -1,0 +1,95 @@
+/* 글로벌 스타일 */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --color-bg: #1a1a2e;
+  --color-surface: #16213e;
+  --color-primary: #0f3460;
+  --color-accent: #e94560;
+  --color-text: #eee;
+  --color-text-dim: #999;
+  --color-hp: #e94560;
+  --color-hp-bg: #4a1a2e;
+  --color-block: #4fc3f7;
+  --color-energy: #ffd54f;
+  --color-attack: #c62828;
+  --color-skill: #1565c0;
+  --color-victory: #4caf50;
+  --color-defeat: #e94560;
+  --cursor-game: url('/assets/ui/cursor-hero.svg') 11 10, auto;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  cursor: var(--cursor-game);
+}
+
+button {
+  cursor: var(--cursor-game);
+  border: none;
+  font-family: inherit;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.card-list {
+  --card-hover-lift: 14px;
+  --card-hover-scale: 1.04;
+  --card-push-near: 12px;
+  --card-push-far: 6px;
+}
+
+.card-list-overlap {
+  --card-hover-lift: 24px;
+  --card-hover-scale: 1.03;
+  --card-push-near: 22px;
+  --card-push-far: 11px;
+}
+
+.card-list .card-item {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.22s ease,
+              border-color 0.22s ease,
+              filter 0.22s ease;
+}
+
+.card-list:not(.card-list-overlap) .card-item {
+  margin: 0;
+}
+
+.card-list .card-item:hover {
+  transform: translateY(calc(var(--card-hover-lift) * -1)) scale(var(--card-hover-scale));
+  z-index: 20;
+}
+
+.card-list .card-item:hover + .card-item {
+  transform: translateX(var(--card-push-near));
+}
+
+.card-list .card-item:has(+ .card-item:hover) {
+  transform: translateX(calc(var(--card-push-near) * -1));
+}
+
+.card-list .card-item:hover + .card-item + .card-item {
+  transform: translateX(var(--card-push-far));
+}
+
+.card-list .card-item:has(+ .card-item + .card-item:hover) {
+  transform: translateX(calc(var(--card-push-far) * -1));
+}
