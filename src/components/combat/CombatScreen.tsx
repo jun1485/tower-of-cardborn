@@ -1,11 +1,11 @@
 // 전투 화면 컨테이너 (드래그 카드 사용 + 공격 연출 + 파일 뷰어)
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { CombatState } from '../../types/combat';
-import type { CardDefinition, CardInstance } from '../../types/card';
-import type { CharacterClass } from '../../types/game';
-import { CARD_DEFINITIONS } from '../../data/cards';
-import { getPreviewDescription } from '../../game/damage-preview';
+import type { CombatState } from '@tower-of-cardborn/game-core/types/combat';
+import type { CardDefinition, CardInstance } from '@tower-of-cardborn/game-core/types/card';
+import type { CharacterClass } from '@tower-of-cardborn/game-core/types/game';
+import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
+import { getPreviewDescription } from '@tower-of-cardborn/game-core/game/damage-preview';
 import { PlayerArea } from './PlayerArea';
 import { EnemyArea } from './EnemyArea';
 import { HandArea } from './HandArea';

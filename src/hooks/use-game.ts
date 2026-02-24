@@ -1,12 +1,12 @@
 // 게임 전체 상태 관리 hook (맵 시스템 통합)
 
 import { useCallback, useEffect, useState } from 'react';
-import type { CharacterClass, GameScreen, GameState } from '../types/game';
-import type { GameMap } from '../types/map';
-import { STARTER_DECK, getStarterDeck, getRewardCards, getUpgradedId } from '../data/cards';
+import type { CharacterClass, GameScreen, GameState } from '@tower-of-cardborn/game-core/types/game';
+import type { GameMap } from '@tower-of-cardborn/game-core/types/map';
+import { STARTER_DECK, getStarterDeck, getRewardCards, getUpgradedId } from '@tower-of-cardborn/game-core/data/cards';
 import { loadGame, saveGame, clearSave } from '../utils/storage';
-import { generateMap, getAvailableNodeIds } from '../game/map-generator';
-import { initCombat } from '../game/combat-engine';
+import { generateMap, getAvailableNodeIds } from '@tower-of-cardborn/game-core/game/map-generator';
+import { initCombat } from '@tower-of-cardborn/game-core/game/combat-engine';
 import { useCombat } from './use-combat';
 
 const PLAYER_MAX_HP = 80;

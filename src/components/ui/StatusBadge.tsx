@@ -1,6 +1,6 @@
 // 상태 효과 배지 + 호버 툴팁
 
-import type { StatusEffect } from '../../types/character';
+import type { StatusEffect } from '@tower-of-cardborn/game-core/types/character';
 import styles from '../../styles/combat.module.css';
 
 interface StatusBadgeProps {

@@ -1,6 +1,6 @@
 // 카드 강화 선택 화면: 덱에서 업그레이드 가능한 카드를 선택
 
-import { CARD_DEFINITIONS, canUpgrade, getUpgradedId } from '../../data/cards';
+import { CARD_DEFINITIONS, canUpgrade, getUpgradedId } from '@tower-of-cardborn/game-core/data/cards';
 import styles from '../../styles/app.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';

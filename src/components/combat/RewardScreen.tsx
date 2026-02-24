@@ -1,7 +1,7 @@
 // 전투 보상 카드 선택 화면
 
-import { CARD_DEFINITIONS } from '../../data/cards';
-import type { CardDefinition } from '../../types/card';
+import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
+import type { CardDefinition } from '@tower-of-cardborn/game-core/types/card';
 import styles from '../../styles/app.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';

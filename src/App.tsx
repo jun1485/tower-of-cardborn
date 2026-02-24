@@ -6,7 +6,7 @@ import { RewardScreen } from './components/combat/RewardScreen';
 import { MapScreen } from './components/map/MapScreen';
 import { RestScreen } from './components/map/RestScreen';
 import { UpgradeScreen } from './components/map/UpgradeScreen';
-import type { CharacterClass } from './types/game';
+import type { CharacterClass } from '@tower-of-cardborn/game-core/types/game';
 import styles from './styles/app.module.css';
 
 const CLASS_IMAGE: Record<CharacterClass, string> = {
