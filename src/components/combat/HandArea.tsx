@@ -1,9 +1,9 @@
 // 패(Hand) 영역 컴포넌트 (드래그 지원)
 
-import type { CardInstance } from '../../types/card';
-import type { Enemy, StatusEffect } from '../../types/character';
-import { CARD_DEFINITIONS } from '../../data/cards';
-import { getPreviewDescription } from '../../game/damage-preview';
+import type { CardInstance } from '@tower-of-cardborn/game-core/types/card';
+import type { Enemy, StatusEffect } from '@tower-of-cardborn/game-core/types/character';
+import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
+import { getPreviewDescription } from '@tower-of-cardborn/game-core/game/damage-preview';
 import { CardComponent } from './CardComponent';
 import styles from '../../styles/combat.module.css';
 

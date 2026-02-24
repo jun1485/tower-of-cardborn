@@ -1,8 +1,8 @@
 // 전투 상태 관리 hook
 
 import { useCallback, useState } from 'react';
-import type { CombatState } from '../types/combat';
-import { endPlayerTurn, initCombat, playCard } from '../game/combat-engine';
+import type { CombatState } from '@tower-of-cardborn/game-core/types/combat';
+import { endPlayerTurn, initCombat, playCard } from '@tower-of-cardborn/game-core/game/combat-engine';
 
 interface UseCombatReturn {
   readonly combat: CombatState | null;

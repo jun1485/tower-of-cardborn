@@ -1,7 +1,7 @@
 // 개별 카드 UI 컴포넌트 (포인터 드래그 지원 + 키워드 툴팁)
 
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import type { CardDefinition } from '../../types/card';
+import type { CardDefinition } from '@tower-of-cardborn/game-core/types/card';
 import styles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
 

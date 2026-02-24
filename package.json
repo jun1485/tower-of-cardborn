@@ -1,5 +1,5 @@
 {
-  "name": "slay-the-spire",
+  "name": "tower-of-cardborn",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "@tower-of-cardborn/game-core": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -28,5 +29,8 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4"
-  }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }

@@ -1,4 +1,9 @@
-# React + TypeScript + Vite
+# tower-of-cardborn
+
+## Monorepo workspace
+
+- `packages/game-core`: 웹/모바일에서 함께 쓰는 게임 로직/데이터/타입 패키지
+- 웹 앱은 해당 패키지를 `@tower-of-cardborn/game-core/*` 경로로 import 하도록 구성
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

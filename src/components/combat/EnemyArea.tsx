@@ -1,6 +1,6 @@
 // 적 표시 + 데미지 피드백 컴포넌트
 
-import type { Enemy } from '../../types/character';
+import type { Enemy } from '@tower-of-cardborn/game-core/types/character';
 import { HealthBar } from '../ui/HealthBar';
 import { FloatingNumber } from '../ui/FloatingNumber';
 import { StatusBadge } from '../ui/StatusBadge';

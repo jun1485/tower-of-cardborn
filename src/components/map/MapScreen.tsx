@@ -1,7 +1,7 @@
 // 맵 화면: 층별 노드 표시 + 다음 노드 선택
 
-import type { GameMap, MapNode, NodeType } from '../../types/map';
-import { getAvailableNodeIds } from '../../game/map-generator';
+import type { GameMap, MapNode, NodeType } from '@tower-of-cardborn/game-core/types/map';
+import { getAvailableNodeIds } from '@tower-of-cardborn/game-core/game/map-generator';
 import styles from '../../styles/map.module.css';
 
 interface MapScreenProps {

@@ -1,7 +1,7 @@
 // 플레이어 정보 표시 + 피격/방어 피드백 컴포넌트
 
-import type { Player } from '../../types/character';
-import type { CharacterClass } from '../../types/game';
+import type { Player } from '@tower-of-cardborn/game-core/types/character';
+import type { CharacterClass } from '@tower-of-cardborn/game-core/types/game';
 import { HealthBar } from '../ui/HealthBar';
 import { FloatingNumber } from '../ui/FloatingNumber';
 import { StatusBadge } from '../ui/StatusBadge';

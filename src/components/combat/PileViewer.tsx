@@ -1,7 +1,7 @@
 // 카드 파일 뷰어 (뽑을 카드 / 버린 카드 / 소멸 카드 목록)
 
-import type { CardInstance } from '../../types/card';
-import { CARD_DEFINITIONS } from '../../data/cards';
+import type { CardInstance } from '@tower-of-cardborn/game-core/types/card';
+import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
 import styles from '../../styles/combat.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
