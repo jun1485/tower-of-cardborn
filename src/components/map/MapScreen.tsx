@@ -84,7 +84,7 @@ function MapNodeButton({ node, isAvailable, isVisited, isCurrent, onSelect }: Ma
       disabled={!isAvailable}
       onClick={() => onSelect(node.id)}
     >
-      <span className={styles.nodeFloor}>{node.floor}F</span>
+      <span className={styles.nodeFloor}>R{node.round} · {node.roundFloor}F</span>
       <span className={styles.nodeIcon}>{NODE_ICON[node.type]}</span>
       <span className={styles.nodeLabel}>{NODE_LABEL[node.type]}</span>
     </button>

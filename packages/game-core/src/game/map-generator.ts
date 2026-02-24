@@ -1,19 +1,31 @@
-// 맵 생성: 15층 구조 (일반전투 / 엘리트 / 휴식 / 보스)
+// 맵 생성: 10층 x 3라운드 구조 (일반전투 / 엘리트 / 휴식 / 보스)
 
 import type { GameMap, MapNode, NodeType } from '../types/map';
 import { NORMAL_ENCOUNTERS, ELITE_ENCOUNTERS, BOSS_ENCOUNTERS } from '../data/enemies';
 import { generateId } from '../utils/random';
 
-const TOTAL_FLOORS = 15;
+const FLOORS_PER_ROUND = 10;
+const TOTAL_ROUNDS = 3;
+const TOTAL_FLOORS = FLOORS_PER_ROUND * TOTAL_ROUNDS;
+
+interface RoundPosition {
+  readonly round: number;
+  readonly roundFloor: number;
+}
+
+function getRoundPosition(floor: number): RoundPosition {
+  const zeroBasedFloor = floor - 1;
+  const round = Math.floor(zeroBasedFloor / FLOORS_PER_ROUND) + 1;
+  const roundFloor = (zeroBasedFloor % FLOORS_PER_ROUND) + 1;
+  return { round, roundFloor };
+}
 
 /** 층별 노드 타입 결정 규칙 */
 function getNodeType(floor: number): NodeType {
-  if (floor === TOTAL_FLOORS) return 'boss';
-  if (floor === 1) return 'combat';
-  // 7층, 12층: 휴식
-  if (floor === 7 || floor === 12) return 'rest';
-  // 5층, 10층: 엘리트
-  if (floor === 5 || floor === 10) return 'elite';
+  const { roundFloor } = getRoundPosition(floor);
+  if (roundFloor === FLOORS_PER_ROUND) return 'boss';
+  if (roundFloor === 5) return 'elite';
+  if (roundFloor === 7) return 'rest';
   return 'combat';
 }
 
@@ -40,17 +52,20 @@ function pickEnemies(type: NodeType, floor: number): string[] {
   }
 }
 
-/** 1~15층 직선 맵 생성 */
+/** 10층 x 3라운드 직선 맵 생성 */
 export function generateMap(): GameMap {
   // ID를 미리 생성하여 nextNodeIds 연결에 사용
   const ids = Array.from({ length: TOTAL_FLOORS }, () => generateId());
 
   const nodes: MapNode[] = ids.map((id, i) => {
     const floor = i + 1;
+    const { round, roundFloor } = getRoundPosition(floor);
     const type = getNodeType(floor);
     return {
       id,
       floor,
+      round,
+      roundFloor,
       type,
       nextNodeIds: i < TOTAL_FLOORS - 1 ? [ids[i + 1]] : [],
       enemyIds: pickEnemies(type, floor),

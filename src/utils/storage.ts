@@ -5,7 +5,7 @@ import type { GameState } from '@tower-of-cardborn/game-core/types/game';
 const SAVE_KEY = 'tower-of-cardborn-save';
 
 /** 저장 포맷 버전 — 타입/구조 변경 시 숫자를 올리면 이전 세이브 자동 무효화 */
-const SAVE_VERSION = 3;
+const SAVE_VERSION = 5;
 
 interface SaveData {
   readonly version: number;

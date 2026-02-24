@@ -194,7 +194,10 @@ export function useGame() {
     setGameState((prev) => {
       if (!prev.map) return prev;
       const currentNode = prev.map.nodes.find((n) => n.id === prev.map!.currentNodeId);
-      if (currentNode?.type === 'boss') {
+      const isFinalBoss = currentNode !== undefined
+        && currentNode.type === 'boss'
+        && currentNode.nextNodeIds.length === 0;
+      if (isFinalBoss) {
         return { ...prev, screen: 'victory', rewardCards: [] };
       }
       return { ...prev, screen: 'map', combatState: null, rewardCards: [] };
