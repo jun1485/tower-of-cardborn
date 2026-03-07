@@ -1,70 +1,287 @@
-/* 전투 화면 스타일 */
-
 .combatScreen {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  padding: 12px;
-  gap: 8px;
+  --panel-border: rgba(216, 191, 135, 0.24);
+  --panel-border-strong: rgba(237, 214, 161, 0.34);
+  --panel-bg: linear-gradient(180deg, rgba(18, 24, 34, 0.94) 0%, rgba(8, 11, 18, 0.9) 100%);
+  --panel-shadow: 0 18px 36px rgba(0, 0, 0, 0.44);
+  --gold-text: #f5e2b0;
+  --gold-text-dim: rgba(245, 226, 176, 0.72);
+  --hud-text: rgba(231, 239, 255, 0.9);
+  --hud-text-dim: rgba(203, 217, 244, 0.74);
+  --hand-card-scale: 0.72;
+  --hand-card-hover-scale: 0.76;
+  --hand-card-offset: -24px;
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+  padding: 12px 18px 0;
+  gap: 10px;
+  background: radial-gradient(circle at 52% 18%, #6a99ba 0%, #325c7c 42%, #13253d 100%);
+  overflow: hidden;
+  isolation: isolate;
 }
 
-/* 상단 정보 바 */
-.topInfo {
+.combatScreen::before {
+  content: '';
+  position: absolute;
+  inset: -4% -2%;
+  background-image: url('/assets/ui/bg_combat_hd.svg?v=4');
+  background-size: cover;
+  background-position: center 56%;
+  opacity: 0.98;
+  filter: saturate(1.08) contrast(1.08) brightness(1.03);
+  transform: scale(1.015);
+  z-index: -3;
+  pointer-events: none;
+}
+
+.combatScreen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 243, 210, 0.14) 0%, rgba(255, 243, 210, 0) 28%),
+    linear-gradient(to bottom, rgba(8, 13, 21, 0.08) 0%, rgba(7, 11, 18, 0.22) 58%, rgba(6, 8, 14, 0.46) 100%);
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* 상단: 턴 정보만 표시 */
+.topSection {
   display: flex;
   justify-content: center;
-  gap: 24px;
-  padding: 8px;
-  font-size: 14px;
-  color: var(--color-text-dim);
+  z-index: 4;
 }
 
-/* 전장 (플레이어 + 적) */
-.battlefield {
-  flex: 1;
-  display: flex;
+.topInfo {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-around;
-  padding: 0 40px;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: fit-content;
+  max-width: min(100%, 560px);
+  padding: 8px 14px;
+  border-radius: 24px;
+  border: 1px solid var(--panel-border);
+  background: linear-gradient(180deg, rgba(17, 22, 31, 0.94) 0%, rgba(9, 12, 19, 0.86) 100%);
+  box-shadow: var(--panel-shadow);
+  backdrop-filter: blur(12px);
+}
+
+.topInfo::before {
+  content: '';
+  position: absolute;
+  inset: 1px 1px auto;
+  height: 42%;
+  border-radius: 22px 22px 18px 18px;
+  background: linear-gradient(180deg, rgba(255, 239, 198, 0.14) 0%, rgba(255, 239, 198, 0) 100%);
+  pointer-events: none;
+}
+
+.infoChip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(199, 214, 245, 0.14);
+  background: linear-gradient(180deg, rgba(45, 58, 82, 0.46) 0%, rgba(20, 28, 41, 0.54) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.infoChipPrimary {
+  border-color: rgba(132, 181, 255, 0.28);
+  background: linear-gradient(180deg, rgba(55, 95, 150, 0.66) 0%, rgba(18, 37, 64, 0.72) 100%);
+}
+
+.infoChipLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: var(--hud-text-dim);
+}
+
+.infoChipValue {
+  max-width: 160px;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--gold-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+
+/* 전장 영역 */
+.battlefield {
+  position: relative;
+  min-height: 0;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 14px 18px 10px;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.85fr) minmax(0, 1.15fr);
+  align-items: end;
+  align-content: end;
+  gap: 28px;
+  z-index: 1;
+}
+
+.battlefield::before {
+  content: '';
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  bottom: 10px;
+  height: 112px;
+  background: radial-gradient(ellipse at center, rgba(6, 10, 18, 0.42) 0%, rgba(6, 10, 18, 0) 74%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.battlefield::after {
+  content: '';
+  position: absolute;
+  inset: auto 10% 6px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 229, 176, 0) 0%, rgba(255, 229, 176, 0.2) 50%, rgba(255, 229, 176, 0) 100%);
+  pointer-events: none;
 }
 
 /* 플레이어 영역 */
 .playerArea {
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  justify-self: start;
+  align-self: end;
+  gap: 14px;
+}
+
+.combatantPanel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+  min-width: 178px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  box-shadow: var(--panel-shadow);
+  backdrop-filter: blur(12px);
+}
+
+.combatantPanel::before {
+  content: '';
+  position: absolute;
+  inset: 1px 1px auto;
+  height: 46%;
+  border-radius: 17px 17px 12px 12px;
+  background: linear-gradient(180deg, rgba(255, 241, 204, 0.12) 0%, rgba(255, 241, 204, 0) 100%);
+  pointer-events: none;
+}
+
+.playerPanel {
+  margin-left: 8px;
+}
+
+.enemyPanel {
+  align-items: center;
+  min-width: 168px;
+  margin-top: -10px;
+  text-align: center;
+}
+
+.combatantHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.combatantLabel {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: var(--gold-text-dim);
+}
+
+.combatantName {
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff2cf;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+.playerArea .characterSprite {
+  width: clamp(140px, 24vh, 252px);
+  height: clamp(140px, 24vh, 252px);
+}
+
+.playerArea .characterImage {
+  width: 120%;
+  height: 120%;
+  object-position: center bottom;
+  transform: translateY(10px);
+  filter: saturate(1.08) contrast(1.02) drop-shadow(0 14px 12px rgba(0, 0, 0, 0.62));
 }
 
 .characterSprite {
-  width: 104px;
-  height: 104px;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 160px;
+  height: 160px;
+}
+
+.characterSprite::before {
+  content: '';
+  position: absolute;
+  inset: 12% 14% 18%;
+  border-radius: 24px;
+  background: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 68%);
+  pointer-events: none;
+}
+
+.characterSprite::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  width: 120px;
+  height: 28px;
+  background: radial-gradient(ellipse at center, rgba(3, 6, 12, 0.62) 0%, rgba(3, 6, 12, 0) 78%);
+  border-radius: 50%;
+  z-index: -1;
 }
 
 .characterImage {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.45));
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.56));
 }
 
-/* 공격 시 적 방향 돌진 */
 .playerLunge {
   animation: lunge 0.2s cubic-bezier(0.2, 0, 0.6, 1);
 }
 
 @keyframes lunge {
   0% { transform: translateX(0); }
-  50% { transform: translateX(80px) scale(1.05); }
+  50% { transform: translateX(78px) scale(1.04); }
   100% { transform: translateX(0); }
 }
 
-/* 피격 흔들림 */
 .shake {
-  animation: shake 0.4s ease-in-out;
+  animation: shake 0.38s ease-in-out;
 }
 
 @keyframes shake {
@@ -76,46 +293,42 @@
   75% { transform: translateX(-1px); }
 }
 
-/* 플로팅 숫자 컨테이너 */
 .floatingContainer {
   position: absolute;
-  top: 0;
+  top: 2px;
   left: 50%;
   transform: translateX(-50%);
   pointer-events: none;
   z-index: 10;
 }
 
-/* 플로팅 숫자 공통 */
 .floatingNumber {
   position: absolute;
   left: 50%;
-  font-size: 22px;
-  font-weight: bold;
+  font-size: 24px;
+  font-weight: 900;
   white-space: nowrap;
   pointer-events: none;
   animation: floatUp 0.8s ease-out forwards;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.86);
 }
 
 .floatingDamage {
-  color: #ff4444;
+  color: #ff6a6a;
 }
 
 .floatingHeal {
-  color: #76ff7a;
+  color: #84ff9f;
 }
 
 .floatingBlock {
   color: var(--color-block);
 }
 
-/* 방어 획득 시 1회 재생 (PlayerArea 직접 사용) */
 .floatingOnce {
   position: absolute;
-  top: -10px;
+  top: -6px;
   left: 50%;
-  animation: floatUp 0.8s ease-out forwards;
 }
 
 @keyframes floatUp {
@@ -123,33 +336,51 @@
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1);
   }
+
   50% {
     opacity: 1;
-    transform: translateX(-50%) translateY(-30px) scale(1.2);
+    transform: translateX(-50%) translateY(-32px) scale(1.15);
   }
+
   100% {
     opacity: 0;
-    transform: translateX(-50%) translateY(-50px) scale(0.8);
+    transform: translateX(-50%) translateY(-56px) scale(0.82);
   }
 }
 
 /* 적 영역 */
 .enemyArea {
   display: flex;
-  gap: 24px;
+  align-items: flex-end;
+  justify-content: flex-end;
+  align-content: flex-end;
+  flex-wrap: wrap;
+  gap: 22px;
+  min-height: 0;
+  padding: 0 10px 8px;
 }
 
 .enemyCard {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 12px;
-  background: transparent;
-  border: 2px solid transparent;
-  border-radius: 8px;
+  gap: 12px;
+  min-width: 188px;
+  padding: 24px 8px 0;
   color: var(--color-text);
-  transition: border-color 0.15s, background 0.15s, transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+}
+
+.enemyCard::after {
+  content: '';
+  position: absolute;
+  bottom: 18px;
+  width: 74%;
+  height: 20px;
+  background: radial-gradient(ellipse at center, rgba(3, 6, 12, 0.58) 0%, rgba(3, 6, 12, 0) 78%);
+  border-radius: 50%;
+  z-index: -1;
 }
 
 .enemyTargetable {
@@ -157,54 +388,165 @@
 }
 
 .enemySelected {
-  border-color: rgba(255, 213, 79, 0.8);
-  background: rgba(255, 213, 79, 0.08);
-  box-shadow: 0 0 10px rgba(255, 213, 79, 0.2);
+  transform: translateY(-4px);
+  filter: saturate(1.1) brightness(1.06);
 }
 
-/* 드래그 중 적 카드 → 드롭 가능 표시 */
+.enemySelected::before {
+  content: '';
+  position: absolute;
+  inset: 28px 8px 42px;
+  border-radius: 30px;
+  border: 2px solid rgba(255, 223, 138, 0.86);
+  box-shadow: 0 0 22px rgba(255, 210, 96, 0.34), inset 0 0 12px rgba(255, 241, 192, 0.12);
+  pointer-events: none;
+}
+
+.enemySelected .enemyIntent,
+.enemySelected .combatantPanel {
+  border-color: rgba(255, 226, 160, 0.36);
+}
+
+.enemyTargetBadge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(106, 61, 10, 0.52);
+  background: linear-gradient(180deg, #ffe39d 0%, #ffca53 56%, #f09a18 100%);
+  color: #412502;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 8px 14px rgba(87, 52, 8, 0.34);
+  text-shadow: 0 1px 0 rgba(255, 244, 205, 0.48);
+  pointer-events: none;
+  z-index: 2;
+}
+
 .enemyDraggable {
-  border-color: rgba(255, 255, 255, 0.2);
-  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+  opacity: 0.98;
 }
 
-/* 드래그 중 호버된 적 → 드롭 타겟 강조 */
 .enemyDropTarget {
-  border-color: var(--color-energy) !important;
-  background: rgba(255, 213, 79, 0.12);
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(255, 213, 79, 0.3);
+  transform: translateY(-10px) scale(1.06);
+  filter: saturate(1.2) brightness(1.1);
+}
+
+.enemyDropTarget::before {
+  content: '';
+  position: absolute;
+  inset: 20px 0 34px;
+  border-radius: 28px;
+  border: 2.5px solid rgba(255, 80, 80, 0.9);
+  box-shadow: 0 0 18px rgba(255, 60, 60, 0.5), 0 0 40px rgba(255, 60, 60, 0.2), inset 0 0 14px rgba(255, 80, 80, 0.15);
+  pointer-events: none;
+  animation: targetPulse 0.8s ease-in-out infinite;
+  z-index: 3;
+}
+
+.enemyDropTargetBadge {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(180, 40, 40, 0.6);
+  background: linear-gradient(180deg, #ff6b6b 0%, #e03131 56%, #c92a2a 100%);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  box-shadow: 0 6px 16px rgba(200, 30, 30, 0.5);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: 4;
+  animation: targetBadgePop 0.2s ease-out;
+}
+
+@keyframes targetPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 18px rgba(255, 60, 60, 0.5), 0 0 40px rgba(255, 60, 60, 0.2); }
+  50% { opacity: 0.7; box-shadow: 0 0 24px rgba(255, 60, 60, 0.7), 0 0 56px rgba(255, 60, 60, 0.3); }
+}
+
+@keyframes targetBadgePop {
+  0% { transform: translateX(-50%) scale(0.6); opacity: 0; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
 }
 
 .enemyIntent {
-  font-size: 18px;
-  padding: 4px 10px;
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 12px;
-  min-width: 60px;
-  text-align: center;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(208, 188, 142, 0.18);
+  background: linear-gradient(180deg, rgba(16, 21, 31, 0.92) 0%, rgba(8, 11, 18, 0.88) 100%);
+  color: #f5f1e2;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.34);
 }
 
 .enemyName {
-  font-size: 14px;
-  color: var(--color-text-dim);
+  font-size: 17px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* HP 바 */
+.enemySprite {
+  width: clamp(132px, 22vh, 228px);
+  height: clamp(132px, 22vh, 228px);
+}
+
+.enemySprite::after {
+  width: 118px;
+  height: 28px;
+  bottom: -8px;
+}
+
+.enemyImage {
+  width: 116%;
+  height: 116%;
+  transform: translateY(10px);
+  object-position: center bottom;
+  filter: saturate(1.04) contrast(1.02) drop-shadow(0 14px 12px rgba(0, 0, 0, 0.62));
+}
+
+/* 체력바 */
 .healthBar {
   position: relative;
-  width: 120px;
-  height: 20px;
-  background: var(--color-hp-bg);
-  border-radius: 10px;
+  width: 160px;
+  height: 24px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(6, 9, 15, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.42);
+  box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.7), 0 8px 12px rgba(0, 0, 0, 0.22);
   overflow: hidden;
 }
 
 .healthBarFill {
   height: 100%;
-  background: var(--color-hp);
-  transition: width 0.3s ease;
-  border-radius: 10px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ff6d6f 0%, #ea4546 42%, #c82d33 100%);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  transition: width 0.28s ease;
 }
 
 .healthBarText {
@@ -213,81 +555,116 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   font-size: 12px;
-  font-weight: bold;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  font-weight: 900;
+  color: #fff6db;
+  letter-spacing: 0.1px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 .blockBadge {
-  color: var(--color-block);
-  margin-left: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(52, 98, 124, 0.94) 0%, rgba(22, 51, 69, 0.94) 100%);
+  color: #dbf3ff;
+  font-size: 10px;
+  font-weight: 900;
 }
 
-/* 상태이상 배지 */
+/* 상태 효과 */
 .statusEffects {
   display: flex;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.playerPanel .statusEffects {
+  justify-content: flex-start;
+}
+
+.enemyPanel .statusEffects {
+  justify-content: center;
 }
 
 .statusBadge {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(188, 207, 244, 0.2);
+  background: rgba(41, 51, 69, 0.78);
+  color: rgba(235, 241, 255, 0.95);
   font-size: 11px;
-  padding: 2px 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  font-weight: 700;
   cursor: default;
 }
 
 .statusTooltip {
   display: none;
   position: absolute;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  padding: 6px 10px;
-  background: var(--color-surface);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(184, 206, 246, 0.26);
+  background: rgba(9, 12, 19, 0.98);
+  color: var(--color-text);
   font-size: 12px;
   white-space: nowrap;
-  color: var(--color-text);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.52);
   z-index: 100;
   pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 
 .statusBadge:hover .statusTooltip {
   display: block;
 }
 
-/* 하단 섹션 래퍼 (덱 표시기 배치 기준) */
+/* 하단 바: [드로우] [에너지] [핸드] [턴종료] [버린+소멸] */
 .bottomSection {
   position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0 8px calc(8px + env(safe-area-inset-bottom));
+  z-index: 4;
 }
 
-/* 뽑을 카드(덱) — bottomArea 상단 우측 */
-.deckIndicator {
-  position: absolute;
-  top: -32px;
-  right: 12px;
+/* 드로우/버린카드/소멸 파일 버튼 */
+.deckIndicator,
+.pileBtn {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: var(--color-text-dim);
-  font-size: 13px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
-  z-index: 1;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(204, 185, 139, 0.22);
+  background: linear-gradient(180deg, rgba(29, 38, 53, 0.92) 0%, rgba(11, 15, 24, 0.92) 100%);
+  color: #eef3ff;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.24);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+  flex-shrink: 0;
 }
 
-.deckIndicator:hover {
-  color: var(--color-text);
-  background: rgba(0, 0, 0, 0.7);
-  border-color: rgba(255, 255, 255, 0.3);
+.deckIndicator:hover,
+.pileBtn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(243, 220, 168, 0.34);
+  color: #fff9eb;
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.28);
 }
 
 .deckIcon {
@@ -296,136 +673,241 @@
   object-fit: contain;
 }
 
-.deckCount {
-  font-weight: 600;
+.utilityCount {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--gold-text);
 }
 
-/* 덱 호버 시 카드 구성 툴팁 */
 .deckTooltip {
   display: none;
   position: absolute;
-  bottom: calc(100% + 8px);
-  right: 0;
-  padding: 8px 12px;
-  background: var(--color-surface);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  font-size: 12px;
-  white-space: nowrap;
+  left: 0;
+  bottom: calc(100% + 10px);
+  min-width: 180px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(184, 206, 246, 0.28);
+  background: rgba(9, 12, 19, 0.98);
   color: var(--color-text);
-  z-index: 100;
-  pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-  text-align: left;
+  font-size: 12px;
   line-height: 1.6;
+  white-space: nowrap;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.46);
+  text-align: left;
+  pointer-events: none;
+  z-index: 10;
 }
 
 .deckIndicator:hover .deckTooltip {
   display: block;
 }
 
-/* 하단 영역 (에너지 + 패 + 턴 종료) */
-.bottomArea {
+/* 버린카드+소멸 그룹 */
+.pileBtnGroup {
   display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  padding: 14px 12px 10px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
-  overflow: visible;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 /* 에너지 오브 */
 .energyOrb {
-  width: 58px;
-  height: 58px;
-  background:
-    radial-gradient(circle at 30% 25%, #fff4d0 0 24%, transparent 25%),
-    linear-gradient(155deg, #ffe082 0%, #ffca28 45%, #fb8c00 100%);
-  border: 2px solid #ffd54f;
-  clip-path: polygon(50% 0%, 88% 24%, 88% 76%, 50% 100%, 12% 76%, 12% 24%);
+  width: 64px;
+  height: 64px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 1px;
   flex-shrink: 0;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+  border-radius: 20px;
+  border: 3px solid #ffd468;
+  background:
+    radial-gradient(circle at 30% 24%, #fff6d2 0 18%, transparent 26%),
+    linear-gradient(180deg, #ffe28f 0%, #ffca3b 42%, #f3941a 100%);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.28), inset 0 0 14px rgba(255, 131, 0, 0.52);
+}
+
+.energyLabel {
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  color: rgba(74, 43, 2, 0.82);
+}
+
+.energyValueGroup {
+  display: inline-flex;
+  align-items: flex-end;
+  line-height: 1;
 }
 
 .energyText {
-  font-size: 16px;
+  font-size: 22px;
   font-weight: 900;
   color: #2f1b00;
-  line-height: 1;
-  letter-spacing: -0.3px;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
 }
 
-/* 패(Hand) 영역 — 하스스톤 스타일 겹침 배치 */
+.energyMax {
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(74, 43, 2, 0.68);
+  transform: translateY(-2px);
+}
+
+/* 핸드 영역 */
 .handArea {
+  position: relative;
   flex: 1;
-  min-height: 232px;
+  min-width: 0;
+  min-height: clamp(132px, 26vh, 228px);
   display: flex;
+  align-items: flex-end;
   justify-content: center;
-  overflow: visible;
-  padding: 4px 0;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 4px 8px 2px;
+  border-radius: 0;
+  background: none;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  --card-hover-lift: 18px;
+  --card-hover-scale: 1;
+  --card-push-near: 14px;
+  --card-push-far: 7px;
+  z-index: 5;
+}
+
+.handArea::-webkit-scrollbar {
+  display: none;
+}
+
+.handArea > * {
+  scroll-snap-align: center;
+}
+
+.handTrack {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: max-content;
+  min-width: 100%;
+  margin: 0 auto;
+}
+
+.handTrack > * {
+  scroll-snap-align: center;
+}
+
+/* 핸드 카드 오버랩/호버 효과 */
+.bottomSection .handTrack > :global(.card-item),
+.bottomSection .handTrack :global(.card-item) {
+  margin: 0 var(--hand-card-offset);
+  transform: scale(var(--hand-card-scale));
+  transform-origin: center bottom;
+}
+
+.bottomSection .handTrack :global(.card-item:hover) {
+  transform: translateY(-18px) scale(var(--hand-card-hover-scale));
+}
+
+.bottomSection .handTrack :global(.card-item:hover + .card-item) {
+  transform: translateX(var(--card-push-near)) scale(var(--hand-card-scale));
+}
+
+.bottomSection .handTrack :global(.card-item:has(+ .card-item:hover)) {
+  transform: translateX(calc(var(--card-push-near) * -1)) scale(var(--hand-card-scale));
+}
+
+.bottomSection .handTrack :global(.card-item:hover + .card-item + .card-item) {
+  transform: translateX(var(--card-push-far)) scale(var(--hand-card-scale));
+}
+
+.bottomSection .handTrack :global(.card-item:has(+ .card-item + .card-item:hover)) {
+  transform: translateX(calc(var(--card-push-far) * -1)) scale(var(--hand-card-scale));
+}
+
+.bottomSection .handTrack :global(.card-item.card-dragging) {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* 턴 종료 버튼 */
 .endTurnBtn {
-  padding: 12px 20px;
-  background: var(--color-primary);
-  color: var(--color-text);
-  border-radius: 8px;
+  width: auto;
+  min-width: 72px;
+  min-height: 58px;
+  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: normal;
+  clip-path: none;
+  border-radius: 14px;
+  border: 1px solid rgba(196, 223, 255, 0.34);
+  background: linear-gradient(180deg, #5fb4ff 0%, #246ea9 50%, #143c60 100%);
+  color: #f6fbff;
   font-size: 14px;
-  font-weight: bold;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0.2px;
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.46);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
   flex-shrink: 0;
-  transition: background 0.15s;
 }
 
 .endTurnBtn:hover {
-  background: var(--color-accent);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  filter: brightness(1.04);
 }
 
-/* 카드 파일 뷰어 */
+/* 파일 뷰어 모달 */
 .pileOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(0, 0, 0, 0.74);
   z-index: 900;
 }
 
 .pileModal {
-  background: var(--color-surface);
-  border-radius: 12px;
-  padding: 20px;
-  max-width: 640px;
+  min-width: 340px;
+  max-width: 680px;
   max-height: 80vh;
   overflow-y: auto;
-  min-width: 320px;
+  padding: 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(192, 212, 247, 0.22);
+  background: linear-gradient(180deg, rgba(17, 22, 31, 0.98) 0%, rgba(8, 11, 18, 0.98) 100%);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.62);
 }
 
 .pileHeader {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 16px;
 }
 
 .pileHeader h2 {
-  font-size: 18px;
   margin: 0;
+  font-size: 20px;
+  color: #fff2cf;
 }
 
 .pileCloseBtn {
+  border: none;
   background: none;
   color: var(--color-text-dim);
-  font-size: 20px;
+  font-size: 22px;
   cursor: pointer;
-  border: none;
-  padding: 4px 8px;
 }
 
 .pileCloseBtn:hover {
@@ -435,31 +917,691 @@
 .pileGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
   justify-content: center;
+  gap: 10px;
 }
 
 .pileEmpty {
+  padding: 24px;
   color: var(--color-text-dim);
   font-size: 14px;
   text-align: center;
-  padding: 24px;
 }
 
-/* 상단 정보 바 - 클릭 가능 파일 버튼 */
-.pileBtn {
-  background: none;
-  border: none;
-  color: var(--color-text-dim);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: color 0.15s, background 0.15s;
+/* === 반응형 === */
+
+@media (max-width: 1200px) {
+  .battlefield {
+    grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+    gap: 22px;
+  }
+
+  .playerArea .characterSprite,
+  .enemySprite {
+    width: 206px;
+    height: 206px;
+  }
+
+  .enemyCard {
+    min-width: 168px;
+  }
+
+  .handArea {
+    min-height: 214px;
+  }
 }
 
-.pileBtn:hover {
-  color: var(--color-text);
-  background: rgba(255, 255, 255, 0.1);
+@media (max-width: 900px) {
+  .combatScreen {
+    --hand-card-scale: 1;
+    --hand-card-hover-scale: 1.02;
+    --hand-card-offset: 0px;
+    padding: 8px 6px 0;
+    gap: 6px;
+  }
+
+  .topInfo {
+    max-width: 100%;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 18px;
+  }
+
+  .infoChip {
+    min-height: 30px;
+    padding: 0 10px;
+    gap: 6px;
+    border-radius: 12px;
+  }
+
+  .infoChipLabel {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+  }
+
+  .infoChipValue {
+    font-size: 14px;
+  }
+
+  .battlefield {
+    padding: 4px 2px 0;
+    grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .playerArea {
+    gap: 6px;
+  }
+
+  .combatantPanel {
+    min-width: 110px;
+    padding: 8px 9px;
+    border-radius: 12px;
+    gap: 5px;
+  }
+
+  .playerPanel {
+    margin-left: 0;
+  }
+
+  .enemyPanel {
+    min-width: 100px;
+    margin-top: -4px;
+  }
+
+  .combatantLabel {
+    font-size: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  .combatantName,
+  .enemyName {
+    font-size: 12px;
+  }
+
+  .playerArea .characterSprite {
+    width: 120px;
+    height: 120px;
+  }
+
+  .playerArea .characterImage,
+  .enemyImage {
+    width: 114%;
+    height: 114%;
+    transform: translateY(6px);
+  }
+
+  .enemyArea {
+    gap: 8px;
+    padding: 0 0 4px;
+  }
+
+  .enemyCard {
+    min-width: 100px;
+    gap: 6px;
+    padding: 14px 2px 0;
+  }
+
+  .enemyCard::after {
+    bottom: 14px;
+    width: 66%;
+    height: 16px;
+  }
+
+  .enemySelected::before {
+    inset: 22px 2px 34px;
+    border-radius: 22px;
+  }
+
+  .enemyDropTarget::before {
+    inset: 16px 0 28px;
+    border-radius: 22px;
+  }
+
+  .enemyDropTargetBadge {
+    min-height: 22px;
+    padding: 0 10px;
+    font-size: 9px;
+  }
+
+  .enemyIntent {
+    min-height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .enemySprite {
+    width: 120px;
+    height: 120px;
+  }
+
+  .healthBar {
+    width: 100px;
+    height: 16px;
+    padding: 2px;
+  }
+
+  .healthBarText {
+    gap: 3px;
+    font-size: 9px;
+  }
+
+  .blockBadge {
+    min-height: 15px;
+    padding: 0 5px;
+    font-size: 8px;
+  }
+
+  .statusEffects {
+    gap: 4px;
+  }
+
+  .statusBadge {
+    min-height: 20px;
+    padding: 0 6px;
+    font-size: 9px;
+  }
+
+  .bottomSection {
+    gap: 6px;
+    padding: 0 4px calc(6px + env(safe-area-inset-bottom));
+  }
+
+  .deckIndicator,
+  .pileBtn {
+    min-height: 34px;
+    padding: 0 8px;
+    gap: 6px;
+    border-radius: 10px;
+  }
+
+  .deckIcon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .utilityCount {
+    font-size: 12px;
+  }
+
+  .energyOrb {
+    width: 52px;
+    height: 52px;
+    border-width: 2px;
+    border-radius: 16px;
+  }
+
+  .energyLabel {
+    font-size: 7px;
+    letter-spacing: 0.4px;
+  }
+
+  .energyText {
+    font-size: 18px;
+  }
+
+  .energyMax {
+    font-size: 9px;
+    transform: translateY(-1px);
+  }
+
+  .handArea {
+    min-height: 160px;
+    justify-content: center;
+    padding: 4px 2px 0;
+    --card-hover-lift: 8px;
+    --card-push-near: 0px;
+    --card-push-far: 0px;
+  }
+
+  .handTrack {
+    justify-content: center;
+  }
+
+  .bottomSection .handTrack > :global(.card-item),
+  .bottomSection .handTrack :global(.card-item) {
+    margin: 0 3px;
+    transform: scale(var(--hand-card-scale));
+  }
+
+  .bottomSection .handTrack :global(.card-item:hover) {
+    transform: translateY(-8px) scale(var(--hand-card-hover-scale));
+  }
+
+  .bottomSection .handTrack :global(.card-item:hover + .card-item),
+  .bottomSection .handTrack :global(.card-item:has(+ .card-item:hover)),
+  .bottomSection .handTrack :global(.card-item:hover + .card-item + .card-item),
+  .bottomSection .handTrack :global(.card-item:has(+ .card-item + .card-item:hover)) {
+    transform: scale(var(--hand-card-scale));
+  }
+
+  .bottomSection .handTrack :global(.card-item.card-dragging) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .endTurnBtn {
+    min-width: 58px;
+    min-height: 48px;
+    padding: 8px 10px;
+    font-size: 12px;
+    border-radius: 12px;
+  }
+
+  .deckTooltip {
+    display: none;
+  }
+
+  .pileModal {
+    min-width: auto;
+    width: calc(100% - 24px);
+    max-width: 480px;
+    max-height: 75vh;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .pileHeader h2 {
+    font-size: 17px;
+  }
+
+  .pileGrid {
+    gap: 8px;
+  }
 }
 
+@media (max-width: 640px) {
+  .combatScreen {
+    padding: 6px 4px 0;
+    gap: 4px;
+  }
+
+  .topInfo {
+    gap: 4px;
+    padding: 5px 8px;
+    border-radius: 16px;
+  }
+
+  .infoChip {
+    min-height: 26px;
+    padding: 0 8px;
+    gap: 5px;
+  }
+
+  .infoChipValue {
+    font-size: 13px;
+  }
+
+  .battlefield {
+    grid-template-columns: minmax(96px, 0.7fr) minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .combatantPanel {
+    min-width: 100px;
+    padding: 7px 7px;
+  }
+
+  .combatantName,
+  .enemyName {
+    font-size: 11px;
+  }
+
+  .playerArea .characterSprite,
+  .enemySprite {
+    width: 104px;
+    height: 104px;
+  }
+
+  .enemyCard {
+    min-width: 88px;
+    gap: 5px;
+  }
+
+  .enemyDropTarget::before {
+    inset: 14px 0 24px;
+    border-radius: 18px;
+  }
+
+  .enemyDropTargetBadge {
+    min-height: 20px;
+    padding: 0 8px;
+    font-size: 8px;
+  }
+
+  .enemyIntent {
+    min-height: 24px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .healthBar {
+    width: 98px;
+    height: 16px;
+  }
+
+  .healthBarText {
+    font-size: 9px;
+  }
+
+  .statusBadge {
+    min-height: 18px;
+    padding: 0 5px;
+    font-size: 8px;
+  }
+
+  .bottomSection {
+    gap: 4px;
+    padding: 0 2px calc(4px + env(safe-area-inset-bottom));
+  }
+
+  .deckIndicator,
+  .pileBtn {
+    min-height: 28px;
+    padding: 0 6px;
+    gap: 4px;
+    border-radius: 8px;
+  }
+
+  .deckIcon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .utilityCount {
+    font-size: 11px;
+  }
+
+  .pileBtnGroup {
+    gap: 3px;
+  }
+
+  .energyOrb {
+    width: 44px;
+    height: 44px;
+    border-width: 2px;
+    border-radius: 14px;
+  }
+
+  .energyLabel {
+    font-size: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  .energyText {
+    font-size: 15px;
+  }
+
+  .energyMax {
+    font-size: 8px;
+    transform: translateY(-1px);
+  }
+
+  .handArea {
+    min-height: 140px;
+    padding: 2px 0 0;
+  }
+
+  .bottomSection .handTrack > :global(.card-item),
+  .bottomSection .handTrack :global(.card-item) {
+    margin: 0 2px;
+  }
+
+  .endTurnBtn {
+    min-width: 48px;
+    min-height: 40px;
+    padding: 6px 8px;
+    font-size: 11px;
+    border-radius: 10px;
+  }
+
+  .pileModal {
+    width: calc(100% - 16px);
+    max-width: 360px;
+    max-height: 70vh;
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .pileHeader {
+    margin-bottom: 10px;
+  }
+
+  .pileHeader h2 {
+    font-size: 15px;
+  }
+
+  .pileCloseBtn {
+    font-size: 18px;
+  }
+
+  .pileGrid {
+    gap: 6px;
+  }
+
+  .pileEmpty {
+    padding: 16px;
+    font-size: 12px;
+  }
+}
+
+@media (max-height: 760px) and (max-width: 900px) {
+  .combatScreen {
+    gap: 4px;
+  }
+
+  .battlefield {
+    padding-top: 0;
+  }
+
+  .handArea {
+    min-height: 140px;
+  }
+}
+
+@media (max-height: 540px) {
+  .combatScreen {
+    padding: 4px 4px 0;
+    gap: 3px;
+  }
+
+  .topInfo {
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 14px;
+  }
+
+  .infoChip {
+    min-height: 24px;
+    padding: 0 7px;
+    gap: 4px;
+    border-radius: 10px;
+  }
+
+  .infoChipLabel {
+    font-size: 8px;
+  }
+
+  .infoChipValue {
+    max-width: 112px;
+    font-size: 12px;
+  }
+
+  .battlefield {
+    padding: 0;
+    grid-template-columns: minmax(104px, 0.72fr) minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .playerArea {
+    gap: 4px;
+  }
+
+  .combatantPanel {
+    min-width: 102px;
+    padding: 6px 7px;
+    border-radius: 12px;
+    gap: 4px;
+  }
+
+  .playerPanel {
+    margin-left: 0;
+  }
+
+  .enemyPanel {
+    min-width: 94px;
+    margin-top: -4px;
+  }
+
+  .combatantLabel {
+    font-size: 8px;
+  }
+
+  .combatantName,
+  .enemyName {
+    font-size: 11px;
+  }
+
+  .playerArea .characterSprite,
+  .enemySprite {
+    width: 112px;
+    height: 112px;
+  }
+
+  .playerArea .characterImage,
+  .enemyImage {
+    width: 112%;
+    height: 112%;
+    transform: translateY(6px);
+  }
+
+  .enemyArea {
+    gap: 6px;
+    padding: 0 0 2px;
+  }
+
+  .enemyCard {
+    min-width: 92px;
+    gap: 4px;
+    padding: 14px 0 0;
+  }
+
+  .enemyCard::after {
+    bottom: 10px;
+    height: 12px;
+  }
+
+  .enemySelected::before {
+    inset: 16px 0 26px;
+    border-radius: 18px;
+  }
+
+  .enemyTargetBadge {
+    min-height: 22px;
+    padding: 0 8px;
+    font-size: 10px;
+  }
+
+  .enemyDropTarget::before {
+    inset: 12px 0 20px;
+    border-radius: 16px;
+  }
+
+  .enemyDropTargetBadge {
+    min-height: 18px;
+    padding: 0 7px;
+    font-size: 8px;
+  }
+
+  .enemyIntent {
+    min-height: 22px;
+    padding: 0 7px;
+    font-size: 10px;
+  }
+
+  .healthBar {
+    width: 88px;
+    height: 14px;
+    padding: 1px;
+  }
+
+  .healthBarText {
+    gap: 3px;
+    font-size: 8px;
+  }
+
+  .blockBadge {
+    min-height: 12px;
+    padding: 0 4px;
+    font-size: 7px;
+  }
+
+  .statusEffects {
+    gap: 3px;
+  }
+
+  .statusBadge {
+    min-height: 16px;
+    padding: 0 4px;
+    font-size: 7px;
+  }
+
+  .bottomSection {
+    gap: 3px;
+    padding: 0 2px calc(3px + env(safe-area-inset-bottom));
+  }
+
+  .deckIndicator,
+  .pileBtn {
+    min-height: 24px;
+    padding: 0 5px;
+    gap: 3px;
+    border-radius: 8px;
+  }
+
+  .deckIcon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .utilityCount {
+    font-size: 10px;
+  }
+
+  .energyOrb {
+    width: 38px;
+    height: 38px;
+    border-width: 2px;
+    border-radius: 12px;
+  }
+
+  .energyLabel {
+    font-size: 5px;
+  }
+
+  .energyText {
+    font-size: 13px;
+  }
+
+  .energyMax {
+    font-size: 7px;
+  }
+
+  .handArea {
+    min-height: 130px;
+    padding: 2px 0 0;
+  }
+
+  .bottomSection .handTrack > :global(.card-item),
+  .bottomSection .handTrack :global(.card-item) {
+    margin: 0 2px;
+  }
+
+  .endTurnBtn {
+    min-width: 42px;
+    min-height: 34px;
+    padding: 5px 6px;
+    font-size: 10px;
+    border-radius: 8px;
+  }
+}

@@ -28,11 +28,14 @@ const NODE_LABEL: Record<NodeType, string> = {
 
 export function MapScreen({ map, playerHp, playerMaxHp, deckSize, onSelectNode }: MapScreenProps) {
   const availableIds = getAvailableNodeIds(map);
+  const themeIndex = (map.mapIndex - 1) % 3;
+  const mapThemeClass = [styles.mapTheme1, styles.mapTheme2, styles.mapTheme3][themeIndex] ?? styles.mapTheme1;
 
   return (
-    <div className={styles.mapScreen}>
+    <div className={`${styles.mapScreen} ${mapThemeClass}`}>
       <div className={styles.mapHeader}>
         <span className={styles.headerStat}>❤️ {playerHp}/{playerMaxHp}</span>
+        <span className={styles.headerStat}>🗺️ 맵 {map.mapIndex}/{map.totalMaps}</span>
         <span className={styles.headerStat}>
           <img className={styles.headerIcon} src="/assets/ui/deck.png" alt="덱" />
           덱 {deckSize}장
@@ -84,7 +87,7 @@ function MapNodeButton({ node, isAvailable, isVisited, isCurrent, onSelect }: Ma
       disabled={!isAvailable}
       onClick={() => onSelect(node.id)}
     >
-      <span className={styles.nodeFloor}>R{node.round} · {node.roundFloor}F</span>
+      <span className={styles.nodeFloor}>{node.floor}F</span>
       <span className={styles.nodeIcon}>{NODE_ICON[node.type]}</span>
       <span className={styles.nodeLabel}>{NODE_LABEL[node.type]}</span>
     </button>

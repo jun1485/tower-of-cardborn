@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "generate:card-art": "node scripts/generate-card-art.mjs",
-    "generate:class-art": "node scripts/generate-class-art.mjs"
+    "generate:class-art": "node scripts/generate-class-art.mjs",
+    "generate:world-art": "node scripts/generate-world-art.mjs"
   },
   "dependencies": {
     "react": "^19.2.0",

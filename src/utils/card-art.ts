@@ -1,6 +1,7 @@
 const CARD_ART_DIRECTORY = '/assets/cards';
 const CARD_ART_PLACEHOLDER_FILE = 'placeholder.svg';
 const CARD_ART_EXTENSION = 'png';
+const CARD_ART_CACHE_VERSION = 'v4';
 const UPGRADE_SUFFIX = '+';
 
 function resolveBaseCardArtId(cardId: string): string {
@@ -11,13 +12,13 @@ function resolveBaseCardArtId(cardId: string): string {
 }
 
 export function getCardArtPath(cardId: string): string {
-  return `${CARD_ART_DIRECTORY}/${cardId}.${CARD_ART_EXTENSION}`;
+  return `${CARD_ART_DIRECTORY}/${cardId}.${CARD_ART_EXTENSION}?${CARD_ART_CACHE_VERSION}`;
 }
 
 export function getBaseCardArtPath(cardId: string): string {
-  return `${CARD_ART_DIRECTORY}/${resolveBaseCardArtId(cardId)}.${CARD_ART_EXTENSION}`;
+  return `${CARD_ART_DIRECTORY}/${resolveBaseCardArtId(cardId)}.${CARD_ART_EXTENSION}?${CARD_ART_CACHE_VERSION}`;
 }
 
 export function getCardArtPlaceholderPath(): string {
-  return `${CARD_ART_DIRECTORY}/${CARD_ART_PLACEHOLDER_FILE}`;
+  return `${CARD_ART_DIRECTORY}/${CARD_ART_PLACEHOLDER_FILE}?${CARD_ART_CACHE_VERSION}`;
 }

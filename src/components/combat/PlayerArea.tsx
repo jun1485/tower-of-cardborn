@@ -9,10 +9,10 @@ import { usePrevious } from '../../hooks/use-previous';
 import styles from '../../styles/combat.module.css';
 
 const CLASS_IMAGE: Record<CharacterClass, string> = {
-  warrior: '/assets/classes/warrior.png?v=4',
-  archer: '/assets/classes/archer.png?v=4',
-  mage: '/assets/classes/mage.png?v=4',
-  assassin: '/assets/classes/assassin.png?v=4',
+  warrior: '/assets/classes/warrior.png?v=7',
+  archer: '/assets/classes/archer.png?v=7',
+  mage: '/assets/classes/mage.png?v=7',
+  assassin: '/assets/classes/assassin.png?v=7',
 };
 
 const CLASS_ALT: Record<CharacterClass, string> = {
@@ -36,6 +36,20 @@ export function PlayerArea({ player, isAttacking, characterClass }: PlayerAreaPr
 
   return (
     <div className={`${styles.playerArea} ${isHit ? styles.shake : ''} ${isAttacking ? styles.playerLunge : ''}`}>
+      <div className={`${styles.combatantPanel} ${styles.playerPanel}`}>
+        <div className={styles.combatantHeader}>
+          <span className={styles.combatantLabel}>플레이어</span>
+          <strong className={styles.combatantName}>{CLASS_ALT[characterClass]}</strong>
+        </div>
+        <HealthBar hp={player.hp} maxHp={player.maxHp} block={player.block} />
+        {player.statusEffects.length > 0 && (
+          <div className={styles.statusEffects}>
+            {player.statusEffects.map((effect, i) => (
+              <StatusBadge key={i} effect={effect} />
+            ))}
+          </div>
+        )}
+      </div>
       <div className={styles.characterSprite}>
         <img className={styles.characterImage} src={CLASS_IMAGE[characterClass]} alt={CLASS_ALT[characterClass]} />
         <FloatingNumber currentValue={player.hp} previousValue={prevHp} mode="hp" />
@@ -45,14 +59,6 @@ export function PlayerArea({ player, isAttacking, characterClass }: PlayerAreaPr
           </span>
         )}
       </div>
-      <HealthBar hp={player.hp} maxHp={player.maxHp} block={player.block} />
-      {player.statusEffects.length > 0 && (
-        <div className={styles.statusEffects}>
-          {player.statusEffects.map((effect, i) => (
-            <StatusBadge key={i} effect={effect} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }

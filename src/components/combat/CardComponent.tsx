@@ -11,7 +11,7 @@ interface CardComponentProps {
   readonly canPlay: boolean;
   readonly isDragging: boolean;
   readonly previewDescription?: string;
-  readonly onDragStart: (instanceId: string, x: number, y: number) => void;
+  readonly onDragStart: (instanceId: string, x: number, y: number, pointerId: number) => void;
 }
 
 /** 카드 효과에서 키워드 설명 추출 */
@@ -45,12 +45,12 @@ export function CardComponent({
   const handlePointerDown = (e: ReactPointerEvent) => {
     if (!canPlay) return;
     e.preventDefault();
-    onDragStart(instanceId, e.clientX, e.clientY);
+    onDragStart(instanceId, e.clientX, e.clientY, e.pointerId);
   };
 
   return (
     <div
-      className={`${styles.card} card-item ${typeClass} ${canPlay ? '' : styles.cardDisabled} ${isDragging ? styles.cardDragging : ''}`}
+      className={`${styles.card} card-item ${typeClass} ${canPlay ? '' : styles.cardDisabled} ${isDragging ? `${styles.cardDragging} card-dragging` : ''}`}
       onPointerDown={handlePointerDown}
     >
       <div className={styles.cardCost}>{definition.cost}</div>

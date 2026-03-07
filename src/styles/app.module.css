@@ -5,8 +5,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  height: 100%;
   gap: 32px;
+  padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+  background: radial-gradient(circle at 50% 40%, #201a30 0%, #0d0c14 70%, #050508 100%);
+  position: relative;
+  overflow: hidden;
 }
 
 .title {
@@ -25,17 +29,22 @@
 
 .startBtn {
   padding: 16px 48px;
-  font-size: 20px;
-  font-weight: bold;
-  background: var(--color-accent);
-  color: var(--color-text);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, var(--color-accent), #8c1d30);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
-  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 15px rgba(194, 46, 71, 0.4);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
 }
 
 .startBtn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(233, 69, 96, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* 직업 선택 */
@@ -44,29 +53,35 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 24px;
+  width: 100%;
+  max-width: 900px;
+  padding: 0 16px;
 }
 
 .classCard {
   width: 280px;
-  min-height: 210px;
+  min-height: 220px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 28px 36px;
-  background: var(--color-surface);
-  border: 2px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
+  gap: 12px;
+  padding: 32px 36px;
+  background: linear-gradient(135deg, rgba(35, 38, 52, 0.8) 0%, rgba(20, 22, 30, 0.9) 100%);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
   color: var(--color-text);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  transition: all 0.2s ease;
 }
 
 .classCard:hover {
   transform: translateY(-6px);
   border-color: var(--color-accent);
-  box-shadow: 0 8px 24px rgba(233, 69, 96, 0.3);
+  box-shadow: 0 12px 30px rgba(194, 46, 71, 0.4);
+  background: linear-gradient(135deg, rgba(45, 48, 62, 0.9) 0%, rgba(25, 27, 35, 1) 100%);
 }
 
 .classIcon {
@@ -98,8 +113,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  gap: 24px;
+  height: 100%;
+  gap: 20px;
+  padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+  background: radial-gradient(circle at 50% 50%, #1c1a24 0%, #0a0a0f 100%);
+  position: relative;
+  overflow-y: auto;
 }
 
 .resultTitle {
@@ -123,6 +142,7 @@
   color: var(--color-text);
   border-radius: 8px;
   transition: background 0.15s;
+  flex-shrink: 0;
 }
 
 .resultBtn:hover {
@@ -132,9 +152,12 @@
 /* 보상 카드 선택 영역 */
 .rewardCards {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   justify-content: center;
   padding: 16px;
+  width: 100%;
+  max-width: 720px;
 }
 
 .rewardCard {
@@ -153,20 +176,21 @@
   gap: 12px;
   justify-content: center;
   padding: 16px;
+  width: 100%;
   max-width: 800px;
   max-height: 60vh;
   overflow-y: auto;
 }
 
 .upgradeCard {
-  width: 156px;
-  min-height: 252px;
-  border-radius: 8px;
-  padding: 9px;
+  width: 196px;
+  min-height: 360px;
+  border-radius: 12px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 7px;
+  gap: 10px;
   color: var(--color-text);
   border: 2px solid rgba(255, 255, 255, 0.15);
   cursor: pointer;
@@ -198,5 +222,179 @@
   font-size: 11px;
   color: rgba(255, 255, 255, 0.4);
   margin-top: auto;
+}
+
+/* 모바일 대응 (900px 이하) */
+@media (max-width: 900px) {
+  .titleScreen {
+    gap: 24px;
+    padding: 20px 12px calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .title {
+    font-size: 36px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .startBtn {
+    padding: 14px 32px;
+    font-size: 18px;
+    letter-spacing: 1.5px;
+  }
+
+  .classSelection {
+    gap: 16px;
+    padding: 0 8px;
+  }
+
+  .classCard {
+    width: 240px;
+    min-height: 180px;
+    padding: 24px 28px;
+    gap: 10px;
+  }
+
+  .classIcon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .className {
+    font-size: 17px;
+  }
+
+  .resultScreen {
+    gap: 16px;
+    padding: 20px 12px calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .resultTitle {
+    font-size: 36px;
+  }
+
+  .resultBtn {
+    padding: 12px 28px;
+    font-size: 14px;
+  }
+
+  .rewardCards {
+    gap: 12px;
+    padding: 8px;
+  }
+
+  .upgradeGrid {
+    gap: 10px;
+    padding: 8px;
+    max-height: 55vh;
+  }
+
+  .upgradeCard {
+    width: 140px;
+    min-height: 260px;
+    padding: 8px;
+    gap: 6px;
+    border-radius: 10px;
+  }
+
+  .upgradePreview {
+    font-size: 9px;
+    padding-top: 4px;
+  }
+
+  .upgradeAlready {
+    font-size: 9px;
+  }
+}
+
+/* 모바일 대응 (640px 이하) */
+@media (max-width: 640px) {
+  .titleScreen {
+    gap: 20px;
+    padding: 16px 10px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .startBtn {
+    padding: 12px 24px;
+    font-size: 16px;
+    letter-spacing: 1px;
+    width: calc(100% - 32px);
+    max-width: 320px;
+  }
+
+  .classSelection {
+    gap: 12px;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .classCard {
+    width: 100%;
+    max-width: 280px;
+    min-height: auto;
+    padding: 20px 24px;
+    flex-direction: row;
+    gap: 14px;
+  }
+
+  .classIcon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .className {
+    font-size: 15px;
+  }
+
+  .classDeck {
+    font-size: 11px;
+    min-height: auto;
+    text-align: left;
+    justify-content: flex-start;
+  }
+
+  .resultScreen {
+    gap: 14px;
+    padding: 16px 10px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .resultTitle {
+    font-size: 28px;
+  }
+
+  .resultBtn {
+    padding: 11px 24px;
+    font-size: 13px;
+    width: calc(100% - 32px);
+    max-width: 280px;
+  }
+
+  .rewardCards {
+    gap: 8px;
+    padding: 4px;
+  }
+
+  .upgradeGrid {
+    gap: 8px;
+    padding: 4px;
+    max-height: 50vh;
+  }
+
+  .upgradeCard {
+    width: 120px;
+    min-height: 220px;
+    padding: 6px;
+    gap: 4px;
+  }
+
+  .upgradePreview {
+    font-size: 8px;
+  }
 }
 

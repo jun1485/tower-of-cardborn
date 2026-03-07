@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
+
 /* 글로벌 스타일 */
 
 * {
@@ -7,34 +9,64 @@
 }
 
 :root {
-  --color-bg: #1a1a2e;
-  --color-surface: #16213e;
-  --color-primary: #0f3460;
-  --color-accent: #e94560;
-  --color-text: #eee;
-  --color-text-dim: #999;
-  --color-hp: #e94560;
-  --color-hp-bg: #4a1a2e;
-  --color-block: #4fc3f7;
-  --color-energy: #ffd54f;
-  --color-attack: #c62828;
-  --color-skill: #1565c0;
-  --color-victory: #4caf50;
-  --color-defeat: #e94560;
+  --color-bg: #0f1015;
+  --color-surface: #1a1c24;
+  --color-primary: #194a82;
+  --color-accent: #c22e47;
+  --color-text: #f0f0f5;
+  --color-text-dim: #9aa0aa;
+  --color-hp: #ff4757;
+  --color-hp-bg: #2f3542;
+  --color-block: #3dc1d3;
+  --color-energy: #ffa502;
+  --color-attack: #c23616;
+  --color-skill: #0097e6;
+  --color-victory: #4cd137;
+  --color-defeat: #e84118;
   --cursor-game: url('/assets/ui/cursor-hero.svg') 11 10, auto;
 }
 
-html, body, #root {
+html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
 
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 태블릿 이상: 4:3 비율 고정 + 중앙 정렬 */
+@media (min-width: 768px) and (min-height: 600px) {
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #root {
+    width: min(100vw, calc(100vh * 4 / 3));
+    width: min(100vw, calc(100dvh * 4 / 3));
+    height: min(100vh, calc(100vw * 3 / 4));
+    height: min(100dvh, calc(100vw * 3 / 4));
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+  }
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
 body {
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: 'Outfit', 'Segoe UI', system-ui, -apple-system, sans-serif;
   background-color: var(--color-bg);
   color: var(--color-text);
   cursor: var(--cursor-game);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
 }
 
 button {
@@ -92,4 +124,18 @@ button:disabled {
 
 .card-list .card-item:has(+ .card-item + .card-item:hover) {
   transform: translateX(calc(var(--card-push-far) * -1));
+}
+
+@media (hover: none) {
+  .card-list .card-item:hover,
+  .card-list .card-item:hover + .card-item,
+  .card-list .card-item:has(+ .card-item:hover),
+  .card-list .card-item:hover + .card-item + .card-item,
+  .card-list .card-item:has(+ .card-item + .card-item:hover) {
+    transform: none;
+  }
+
+  .card-list .card-item:hover {
+    z-index: auto;
+  }
 }

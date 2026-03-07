@@ -10,7 +10,11 @@ interface EnergyDisplayProps {
 export function EnergyDisplay({ energy, maxEnergy }: EnergyDisplayProps) {
   return (
     <div className={styles.energyOrb}>
-      <span className={styles.energyText}>{energy}/{maxEnergy}</span>
+      <span className={styles.energyLabel}>에너지</span>
+      <div className={styles.energyValueGroup}>
+        <span className={styles.energyText}>{energy}</span>
+        <span className={styles.energyMax}>/{maxEnergy}</span>
+      </div>
     </div>
   );
 }

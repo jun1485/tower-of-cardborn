@@ -1,40 +1,27 @@
-// 맵 생성: 10층 x 3라운드 구조 (일반전투 / 엘리트 / 휴식 / 보스)
+// 맵 생성: 10층 단일 맵 구조 (일반전투 / 엘리트 / 휴식 / 보스)
 
 import type { GameMap, MapNode, NodeType } from '../types/map';
 import { NORMAL_ENCOUNTERS, ELITE_ENCOUNTERS, BOSS_ENCOUNTERS } from '../data/enemies';
 import { generateId } from '../utils/random';
 
-const FLOORS_PER_ROUND = 10;
-const TOTAL_ROUNDS = 3;
-const TOTAL_FLOORS = FLOORS_PER_ROUND * TOTAL_ROUNDS;
-
-interface RoundPosition {
-  readonly round: number;
-  readonly roundFloor: number;
-}
-
-function getRoundPosition(floor: number): RoundPosition {
-  const zeroBasedFloor = floor - 1;
-  const round = Math.floor(zeroBasedFloor / FLOORS_PER_ROUND) + 1;
-  const roundFloor = (zeroBasedFloor % FLOORS_PER_ROUND) + 1;
-  return { round, roundFloor };
-}
+export const FLOORS_PER_MAP = 10;
+export const DEFAULT_TOTAL_MAPS = 3;
 
 /** 층별 노드 타입 결정 규칙 */
 function getNodeType(floor: number): NodeType {
-  const { roundFloor } = getRoundPosition(floor);
-  if (roundFloor === FLOORS_PER_ROUND) return 'boss';
-  if (roundFloor === 5) return 'elite';
-  if (roundFloor === 7) return 'rest';
+  if (floor === FLOORS_PER_MAP) return 'boss';
+  if (floor === 5) return 'elite';
+  if (floor === 7) return 'rest';
   return 'combat';
 }
 
-/** 노드 타입에 맞는 적 ID 목록 선택 */
-function pickEnemies(type: NodeType, floor: number): string[] {
+/** 노드 타입 기반 적 목록 선택 */
+function pickEnemies(type: NodeType, mapIndex: number, floor: number): string[] {
+  const progressionFloor = (mapIndex - 1) * FLOORS_PER_MAP + floor;
   switch (type) {
     case 'combat': {
       const pool = NORMAL_ENCOUNTERS;
-      const maxGroupSize = floor >= 10 ? 3 : floor >= 4 ? 2 : 1;
+      const maxGroupSize = progressionFloor >= 10 ? 3 : progressionFloor >= 4 ? 2 : 1;
       const sizedPool = pool.filter((encounter) => encounter.length <= maxGroupSize);
       const targetPool = sizedPool.length > 0 ? sizedPool : pool;
       return [...targetPool[Math.floor(Math.random() * targetPool.length)]];
@@ -52,23 +39,19 @@ function pickEnemies(type: NodeType, floor: number): string[] {
   }
 }
 
-/** 10층 x 3라운드 직선 맵 생성 */
-export function generateMap(): GameMap {
-  // ID를 미리 생성하여 nextNodeIds 연결에 사용
-  const ids = Array.from({ length: TOTAL_FLOORS }, () => generateId());
+/** 10층 직선 맵 생성 */
+export function generateMap(mapIndex = 1, totalMaps = DEFAULT_TOTAL_MAPS): GameMap {
+  const ids = Array.from({ length: FLOORS_PER_MAP }, () => generateId());
 
   const nodes: MapNode[] = ids.map((id, i) => {
     const floor = i + 1;
-    const { round, roundFloor } = getRoundPosition(floor);
     const type = getNodeType(floor);
     return {
       id,
       floor,
-      round,
-      roundFloor,
       type,
-      nextNodeIds: i < TOTAL_FLOORS - 1 ? [ids[i + 1]] : [],
-      enemyIds: pickEnemies(type, floor),
+      nextNodeIds: i < FLOORS_PER_MAP - 1 ? [ids[i + 1]] : [],
+      enemyIds: pickEnemies(type, mapIndex, floor),
     };
   });
 
@@ -76,17 +59,18 @@ export function generateMap(): GameMap {
     nodes,
     currentNodeId: null,
     visitedNodeIds: [],
-    totalFloors: TOTAL_FLOORS,
+    mapIndex,
+    totalMaps,
+    totalFloorsPerMap: FLOORS_PER_MAP,
   };
 }
 
 /** 현재 선택 가능한 노드 ID 목록 */
 export function getAvailableNodeIds(map: GameMap): string[] {
-  // 첫 진입: 1층 노드만 선택 가능
   if (!map.currentNodeId) {
-    return map.nodes.filter((n) => n.floor === 1).map((n) => n.id);
+    return map.nodes.filter((node) => node.floor === 1).map((node) => node.id);
   }
-  const current = map.nodes.find((n) => n.id === map.currentNodeId);
+  const current = map.nodes.find((node) => node.id === map.currentNodeId);
   if (!current) return [];
   return [...current.nextNodeIds];
 }

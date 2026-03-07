@@ -17,13 +17,13 @@ interface EnemyAreaProps {
 }
 
 const ENEMY_IMAGE: Record<string, string> = {
-  jaw_worm: '/assets/monsters/jaw_worm.png',
-  cultist: '/assets/monsters/cultist.png',
-  louse_red: '/assets/monsters/louse_red.png',
-  fungi_beast: '/assets/monsters/fungi_beast.png',
-  gremlin_nob: '/assets/monsters/gremlin_nob.png',
-  lagavulin: '/assets/monsters/lagavulin.png',
-  slime_boss: '/assets/monsters/slime_boss.png',
+  jaw_worm: '/assets/monsters/jaw_worm_hd.png?v=6',
+  cultist: '/assets/monsters/cultist_hd.png?v=6',
+  louse_red: '/assets/monsters/louse_red_hd.png?v=6',
+  fungi_beast: '/assets/monsters/fungi_beast_hd.png?v=6',
+  gremlin_nob: '/assets/monsters/gremlin_nob_hd.png?v=6',
+  lagavulin: '/assets/monsters/lagavulin_hd.png?v=6',
+  slime_boss: '/assets/monsters/slime_boss_hd.png?v=6',
 };
 
 export function EnemyArea({
@@ -76,7 +76,10 @@ function EnemyCard({
 }: EnemyCardProps) {
   const prevHp = usePrevious(enemy.hp);
   const isHit = prevHp > enemy.hp;
-  const enemyImage = ENEMY_IMAGE[enemy.definitionId] ?? '/assets/monsters/jaw_worm.png';
+  const enemyImage = ENEMY_IMAGE[enemy.definitionId] ?? '/assets/monsters/jaw_worm_hd.png?v=6';
+  const enemySpriteClassName = `${styles.characterSprite} ${styles.enemySprite}`;
+  const enemyImageClassName = `${styles.characterImage} ${styles.enemyImage}`;
+  const showTargetBadge = targetSelectable && selected;
   const className = [
     styles.enemyCard,
     isHit ? styles.shake : '',
@@ -92,24 +95,31 @@ function EnemyCard({
       data-enemy-id={enemy.id}
       onClick={() => targetSelectable && onSelectEnemy(enemy.id)}
     >
+      {showTargetBadge && <div className={styles.enemyTargetBadge}>타겟</div>}
+      {targetingActive && hovered && <div className={styles.enemyDropTargetBadge}>🎯</div>}
       <div className={styles.enemyIntent}>
         {enemy.intent.type === 'attack' && `⚔️ ${getDisplayedAttack(enemy)}`}
         {enemy.intent.type === 'defend' && `🛡 ${enemy.intent.value}`}
         {enemy.intent.type === 'buff' && `⬆️`}
       </div>
-      <div className={styles.characterSprite}>
-        <img className={styles.characterImage} src={enemyImage} alt={enemy.name} />
+      <div className={enemySpriteClassName}>
+        <img className={enemyImageClassName} src={enemyImage} alt={enemy.name} />
         <FloatingNumber currentValue={enemy.hp} previousValue={prevHp} mode="damage" />
       </div>
-      <div className={styles.enemyName}>{enemy.name}</div>
-      <HealthBar hp={enemy.hp} maxHp={enemy.maxHp} block={enemy.block} />
-      {enemy.statusEffects.length > 0 && (
-        <div className={styles.statusEffects}>
-          {enemy.statusEffects.map((effect, i) => (
-            <StatusBadge key={i} effect={effect} />
-          ))}
+      <div className={`${styles.combatantPanel} ${styles.enemyPanel}`}>
+        <div className={styles.combatantHeader}>
+          <span className={styles.combatantLabel}>적</span>
+          <strong className={`${styles.combatantName} ${styles.enemyName}`}>{enemy.name}</strong>
         </div>
-      )}
+        <HealthBar hp={enemy.hp} maxHp={enemy.maxHp} block={enemy.block} />
+        {enemy.statusEffects.length > 0 && (
+          <div className={styles.statusEffects}>
+            {enemy.statusEffects.map((effect, i) => (
+              <StatusBadge key={i} effect={effect} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

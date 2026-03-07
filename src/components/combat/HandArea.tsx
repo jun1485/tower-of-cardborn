@@ -14,7 +14,7 @@ interface HandAreaProps {
   readonly enemies: readonly Enemy[];
   readonly targetEnemyId: string | undefined;
   readonly draggingInstanceId: string | null;
-  readonly onDragStart: (instanceId: string, x: number, y: number) => void;
+  readonly onDragStart: (instanceId: string, x: number, y: number, pointerId: number) => void;
 }
 
 export function HandArea({
@@ -28,22 +28,24 @@ export function HandArea({
 }: HandAreaProps) {
   return (
     <div className={`${styles.handArea} card-list card-list-overlap`}>
-      {hand.map((card) => {
-        const definition = CARD_DEFINITIONS[card.definitionId];
-        if (!definition) return null;
-        const previewDescription = getPreviewDescription(definition, playerStatusEffects, enemies, targetEnemyId);
-        return (
-          <CardComponent
-            key={card.instanceId}
-            instanceId={card.instanceId}
-            definition={definition}
-            canPlay={energy >= definition.cost}
-            isDragging={draggingInstanceId === card.instanceId}
-            previewDescription={previewDescription}
-            onDragStart={onDragStart}
-          />
-        );
-      })}
+      <div className={styles.handTrack}>
+        {hand.map((card) => {
+          const definition = CARD_DEFINITIONS[card.definitionId];
+          if (!definition) return null;
+          const previewDescription = getPreviewDescription(definition, playerStatusEffects, enemies, targetEnemyId);
+          return (
+            <CardComponent
+              key={card.instanceId}
+              instanceId={card.instanceId}
+              definition={definition}
+              canPlay={energy >= definition.cost}
+              isDragging={draggingInstanceId === card.instanceId}
+              previewDescription={previewDescription}
+              onDragStart={onDragStart}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

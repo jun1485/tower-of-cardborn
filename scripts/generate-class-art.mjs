@@ -9,27 +9,51 @@ const projectRoot = process.cwd();
 const outputDirectory = path.join(projectRoot, 'public', 'assets', 'classes');
 const defaultModel = 'gemini-3-pro-image-preview';
 const defaultDelayMs = 1200;
+const defaultStylePreset = 'cute-pixel';
+
+const stylePresets = {
+  'cute-pixel': {
+    label: '귀여운 도트',
+    lines: [
+      'STRICT PIXEL ART ONLY. Cute pixel-art hero sprite for a turn-based card roguelike game.',
+      'Single hero full body centered, iconic silhouette, readable at small size.',
+      'Super-deformed chibi proportion, visible hard-edged pixel clusters, limited palette, retro 16-bit JRPG vibe.',
+      'Adorable facial expression, friendly pose, playful adventure mood.',
+      'No anti-aliasing, no painterly brush, no realistic shading, no photorealistic detail.',
+      'No text, no logo, no watermark, no extra characters, clean plain backdrop.',
+    ],
+  },
+  'painterly-dark': {
+    label: '다크 페인터리',
+    lines: [
+      'Stylized dark-fantasy character concept art for a deckbuilding roguelike game.',
+      'One single hero character centered in frame, full body visible, dynamic but readable silhouette.',
+      'Painterly brush strokes, strong contrast, rim lighting, dramatic mood.',
+      'No text, no logo, no UI frame, no watermark, no extra characters, simple subtle background.',
+    ],
+  },
+};
 
 const classConfigs = {
   warrior: {
     label: '전사',
-    subject: 'battle-hardened knight with heavy armor, broad shoulders, massive sword',
-    palette: 'steel gray, muted crimson accents',
+    subject: 'same chibi warrior heroine, short dark-brown hair, red scarf, steel armor, round shield, broad sword',
+    palette: 'steel gray armor, warm crimson scarf accents',
   },
   archer: {
     label: '궁수',
-    subject: 'swift ranger with layered leather armor, recurved bow, poised stance',
-    palette: 'forest green, bronze accents',
+    subject: 'same chibi archer heroine, short light-brown hair, green hooded cloak, leather tunic, wooden bow',
+    palette: 'forest green cloak, tan leather, warm daylight accents',
   },
   mage: {
     label: '마법사',
-    subject: 'arcane sorcerer with runic robes, glowing staff, mystical aura',
-    palette: 'indigo blue, cyan magical highlights',
+    subject: 'same chibi mage heroine, silver-blue bob hair, navy rune robe, glowing staff with blue crystal',
+    palette: 'indigo robe, cyan rune glow',
   },
   assassin: {
     label: '암살자',
-    subject: 'shadow assassin with hooded cloak, dual daggers, silent lethal posture',
-    palette: 'dark charcoal, deep violet accents',
+    subject: 'same chibi assassin heroine, dark violet short hair, black hooded outfit, twin daggers, crimson sash',
+    palette: 'charcoal black outfit, violet and crimson accents',
   },
 };
 
@@ -54,6 +78,8 @@ async function main() {
     }
 
     const model = process.env.GOOGLE_IMAGE_MODEL ?? defaultModel;
+    const stylePreset = options.style ?? process.env.CLASS_ART_STYLE ?? defaultStylePreset;
+    assertStylePreset(stylePreset, 'CLASS_ART_STYLE');
     const delayMs = parseNonNegativeNumber(process.env.CLASS_ART_DELAY_MS) ?? defaultDelayMs;
     const aspectRatio = process.env.CLASS_ART_ASPECT_RATIO ?? '3:4';
     const imageSize = process.env.CLASS_ART_IMAGE_SIZE ?? process.env.CARD_ART_IMAGE_SIZE ?? '1K';
@@ -68,6 +94,7 @@ async function main() {
 
     console.log(`클래스 아트 생성 시작: 총 ${classIds.length}개`);
     console.log(`모델: ${model}`);
+    console.log(`스타일: ${stylePresets[stylePreset].label} (${stylePreset})`);
     console.log(`비율: ${aspectRatio}`);
     console.log(`누끼 처리: ${options.cutout ? '활성' : '비활성'}`);
     console.log(`저장 경로: ${path.relative(projectRoot, outputDirectory)}`);
@@ -90,7 +117,7 @@ async function main() {
       console.log(`[${index + 1}/${classIds.length}] 생성 중: ${classId} (${config.label})`);
 
       try {
-        const prompt = createPrompt(config);
+        const prompt = createPrompt(config, stylePreset);
         const base64Data = await generateImage({
           apiKey,
           model,
@@ -136,6 +163,7 @@ function parseCliOptions(args) {
     help: false,
     ids: null,
     cutout: true,
+    style: null,
   };
 
   for (const arg of args) {
@@ -165,6 +193,12 @@ function parseCliOptions(args) {
       parsed.cutout = false;
       continue;
     }
+    if (arg.startsWith('--style=')) {
+      const style = arg.slice('--style='.length).trim();
+      assertStylePreset(style, '--style');
+      parsed.style = style;
+      continue;
+    }
     throw new Error(`오류: 지원하지 않는 옵션입니다. (${arg})`);
   }
 
@@ -177,6 +211,7 @@ function printHelp() {
   console.log('필수 환경 변수: GOOGLE_AI_STUDIO_API_KEY');
   console.log('--force         : 기존 파일 덮어쓰기');
   console.log('--ids=a,b,c     : 특정 클래스만 생성 (warrior, archer, mage, assassin)');
+  console.log(`--style=스타일  : 스타일 프리셋 (${Object.keys(stylePresets).join(', ')})`);
   console.log('--cutout        : 배경 제거 강제 활성');
   console.log('--no-cutout     : 배경 제거 비활성');
   console.log('--help          : 도움말 출력');
@@ -224,17 +259,21 @@ function fileExists(filePath) {
   }
 }
 
-function createPrompt(config) {
+function createPrompt(config, stylePreset) {
+  const preset = stylePresets[stylePreset];
   return [
-    'Stylized dark-fantasy character concept art for a deckbuilding roguelike game.',
-    'One single hero character centered in frame, full body visible, dynamic but readable silhouette.',
-    'Painterly brush strokes, strong contrast, rim lighting, dramatic mood.',
+    ...preset.lines,
     `Character archetype: ${config.subject}.`,
     `Color direction: ${config.palette}.`,
     'Pose should feel iconic and recognizable at small thumbnail size.',
-    'No text, no logo, no UI frame, no watermark, no extra characters.',
-    'Simple subtle background, character readability prioritized.',
   ].join('\n');
+}
+
+function assertStylePreset(stylePreset, sourceLabel) {
+  if (Object.prototype.hasOwnProperty.call(stylePresets, stylePreset)) {
+    return;
+  }
+  throw new Error(`오류: ${sourceLabel} 값은 ${Object.keys(stylePresets).join('/')} 중 하나여야 합니다.`);
 }
 
 async function applyCutout(filePath) {

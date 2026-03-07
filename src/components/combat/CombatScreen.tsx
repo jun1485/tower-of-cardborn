@@ -69,6 +69,8 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
   const [selectedEnemyId, setSelectedEnemyId] = useState<string | null>(combat.enemies[0]?.id ?? null);
   const [hoveredEnemyId, setHoveredEnemyId] = useState<string | null>(null);
   const dragRef = useRef<DragState | null>(null);
+  const dragPointerIdRef = useRef<number | null>(null);
+  const screenRef = useRef<HTMLDivElement>(null);
   const bottomAreaRef = useRef<HTMLDivElement>(null);
   const [viewingPile, setViewingPile] = useState<PileType>(null);
 
@@ -109,14 +111,27 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
   // #endregion
 
   // #region 드래그 시작/이동/종료
-  const handleDragStart = useCallback((instanceId: string, x: number, y: number) => {
+  const handleDragStart = useCallback((instanceId: string, x: number, y: number, pointerId: number) => {
     const state: DragState = { instanceId, x, y, startX: x, startY: y };
     setDrag(state);
     dragRef.current = state;
+    dragPointerIdRef.current = pointerId;
+    // 전체 화면에 포인터 캡처 설정 (터치 드래그 중 pointercancel 방지)
+    screenRef.current?.setPointerCapture(pointerId);
   }, []);
 
   useEffect(() => {
     if (!drag) return;
+
+    const clearDragState = () => {
+      if (dragPointerIdRef.current != null && screenRef.current) {
+        try { screenRef.current.releasePointerCapture(dragPointerIdRef.current); } catch { /* 이미 해제됨 */ }
+      }
+      dragPointerIdRef.current = null;
+      setDrag(null);
+      setHoveredEnemyId(null);
+      dragRef.current = null;
+    };
 
     const handlePointerMove = (e: PointerEvent) => {
       const next: DragState = { ...dragRef.current!, x: e.clientX, y: e.clientY };
@@ -143,9 +158,7 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
         const card = combat.hand.find((c) => c.instanceId === current.instanceId);
         const def = card ? CARD_DEFINITIONS[card.definitionId] : null;
         if (!def) {
-          setDrag(null);
-          setHoveredEnemyId(null);
-          dragRef.current = null;
+          clearDragState();
           return;
         }
         const pointTargetEnemyId = resolveEnemyIdFromPoint(e.clientX, e.clientY);
@@ -166,16 +179,21 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
         }
       }
 
-      setDrag(null);
-      setHoveredEnemyId(null);
-      dragRef.current = null;
+      clearDragState();
     };
 
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerUp);
+    const handlePointerCancel = () => {
+      clearDragState();
+    };
+
+    const el = screenRef.current ?? window;
+    el.addEventListener('pointermove', handlePointerMove as EventListener);
+    el.addEventListener('pointerup', handlePointerUp as EventListener);
+    el.addEventListener('pointercancel', handlePointerCancel as EventListener);
     return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
+      el.removeEventListener('pointermove', handlePointerMove as EventListener);
+      el.removeEventListener('pointerup', handlePointerUp as EventListener);
+      el.removeEventListener('pointercancel', handlePointerCancel as EventListener);
     };
   }, [drag !== null, combat.enemies, combat.hand, onPlayCard, selectedEnemyId, hoveredEnemyId]);
   // #endregion
@@ -207,16 +225,20 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
   const typeMap = { attack: cardStyles.cardAttack, skill: cardStyles.cardSkill, power: cardStyles.cardPower };
 
   return (
-    <div className={styles.combatScreen}>
-      <div className={styles.topInfo}>
-        <span>턴 {combat.turn}</span>
-        {targetSelectable && <span>타겟: {selectedEnemyName}</span>}
-        <button className={styles.pileBtn} onClick={() => setViewingPile('discard')}>
-          버린 카드: {combat.discardPile.length}
-        </button>
-        <button className={styles.pileBtn} onClick={() => setViewingPile('exhaust')}>
-          소멸: {combat.exhaustPile.length}
-        </button>
+    <div className={styles.combatScreen} ref={screenRef} style={drag ? { touchAction: 'none' } : undefined}>
+      <div className={styles.topSection}>
+        <div className={styles.topInfo}>
+          <div className={`${styles.infoChip} ${styles.infoChipPrimary}`}>
+            <span className={styles.infoChipLabel}>턴</span>
+            <strong className={styles.infoChipValue}>{combat.turn}</strong>
+          </div>
+          {targetSelectable && (
+            <div className={styles.infoChip}>
+              <span className={styles.infoChipLabel}>타겟</span>
+              <strong className={styles.infoChipValue}>{selectedEnemyName}</strong>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className={styles.battlefield}>
@@ -231,10 +253,10 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
         />
       </div>
 
-      <div className={styles.bottomSection}>
+      <div className={styles.bottomSection} ref={bottomAreaRef}>
         <button className={styles.deckIndicator} onClick={() => setViewingPile('draw')}>
           <img className={styles.deckIcon} src="/assets/ui/deck.png" alt="덱" />
-          <span className={styles.deckCount}>{combat.drawPile.length}</span>
+          <strong className={styles.utilityCount}>{combat.drawPile.length}</strong>
           <div className={styles.deckTooltip}>
             {combat.drawPile.length === 0
               ? <span>카드 없음</span>
@@ -244,19 +266,29 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
             }
           </div>
         </button>
-        <div className={styles.bottomArea} ref={bottomAreaRef}>
-          <EnergyDisplay energy={combat.player.energy} maxEnergy={combat.player.maxEnergy} />
-          <HandArea
-            hand={combat.hand}
-            energy={combat.player.energy}
-            playerStatusEffects={combat.player.statusEffects}
-            enemies={combat.enemies}
-            targetEnemyId={selectedEnemyId ?? undefined}
-            draggingInstanceId={drag?.instanceId ?? null}
-            onDragStart={handleDragStart}
-          />
-          <button className={styles.endTurnBtn} onClick={onEndTurn}>
-            턴 종료
+
+        <EnergyDisplay energy={combat.player.energy} maxEnergy={combat.player.maxEnergy} />
+
+        <HandArea
+          hand={combat.hand}
+          energy={combat.player.energy}
+          playerStatusEffects={combat.player.statusEffects}
+          enemies={combat.enemies}
+          targetEnemyId={selectedEnemyId ?? undefined}
+          draggingInstanceId={drag?.instanceId ?? null}
+          onDragStart={handleDragStart}
+        />
+
+        <button className={styles.endTurnBtn} onClick={onEndTurn}>
+          턴 종료
+        </button>
+
+        <div className={styles.pileBtnGroup}>
+          <button className={styles.pileBtn} onClick={() => setViewingPile('discard')}>
+            <strong className={styles.utilityCount}>{combat.discardPile.length}</strong>
+          </button>
+          <button className={styles.pileBtn} onClick={() => setViewingPile('exhaust')}>
+            <strong className={styles.utilityCount}>{combat.exhaustPile.length}</strong>
           </button>
         </div>
       </div>

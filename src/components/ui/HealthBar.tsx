@@ -1,6 +1,6 @@
 // HP 바 공용 컴포넌트
 
-import styles from '../../styles/combat.module.css';
+import styles from "../../styles/combat.module.css";
 
 interface HealthBarProps {
   readonly hp: number;
@@ -13,10 +13,13 @@ export function HealthBar({ hp, maxHp, block }: HealthBarProps) {
 
   return (
     <div className={styles.healthBar}>
-      <div className={styles.healthBarFill} style={{ width: `${percentage}%` }} />
+      <div
+        className={styles.healthBarFill}
+        style={{ width: `${percentage}%` }}
+      />
       <span className={styles.healthBarText}>
         {hp}/{maxHp}
-        {block > 0 && <span className={styles.blockBadge}> 🛡{block}</span>}
+        {block > 0 && <span className={styles.blockBadge}>방어 {block}</span>}
       </span>
     </div>
   );

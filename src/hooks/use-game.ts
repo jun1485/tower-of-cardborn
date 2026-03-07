@@ -188,17 +188,27 @@ export function useGame() {
   }, [gameState.screen, combat, gameState.map, gameState.deck, gameState.playerHp, gameState.playerMaxHp, startCombat]);
   // #endregion
 
-  // #region 보상 선택 / 건너뛰기 → 맵 복귀 (보스 승리 시 게임 클리어)
+  // #region 보상 선택/건너뛰기 후 맵 복귀, 10층 보스 클리어 시 다음 맵 생성 전환
   const afterCombatEnd = useCallback(() => {
     clearCombat();
     setGameState((prev) => {
       if (!prev.map) return prev;
-      const currentNode = prev.map.nodes.find((n) => n.id === prev.map!.currentNodeId);
-      const isFinalBoss = currentNode !== undefined
-        && currentNode.type === 'boss'
-        && currentNode.nextNodeIds.length === 0;
-      if (isFinalBoss) {
-        return { ...prev, screen: 'victory', rewardCards: [] };
+      const currentNodeId = prev.map.currentNodeId;
+      const currentNode = currentNodeId
+        ? prev.map.nodes.find((node) => node.id === currentNodeId)
+        : undefined;
+      const isBossClear = currentNode?.type === 'boss';
+      if (isBossClear && prev.map.mapIndex < prev.map.totalMaps) {
+        return {
+          ...prev,
+          screen: 'map',
+          map: generateMap(prev.map.mapIndex + 1, prev.map.totalMaps),
+          combatState: null,
+          rewardCards: [],
+        };
+      }
+      if (isBossClear) {
+        return { ...prev, screen: 'victory', combatState: null, rewardCards: [] };
       }
       return { ...prev, screen: 'map', combatState: null, rewardCards: [] };
     });
