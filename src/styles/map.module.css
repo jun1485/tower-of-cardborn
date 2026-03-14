@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  padding: calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
   gap: 16px;
   background: radial-gradient(circle at 50% 20%, #221c35 0%, #100f16 60%, #050508 100%);
   position: relative;

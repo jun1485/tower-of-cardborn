@@ -1,6 +1,8 @@
 // 적 표시 + 데미지 피드백 컴포넌트
 
 import type { Enemy } from '@tower-of-cardborn/game-core/types/character';
+import { useTranslation, useLanguage } from '../../i18n';
+import { getEnemyName } from '../../i18n/card-text';
 import { HealthBar } from '../ui/HealthBar';
 import { FloatingNumber } from '../ui/FloatingNumber';
 import { StatusBadge } from '../ui/StatusBadge';
@@ -9,8 +11,8 @@ import styles from '../../styles/combat.module.css';
 
 interface EnemyAreaProps {
   readonly enemies: readonly Enemy[];
-  readonly selectedEnemyId: string | null;
   readonly hoveredEnemyId: string | null;
+  readonly lungingEnemyIds: readonly string[];
   readonly targetSelectable: boolean;
   readonly targetingActive: boolean;
   readonly onSelectEnemy: (enemyId: string) => void;
@@ -28,8 +30,8 @@ const ENEMY_IMAGE: Record<string, string> = {
 
 export function EnemyArea({
   enemies,
-  selectedEnemyId,
   hoveredEnemyId,
+  lungingEnemyIds,
   targetSelectable,
   targetingActive,
   onSelectEnemy,
@@ -40,8 +42,8 @@ export function EnemyArea({
         <EnemyCard
           key={enemy.id}
           enemy={enemy}
-          selected={selectedEnemyId === enemy.id}
           hovered={hoveredEnemyId === enemy.id}
+          isLunging={lungingEnemyIds.includes(enemy.id)}
           targetSelectable={targetSelectable}
           targetingActive={targetingActive}
           onSelectEnemy={onSelectEnemy}
@@ -59,8 +61,8 @@ function getDisplayedAttack(enemy: Enemy): number {
 
 interface EnemyCardProps {
   readonly enemy: Enemy;
-  readonly selected: boolean;
   readonly hovered: boolean;
+  readonly isLunging: boolean;
   readonly targetSelectable: boolean;
   readonly targetingActive: boolean;
   readonly onSelectEnemy: (enemyId: string) => void;
@@ -68,24 +70,26 @@ interface EnemyCardProps {
 
 function EnemyCard({
   enemy,
-  selected,
   hovered,
+  isLunging,
   targetSelectable,
   targetingActive,
   onSelectEnemy,
 }: EnemyCardProps) {
+  const t = useTranslation();
+  const lang = useLanguage();
   const prevHp = usePrevious(enemy.hp);
   const isHit = prevHp > enemy.hp;
   const enemyImage = ENEMY_IMAGE[enemy.definitionId] ?? '/assets/monsters/jaw_worm_hd.png?v=6';
+  const localizedName = getEnemyName(enemy.definitionId, lang);
   const enemySpriteClassName = `${styles.characterSprite} ${styles.enemySprite}`;
   const enemyImageClassName = `${styles.characterImage} ${styles.enemyImage}`;
-  const showTargetBadge = targetSelectable && selected;
   const className = [
     styles.enemyCard,
     isHit ? styles.shake : '',
+    isLunging ? styles.enemyLunge : '',
     targetingActive ? styles.enemyDraggable : '',
     targetingActive && hovered ? styles.enemyDropTarget : '',
-    targetSelectable && selected ? styles.enemySelected : '',
     targetSelectable ? styles.enemyTargetable : '',
   ].join(' ');
 
@@ -95,7 +99,6 @@ function EnemyCard({
       data-enemy-id={enemy.id}
       onClick={() => targetSelectable && onSelectEnemy(enemy.id)}
     >
-      {showTargetBadge && <div className={styles.enemyTargetBadge}>타겟</div>}
       {targetingActive && hovered && <div className={styles.enemyDropTargetBadge}>🎯</div>}
       <div className={styles.enemyIntent}>
         {enemy.intent.type === 'attack' && `⚔️ ${getDisplayedAttack(enemy)}`}
@@ -103,13 +106,13 @@ function EnemyCard({
         {enemy.intent.type === 'buff' && `⬆️`}
       </div>
       <div className={enemySpriteClassName}>
-        <img className={enemyImageClassName} src={enemyImage} alt={enemy.name} />
+        <img className={enemyImageClassName} src={enemyImage} alt={localizedName} />
         <FloatingNumber currentValue={enemy.hp} previousValue={prevHp} mode="damage" />
       </div>
       <div className={`${styles.combatantPanel} ${styles.enemyPanel}`}>
         <div className={styles.combatantHeader}>
-          <span className={styles.combatantLabel}>적</span>
-          <strong className={`${styles.combatantName} ${styles.enemyName}`}>{enemy.name}</strong>
+          <span className={styles.combatantLabel}>{t('enemy')}</span>
+          <strong className={`${styles.combatantName} ${styles.enemyName}`}>{localizedName}</strong>
         </div>
         <HealthBar hp={enemy.hp} maxHp={enemy.maxHp} block={enemy.block} />
         {enemy.statusEffects.length > 0 && (

@@ -10,14 +10,22 @@
     "preview": "vite preview",
     "generate:card-art": "node scripts/generate-card-art.mjs",
     "generate:class-art": "node scripts/generate-class-art.mjs",
-    "generate:world-art": "node scripts/generate-world-art.mjs"
+    "generate:world-art": "node scripts/generate-world-art.mjs",
+    "generate:sfx": "node scripts/generate-sfx.mjs",
+    "cap:sync": "npx cap sync android",
+    "cap:open": "npx cap open android",
+    "cap:build": "npm run build && npx cap sync android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/app": "^8.0.1",
+    "@capacitor/core": "^8.2.0",
+    "@tower-of-cardborn/game-core": "workspace:*",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "@tower-of-cardborn/game-core": "workspace:*"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.6.0",
     "@eslint/js": "^9.39.1",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",

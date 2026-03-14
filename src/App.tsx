@@ -1,11 +1,21 @@
-// 루트 컴포넌트: 화면 라우팅
+// 루트 컴포넌트: 화면 라우팅 + i18n Provider
 
+import { useEffect, useMemo, useState } from 'react';
 import { useGame } from './hooks/use-game';
+import { useBackButton } from './hooks/use-back-button';
+import { I18nProvider, LangProvider, createT, useTranslation } from './i18n';
+import { getCardName } from './i18n/card-text';
+import { loadSettings } from './utils/settings';
+import { resumeAudioContext } from './utils/sound';
 import { CombatScreen } from './components/combat/CombatScreen';
 import { RewardScreen } from './components/combat/RewardScreen';
 import { MapScreen } from './components/map/MapScreen';
 import { RestScreen } from './components/map/RestScreen';
 import { UpgradeScreen } from './components/map/UpgradeScreen';
+import { ConfirmDialog } from './components/ui/ConfirmDialog';
+import { PrivacyPolicy } from './components/ui/PrivacyPolicy';
+import { SettingsModal } from './components/ui/SettingsModal';
+import type { Language } from './i18n/types';
 import type { CharacterClass } from '@tower-of-cardborn/game-core/types/game';
 import styles from './styles/app.module.css';
 
@@ -16,124 +26,194 @@ const CLASS_IMAGE: Record<CharacterClass, string> = {
   assassin: '/assets/classes/assassin.png?v=4',
 };
 
+// 직업별 번역 키 매핑
+const CLASS_NAME_KEY = {
+  warrior: 'warrior',
+  archer: 'archer',
+  mage: 'mage',
+  assassin: 'assassin',
+} as const;
+
+// 직업별 시작 덱 구성 (카드ID + 수량)
+const CLASS_STARTER_DECK: Record<CharacterClass, readonly { id: string; count: number }[]> = {
+  warrior: [{ id: 'strike', count: 5 }, { id: 'defend', count: 4 }, { id: 'bash', count: 1 }],
+  archer: [{ id: 'quick_shot', count: 5 }, { id: 'dodge', count: 4 }, { id: 'aimed_shot', count: 1 }],
+  mage: [{ id: 'magic_bolt', count: 5 }, { id: 'arcane_barrier', count: 4 }, { id: 'mana_blast', count: 1 }],
+  assassin: [{ id: 'shadow_strike', count: 5 }, { id: 'evasive_step', count: 4 }, { id: 'blood_drain', count: 1 }],
+};
+
 function App() {
+  const [lang, setLang] = useState<Language>(() => loadSettings().language);
+  const tFn = useMemo(() => createT(lang), [lang]);
+
+  return (
+    <LangProvider value={lang}>
+      <I18nProvider value={tFn}>
+        <AppInner lang={lang} onLangChange={setLang} />
+      </I18nProvider>
+    </LangProvider>
+  );
+}
+
+interface AppInnerProps {
+  readonly lang: Language;
+  readonly onLangChange: (lang: Language) => void;
+}
+
+/** 직업 시작 덱 설명 동적 생성 (카드 이름 번역 적용) */
+function buildDeckLabel(cls: CharacterClass, lang: import('./i18n/types').Language): string {
+  return CLASS_STARTER_DECK[cls]
+    .map(({ id, count }) => `${getCardName(id, lang)} x${count}`)
+    .join(' · ');
+}
+
+// 실제 라우팅 렌더링 (I18nProvider 하위)
+function AppInner({ lang, onLangChange }: AppInnerProps) {
+  const t = useTranslation();
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const {
     screen, combat, deck, playerHp, playerMaxHp, map, characterClass, rewardCards,
     startNewGame, selectMapNode, handlePlayCard, handleEndTurn,
     pickRewardCard, skipReward, rest, goToUpgrade, upgradeCard, skipUpgrade, skipRest, goToTitle,
   } = useGame();
 
-  switch (screen) {
-    case 'title':
-      return (
-        <div className={styles.titleScreen}>
-          <h1 className={styles.title}>루멘폴 크로니클</h1>
-          <p className={styles.subtitle}>직업을 선택하세요</p>
-          <div className={styles.classSelection}>
-            <button className={styles.classCard} onClick={() => startNewGame('warrior')}>
-              <img className={styles.classIcon} src={CLASS_IMAGE.warrior} alt="전사" />
-              <span className={styles.className}>전사</span>
-              <span className={styles.classDeck}>Strike x5 · Defend x4 · Bash x1</span>
+  const { showConfirm, confirmBack, cancelBack } = useBackButton({ screen, goToTitle });
+
+  // 첫 사용자 제스처 시 AudioContext 활성화
+  useEffect(() => {
+    const handler = () => { resumeAudioContext(); window.removeEventListener('pointerdown', handler); };
+    window.addEventListener('pointerdown', handler);
+    return () => window.removeEventListener('pointerdown', handler);
+  }, []);
+
+  const confirmMessage = screen === 'title' ? t('exitConfirm') : t('backToTitleConfirm');
+  const confirmLabel = screen === 'title' ? t('exit') : t('titleBack');
+
+  const renderScreen = () => {
+    switch (screen) {
+      case 'title':
+        return (
+          <div className={styles.titleScreen}>
+            <h1 className={styles.title}>{t('gameTitle')}</h1>
+            <p className={styles.subtitle}>{t('selectClass')}</p>
+            <div className={styles.classSelection}>
+              {(['warrior', 'archer', 'mage', 'assassin'] as const).map((cls) => (
+                <button key={cls} className={styles.classCard} onClick={() => startNewGame(cls)}>
+                  <img className={styles.classIcon} src={CLASS_IMAGE[cls]} alt={t(CLASS_NAME_KEY[cls])} />
+                  <span className={styles.className}>{t(CLASS_NAME_KEY[cls])}</span>
+                  <span className={styles.classDeck}>{buildDeckLabel(cls, lang)}</span>
+                </button>
+              ))}
+            </div>
+            <button className={styles.privacyLink} onClick={() => setShowPrivacy(true)}>
+              Privacy Policy
             </button>
-            <button className={styles.classCard} onClick={() => startNewGame('archer')}>
-              <img className={styles.classIcon} src={CLASS_IMAGE.archer} alt="궁수" />
-              <span className={styles.className}>궁수</span>
-              <span className={styles.classDeck}>Quick Shot x5 · Dodge x4 · Aimed Shot x1</span>
+            {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+          </div>
+        );
+
+      case 'map':
+        if (!map) return null;
+        return (
+          <MapScreen
+            map={map}
+            playerHp={playerHp}
+            playerMaxHp={playerMaxHp}
+            deckSize={deck.length}
+            onSelectNode={selectMapNode}
+          />
+        );
+
+      case 'combat':
+        if (!combat) return null;
+        return (
+          <CombatScreen
+            combat={combat}
+            characterClass={characterClass}
+            onPlayCard={handlePlayCard}
+            onEndTurn={handleEndTurn}
+          />
+        );
+
+      case 'combat_reward':
+        return (
+          <RewardScreen
+            rewardCards={rewardCards}
+            onPick={pickRewardCard}
+            onSkip={skipReward}
+          />
+        );
+
+      case 'rest':
+        return (
+          <RestScreen
+            playerHp={playerHp}
+            playerMaxHp={playerMaxHp}
+            onRest={rest}
+            onUpgrade={goToUpgrade}
+            onSkip={skipRest}
+          />
+        );
+
+      case 'upgrade':
+        return (
+          <UpgradeScreen
+            deck={deck}
+            onUpgrade={upgradeCard}
+            onSkip={skipUpgrade}
+          />
+        );
+
+      case 'victory':
+        return (
+          <div className={styles.resultScreen}>
+            <h1 className={`${styles.resultTitle} ${styles.victoryTitle}`}>{t('victoryTitle')}</h1>
+            <p className={styles.subtitle}>{t('deckStat', deck.length, playerHp, playerMaxHp)}</p>
+            <button className={styles.resultBtn} onClick={() => startNewGame(characterClass)}>
+              {t('newGame')}
             </button>
-            <button className={styles.classCard} onClick={() => startNewGame('mage')}>
-              <img className={styles.classIcon} src={CLASS_IMAGE.mage} alt="마법사" />
-              <span className={styles.className}>마법사</span>
-              <span className={styles.classDeck}>Magic Bolt x5 · Arcane Barrier x4 · Mana Blast x1</span>
-            </button>
-            <button className={styles.classCard} onClick={() => startNewGame('assassin')}>
-              <img className={styles.classIcon} src={CLASS_IMAGE.assassin} alt="암살자" />
-              <span className={styles.className}>암살자</span>
-              <span className={styles.classDeck}>Shadow Strike x5 · Evasive Step x4 · Blood Drain x1</span>
+            <button className={styles.resultBtn} onClick={goToTitle}>
+              {t('titleBack')}
             </button>
           </div>
-        </div>
-      );
+        );
 
-    case 'map':
-      if (!map) return null;
-      return (
-        <MapScreen
-          map={map}
-          playerHp={playerHp}
-          playerMaxHp={playerMaxHp}
-          deckSize={deck.length}
-          onSelectNode={selectMapNode}
+      case 'game_over':
+        return (
+          <div className={styles.resultScreen}>
+            <h1 className={`${styles.resultTitle} ${styles.defeatTitle}`}>{t('defeatTitle')}</h1>
+            <button className={styles.resultBtn} onClick={() => startNewGame(characterClass)}>
+              {t('retry')}
+            </button>
+            <button className={styles.resultBtn} onClick={goToTitle}>
+              {t('titleBack')}
+            </button>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <>
+      {renderScreen()}
+      <button className={styles.globalSettingsBtn} onClick={() => setShowSettings(true)}>⚙</button>
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+          onLangChange={onLangChange}
         />
-      );
-
-    case 'combat':
-      if (!combat) return null;
-      return (
-        <CombatScreen
-          combat={combat}
-          characterClass={characterClass}
-          onPlayCard={handlePlayCard}
-          onEndTurn={handleEndTurn}
+      )}
+      {showConfirm && (
+        <ConfirmDialog
+          message={confirmMessage}
+          confirmText={confirmLabel}
+          onConfirm={confirmBack}
+          onCancel={cancelBack}
         />
-      );
-
-    case 'combat_reward':
-      return (
-        <RewardScreen
-          rewardCards={rewardCards}
-          onPick={pickRewardCard}
-          onSkip={skipReward}
-        />
-      );
-
-    case 'rest':
-      return (
-        <RestScreen
-          playerHp={playerHp}
-          playerMaxHp={playerMaxHp}
-          onRest={rest}
-          onUpgrade={goToUpgrade}
-          onSkip={skipRest}
-        />
-      );
-
-    case 'upgrade':
-      return (
-        <UpgradeScreen
-          deck={deck}
-          onUpgrade={upgradeCard}
-          onSkip={skipUpgrade}
-        />
-      );
-
-    case 'victory':
-      return (
-        <div className={styles.resultScreen}>
-          <h1 className={`${styles.resultTitle} ${styles.victoryTitle}`}>게임 클리어!</h1>
-          <p className={styles.subtitle}>덱 {deck.length}장 · HP {playerHp}/{playerMaxHp}</p>
-          <button className={styles.resultBtn} onClick={() => startNewGame(characterClass)}>
-            새 게임
-          </button>
-          <button className={styles.resultBtn} onClick={goToTitle}>
-            타이틀로
-          </button>
-        </div>
-      );
-
-    case 'game_over':
-      return (
-        <div className={styles.resultScreen}>
-          <h1 className={`${styles.resultTitle} ${styles.defeatTitle}`}>패배...</h1>
-          <button className={styles.resultBtn} onClick={() => startNewGame(characterClass)}>
-            다시 시작
-          </button>
-          <button className={styles.resultBtn} onClick={goToTitle}>
-            타이틀로
-          </button>
-        </div>
-      );
-  }
+      )}
+    </>
+  );
 }
 
 export default App;
-

@@ -2,6 +2,9 @@
 
 import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
 import type { CardDefinition } from '@tower-of-cardborn/game-core/types/card';
+import { useTranslation, useLanguage } from '../../i18n';
+import type { TFunction } from '../../i18n';
+import { getCardName, generateCardDescription, getCardTypeName } from '../../i18n/card-text';
 import styles from '../../styles/app.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
@@ -12,31 +15,40 @@ interface RewardScreenProps {
   readonly onSkip: () => void;
 }
 
-function getKeywords(def: CardDefinition): string[] {
+/** 카드 정의에서 키워드 목록 추출 */
+function getKeywords(def: CardDefinition, t: TFunction): string[] {
   const keywords: string[] = [];
   for (const effect of def.effects) {
-    if (effect.statusType === 'vulnerable' && !keywords.includes('취약: 받는 데미지 50% 증가'))
-      keywords.push('취약: 받는 데미지 50% 증가');
-    if (effect.statusType === 'weak' && !keywords.includes('약화: 주는 데미지 25% 감소'))
-      keywords.push('약화: 주는 데미지 25% 감소');
-    if (effect.type === 'gain_strength' && !keywords.includes('힘: 공격 카드 데미지 영구 증가'))
-      keywords.push('힘: 공격 카드 데미지 영구 증가');
+    const vulnText = t('kwVulnerable');
+    const weakText = t('kwWeak');
+    const strText = t('kwStrength');
+    if (effect.statusType === 'vulnerable' && !keywords.includes(vulnText))
+      keywords.push(vulnText);
+    if (effect.statusType === 'weak' && !keywords.includes(weakText))
+      keywords.push(weakText);
+    if (effect.type === 'gain_strength' && !keywords.includes(strText))
+      keywords.push(strText);
   }
-  if (def.exhaust) keywords.push('소멸: 사용 후 이번 전투에서 제거');
-  if (def.type === 'power') keywords.push('파워: 사용 시 영구 효과 발동');
+  if (def.exhaust) keywords.push(t('kwExhaust'));
+  if (def.type === 'power') keywords.push(t('kwPower'));
   return keywords;
 }
 
 export function RewardScreen({ rewardCards, onPick, onSkip }: RewardScreenProps) {
+  const t = useTranslation();
+  const lang = useLanguage();
+
   return (
     <div className={styles.resultScreen}>
-      <h1 className={`${styles.resultTitle} ${styles.victoryTitle}`}>승리!</h1>
-      <p className={styles.subtitle}>카드를 선택하세요</p>
+      <h1 className={`${styles.resultTitle} ${styles.victoryTitle}`}>{t('victory')}</h1>
+      <p className={styles.subtitle}>{t('selectCard')}</p>
       <div className={`${styles.rewardCards} card-list`}>
         {rewardCards.map((cardId) => {
           const def = CARD_DEFINITIONS[cardId];
           if (!def) return null;
-          const keywords = getKeywords(def);
+          const keywords = getKeywords(def, t);
+          const name = getCardName(def.id, lang);
+          const desc = generateCardDescription(def, t);
           const typeClassMap = {
             attack: cardStyles.cardAttack,
             skill: cardStyles.cardSkill,
@@ -50,10 +62,10 @@ export function RewardScreen({ rewardCards, onPick, onSkip }: RewardScreenProps)
               onClick={() => onPick(cardId)}
             >
               <div className={cardStyles.cardCost}>{def.cost}</div>
-              <div className={cardStyles.cardName}>{def.name}</div>
-              <CardArtwork cardId={def.id} cardName={def.name} />
-              <div className={cardStyles.cardDescription}>{def.description}</div>
-              <div className={cardStyles.cardType}>{def.type}</div>
+              <div className={cardStyles.cardName}>{name}</div>
+              <CardArtwork cardId={def.id} cardName={name} />
+              <div className={cardStyles.cardDescription}>{desc}</div>
+              <div className={cardStyles.cardType}>{getCardTypeName(def.type, t)}</div>
               {keywords.length > 0 && (
                 <div className={cardStyles.cardTooltip}>
                   {keywords.map((kw) => (
@@ -66,7 +78,7 @@ export function RewardScreen({ rewardCards, onPick, onSkip }: RewardScreenProps)
         })}
       </div>
       <button className={styles.resultBtn} onClick={onSkip}>
-        건너뛰기
+        {t('skip')}
       </button>
     </div>
   );

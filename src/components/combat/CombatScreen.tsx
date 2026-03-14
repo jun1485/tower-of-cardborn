@@ -5,7 +5,8 @@ import type { CombatState } from '@tower-of-cardborn/game-core/types/combat';
 import type { CardDefinition, CardInstance } from '@tower-of-cardborn/game-core/types/card';
 import type { CharacterClass } from '@tower-of-cardborn/game-core/types/game';
 import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
-import { getPreviewDescription } from '@tower-of-cardborn/game-core/game/damage-preview';
+import { useTranslation, useLanguage } from '../../i18n';
+import { getCardName, getCardTypeName, generatePreviewDescription } from '../../i18n/card-text';
 import { PlayerArea } from './PlayerArea';
 import { EnemyArea } from './EnemyArea';
 import { HandArea } from './HandArea';
@@ -53,19 +54,22 @@ function resolveEnemyIdFromPoint(x: number, y: number): string | null {
 }
 
 /** 드로우 파일 카드 이름별 그룹핑 (툴팁 표시용) */
-function groupDrawPile(drawPile: readonly CardInstance[]): string[] {
+function groupDrawPile(drawPile: readonly CardInstance[], lang: import('../../i18n/types').Language): string[] {
   const counts = new Map<string, number>();
   for (const card of drawPile) {
     const def = CARD_DEFINITIONS[card.definitionId];
-    const name = def?.name ?? card.definitionId;
+    const name = def ? getCardName(def.id, lang) : card.definitionId;
     counts.set(name, (counts.get(name) ?? 0) + 1);
   }
   return Array.from(counts.entries()).map(([name, count]) => `${name} x${count}`);
 }
 
 export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: CombatScreenProps) {
+  const t = useTranslation();
+  const lang = useLanguage();
   const [drag, setDrag] = useState<DragState | null>(null);
   const [attacking, setAttacking] = useState(false);
+  const [lungingEnemyIds, setLungingEnemyIds] = useState<readonly string[]>([]);
   const [selectedEnemyId, setSelectedEnemyId] = useState<string | null>(combat.enemies[0]?.id ?? null);
   const [hoveredEnemyId, setHoveredEnemyId] = useState<string | null>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -73,6 +77,27 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
   const screenRef = useRef<HTMLDivElement>(null);
   const bottomAreaRef = useRef<HTMLDivElement>(null);
   const [viewingPile, setViewingPile] = useState<PileType>(null);
+  const endTurnLockRef = useRef(false);
+
+  /** 적 공격 돌진 애니메이션 후 실제 턴 종료 처리 */
+  const handleEndTurnWithAnimation = useCallback(() => {
+    if (endTurnLockRef.current) return;
+    const attackerIds = combat.enemies
+      .filter((e) => e.intent.type === 'attack')
+      .map((e) => e.id);
+
+    if (attackerIds.length > 0) {
+      endTurnLockRef.current = true;
+      setLungingEnemyIds(attackerIds);
+      setTimeout(() => {
+        setLungingEnemyIds([]);
+        onEndTurn();
+        endTurnLockRef.current = false;
+      }, 350);
+    } else {
+      onEndTurn();
+    }
+  }, [combat.enemies, onEndTurn]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -81,14 +106,14 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
       const tagName = target?.tagName;
       if (tagName === 'INPUT' || tagName === 'TEXTAREA') return;
       e.preventDefault();
-      onEndTurn();
+      handleEndTurnWithAnimation();
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onEndTurn]);
+  }, [handleEndTurnWithAnimation]);
 
   // #region 적 타겟 선택 동기화
   useEffect(() => {
@@ -204,24 +229,20 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
     : null;
   const draggedDef = draggedCard ? CARD_DEFINITIONS[draggedCard.definitionId] : null;
   const draggedDescription = draggedDef
-    ? getPreviewDescription(draggedDef, combat.player.statusEffects, combat.enemies, selectedEnemyId ?? undefined)
+    ? generatePreviewDescription(draggedDef, t, combat.player.statusEffects, combat.enemies, selectedEnemyId ?? undefined)
     : '';
 
   const getPileData = (): { title: string; pile: readonly CardInstance[] } => {
     switch (viewingPile) {
-      case 'draw': return { title: '뽑을 카드', pile: combat.drawPile };
-      case 'discard': return { title: '버린 카드', pile: combat.discardPile };
-      case 'exhaust': return { title: '소멸 카드', pile: combat.exhaustPile };
+      case 'draw': return { title: t('drawPile'), pile: combat.drawPile };
+      case 'discard': return { title: t('discardPile'), pile: combat.discardPile };
+      case 'exhaust': return { title: t('exhaustPile'), pile: combat.exhaustPile };
       default: return { title: '', pile: [] };
     }
   };
 
   const targetSelectable = combat.enemies.length > 1;
   const targetingActive = drag ? hasSingleTargetEffect(draggedDef) : false;
-  const selectedEnemyName = selectedEnemyId
-    ? combat.enemies.find((enemy) => enemy.id === selectedEnemyId)?.name ?? '-'
-    : '-';
-
   const typeMap = { attack: cardStyles.cardAttack, skill: cardStyles.cardSkill, power: cardStyles.cardPower };
 
   return (
@@ -229,15 +250,9 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
       <div className={styles.topSection}>
         <div className={styles.topInfo}>
           <div className={`${styles.infoChip} ${styles.infoChipPrimary}`}>
-            <span className={styles.infoChipLabel}>턴</span>
+            <span className={styles.infoChipLabel}>{t('turn')}</span>
             <strong className={styles.infoChipValue}>{combat.turn}</strong>
           </div>
-          {targetSelectable && (
-            <div className={styles.infoChip}>
-              <span className={styles.infoChipLabel}>타겟</span>
-              <strong className={styles.infoChipValue}>{selectedEnemyName}</strong>
-            </div>
-          )}
         </div>
       </div>
 
@@ -245,8 +260,8 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
         <PlayerArea player={combat.player} isAttacking={attacking} characterClass={characterClass} />
         <EnemyArea
           enemies={combat.enemies}
-          selectedEnemyId={selectedEnemyId}
           hoveredEnemyId={hoveredEnemyId}
+          lungingEnemyIds={lungingEnemyIds}
           targetSelectable={targetSelectable}
           targetingActive={targetingActive}
           onSelectEnemy={setSelectedEnemyId}
@@ -255,12 +270,12 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
 
       <div className={styles.bottomSection} ref={bottomAreaRef}>
         <button className={styles.deckIndicator} onClick={() => setViewingPile('draw')}>
-          <img className={styles.deckIcon} src="/assets/ui/deck.png" alt="덱" />
+          <img className={styles.deckIcon} src="/assets/ui/deck.png" alt={t('deck')} />
           <strong className={styles.utilityCount}>{combat.drawPile.length}</strong>
           <div className={styles.deckTooltip}>
             {combat.drawPile.length === 0
-              ? <span>카드 없음</span>
-              : groupDrawPile(combat.drawPile).map((line) => (
+              ? <span>{t('noCards')}</span>
+              : groupDrawPile(combat.drawPile, lang).map((line) => (
                   <div key={line}>{line}</div>
                 ))
             }
@@ -279,8 +294,8 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
           onDragStart={handleDragStart}
         />
 
-        <button className={styles.endTurnBtn} onClick={onEndTurn}>
-          턴 종료
+        <button className={styles.endTurnBtn} onClick={handleEndTurnWithAnimation}>
+          {t('endTurn')}
         </button>
 
         <div className={styles.pileBtnGroup}>
@@ -300,10 +315,10 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
           style={{ left: drag.x, top: drag.y }}
         >
           <div className={cardStyles.cardCost}>{draggedDef.cost}</div>
-          <div className={cardStyles.cardName}>{draggedDef.name}</div>
-          <CardArtwork cardId={draggedDef.id} cardName={draggedDef.name} />
+          <div className={cardStyles.cardName}>{getCardName(draggedDef.id, lang)}</div>
+          <CardArtwork cardId={draggedDef.id} cardName={getCardName(draggedDef.id, lang)} />
           <div className={cardStyles.cardDescription}>{draggedDescription}</div>
-          <div className={cardStyles.cardType}>{draggedDef.type}</div>
+          <div className={cardStyles.cardType}>{getCardTypeName(draggedDef.type, t)}</div>
         </div>
       )}
 

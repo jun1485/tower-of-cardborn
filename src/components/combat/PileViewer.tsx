@@ -2,6 +2,8 @@
 
 import type { CardInstance } from '@tower-of-cardborn/game-core/types/card';
 import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
+import { useTranslation, useLanguage } from '../../i18n';
+import { getCardName, generateCardDescription, getCardTypeName } from '../../i18n/card-text';
 import styles from '../../styles/combat.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
@@ -13,6 +15,9 @@ interface PileViewerProps {
 }
 
 export function PileViewer({ title, pile, onClose }: PileViewerProps) {
+  const t = useTranslation();
+  const lang = useLanguage();
+
   return (
     <div className={styles.pileOverlay} onClick={onClose}>
       <div className={styles.pileModal} onClick={(e) => e.stopPropagation()}>
@@ -24,19 +29,20 @@ export function PileViewer({ title, pile, onClose }: PileViewerProps) {
           {pile.map((card) => {
             const def = CARD_DEFINITIONS[card.definitionId];
             if (!def) return null;
+            const name = getCardName(def.id, lang);
             const typeClassMap = { attack: cardStyles.cardAttack, skill: cardStyles.cardSkill, power: cardStyles.cardPower };
             const typeClass = typeClassMap[def.type];
             return (
               <div key={card.instanceId} className={`${cardStyles.card} card-item ${typeClass}`}>
                 <div className={cardStyles.cardCost}>{def.cost}</div>
-                <div className={cardStyles.cardName}>{def.name}</div>
-                <CardArtwork cardId={def.id} cardName={def.name} />
-                <div className={cardStyles.cardDescription}>{def.description}</div>
-                <div className={cardStyles.cardType}>{def.type}</div>
+                <div className={cardStyles.cardName}>{name}</div>
+                <CardArtwork cardId={def.id} cardName={name} />
+                <div className={cardStyles.cardDescription}>{generateCardDescription(def, t)}</div>
+                <div className={cardStyles.cardType}>{getCardTypeName(def.type, t)}</div>
               </div>
             );
           })}
-          {pile.length === 0 && <p className={styles.pileEmpty}>카드 없음</p>}
+          {pile.length === 0 && <p className={styles.pileEmpty}>{t('noCards')}</p>}
         </div>
       </div>
     </div>

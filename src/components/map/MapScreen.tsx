@@ -2,6 +2,7 @@
 
 import type { GameMap, MapNode, NodeType } from '@tower-of-cardborn/game-core/types/map';
 import { getAvailableNodeIds } from '@tower-of-cardborn/game-core/game/map-generator';
+import { useTranslation } from '../../i18n';
 import styles from '../../styles/map.module.css';
 
 interface MapScreenProps {
@@ -19,14 +20,15 @@ const NODE_ICON: Record<NodeType, string> = {
   boss: '💀',
 };
 
-const NODE_LABEL: Record<NodeType, string> = {
-  combat: '전투',
-  elite: '엘리트',
-  rest: '휴식',
-  boss: '보스',
+const NODE_LABEL_KEY: Record<NodeType, 'nodecombat' | 'nodeElite' | 'nodeRest' | 'nodeBoss'> = {
+  combat: 'nodecombat',
+  elite: 'nodeElite',
+  rest: 'nodeRest',
+  boss: 'nodeBoss',
 };
 
 export function MapScreen({ map, playerHp, playerMaxHp, deckSize, onSelectNode }: MapScreenProps) {
+  const t = useTranslation();
   const availableIds = getAvailableNodeIds(map);
   const themeIndex = (map.mapIndex - 1) % 3;
   const mapThemeClass = [styles.mapTheme1, styles.mapTheme2, styles.mapTheme3][themeIndex] ?? styles.mapTheme1;
@@ -35,10 +37,10 @@ export function MapScreen({ map, playerHp, playerMaxHp, deckSize, onSelectNode }
     <div className={`${styles.mapScreen} ${mapThemeClass}`}>
       <div className={styles.mapHeader}>
         <span className={styles.headerStat}>❤️ {playerHp}/{playerMaxHp}</span>
-        <span className={styles.headerStat}>🗺️ 맵 {map.mapIndex}/{map.totalMaps}</span>
+        <span className={styles.headerStat}>🗺️ {t('mapLabel')} {map.mapIndex}/{map.totalMaps}</span>
         <span className={styles.headerStat}>
-          <img className={styles.headerIcon} src="/assets/ui/deck.png" alt="덱" />
-          덱 {deckSize}장
+          <img className={styles.headerIcon} src="/assets/ui/deck.png" alt={t('deck')} />
+          {t('deck')} {deckSize}{t('deckCount')}
         </span>
       </div>
 
@@ -73,6 +75,7 @@ interface MapNodeButtonProps {
 }
 
 function MapNodeButton({ node, isAvailable, isVisited, isCurrent, onSelect }: MapNodeButtonProps) {
+  const t = useTranslation();
   const stateClass = isCurrent
     ? styles.nodeCurrent
     : isAvailable
@@ -87,9 +90,9 @@ function MapNodeButton({ node, isAvailable, isVisited, isCurrent, onSelect }: Ma
       disabled={!isAvailable}
       onClick={() => onSelect(node.id)}
     >
-      <span className={styles.nodeFloor}>{node.floor}F</span>
+      <span className={styles.nodeFloor}>{node.floor}{t('floor')}</span>
       <span className={styles.nodeIcon}>{NODE_ICON[node.type]}</span>
-      <span className={styles.nodeLabel}>{NODE_LABEL[node.type]}</span>
+      <span className={styles.nodeLabel}>{t(NODE_LABEL_KEY[node.type])}</span>
     </button>
   );
 }

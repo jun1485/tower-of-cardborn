@@ -3,7 +3,8 @@
 import type { CardInstance } from '@tower-of-cardborn/game-core/types/card';
 import type { Enemy, StatusEffect } from '@tower-of-cardborn/game-core/types/character';
 import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
-import { getPreviewDescription } from '@tower-of-cardborn/game-core/game/damage-preview';
+import { useTranslation } from '../../i18n';
+import { generatePreviewDescription } from '../../i18n/card-text';
 import { CardComponent } from './CardComponent';
 import styles from '../../styles/combat.module.css';
 
@@ -26,13 +27,15 @@ export function HandArea({
   draggingInstanceId,
   onDragStart,
 }: HandAreaProps) {
+  const t = useTranslation();
+
   return (
     <div className={`${styles.handArea} card-list card-list-overlap`}>
       <div className={styles.handTrack}>
         {hand.map((card) => {
           const definition = CARD_DEFINITIONS[card.definitionId];
           if (!definition) return null;
-          const previewDescription = getPreviewDescription(definition, playerStatusEffects, enemies, targetEnemyId);
+          const previewDescription = generatePreviewDescription(definition, t, playerStatusEffects, enemies, targetEnemyId);
           return (
             <CardComponent
               key={card.instanceId}

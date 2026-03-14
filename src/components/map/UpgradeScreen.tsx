@@ -1,6 +1,8 @@
 // 카드 강화 선택 화면: 덱에서 업그레이드 가능한 카드를 선택
 
 import { CARD_DEFINITIONS, canUpgrade, getUpgradedId } from '@tower-of-cardborn/game-core/data/cards';
+import { useTranslation, useLanguage } from '../../i18n';
+import { getCardName, generateCardDescription } from '../../i18n/card-text';
 import styles from '../../styles/app.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
@@ -12,10 +14,13 @@ interface UpgradeScreenProps {
 }
 
 export function UpgradeScreen({ deck, onUpgrade, onSkip }: UpgradeScreenProps) {
+  const t = useTranslation();
+  const lang = useLanguage();
+
   return (
     <div className={styles.resultScreen}>
-      <h1 className={styles.resultTitle}>카드 강화</h1>
-      <p className={styles.subtitle}>강화할 카드를 선택하세요</p>
+      <h1 className={styles.resultTitle}>{t('upgradeTitle')}</h1>
+      <p className={styles.subtitle}>{t('upgradeSelect')}</p>
 
       <div className={`${styles.upgradeGrid} card-list`}>
         {deck.map((cardId, index) => {
@@ -24,6 +29,8 @@ export function UpgradeScreen({ deck, onUpgrade, onSkip }: UpgradeScreenProps) {
 
           const upgradable = canUpgrade(cardId);
           const upgradedDef = upgradable ? CARD_DEFINITIONS[getUpgradedId(cardId)] : null;
+          const name = getCardName(def.id, lang);
+          const desc = generateCardDescription(def, t);
           const typeClassMap = {
             attack: cardStyles.cardAttack,
             skill: cardStyles.cardSkill,
@@ -39,16 +46,16 @@ export function UpgradeScreen({ deck, onUpgrade, onSkip }: UpgradeScreenProps) {
               onClick={() => upgradable && onUpgrade(index)}
             >
               <div className={cardStyles.cardCost}>{def.cost}</div>
-              <div className={cardStyles.cardName}>{def.name}</div>
-              <CardArtwork cardId={def.id} cardName={def.name} />
-              <div className={cardStyles.cardDescription}>{def.description}</div>
+              <div className={cardStyles.cardName}>{name}</div>
+              <CardArtwork cardId={def.id} cardName={name} />
+              <div className={cardStyles.cardDescription}>{desc}</div>
               {upgradedDef && (
                 <div className={styles.upgradePreview}>
-                  → {upgradedDef.name}: {upgradedDef.description}
+                  → {getCardName(upgradedDef.id, lang)}: {generateCardDescription(upgradedDef, t)}
                 </div>
               )}
               {!upgradable && def.upgraded && (
-                <div className={styles.upgradeAlready}>강화 완료</div>
+                <div className={styles.upgradeAlready}>{t('alreadyUpgraded')}</div>
               )}
             </button>
           );
@@ -56,7 +63,7 @@ export function UpgradeScreen({ deck, onUpgrade, onSkip }: UpgradeScreenProps) {
       </div>
 
       <button className={styles.resultBtn} onClick={onSkip}>
-        건너뛰기
+        {t('skip')}
       </button>
     </div>
   );

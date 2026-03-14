@@ -1,4 +1,5 @@
 import type { SyntheticEvent } from 'react';
+import { useTranslation } from '../../i18n';
 import styles from '../../styles/card.module.css';
 import { getBaseCardArtPath, getCardArtPath, getCardArtPlaceholderPath } from '../../utils/card-art';
 
@@ -8,6 +9,8 @@ interface CardArtworkProps {
 }
 
 export function CardArtwork({ cardId, cardName }: CardArtworkProps) {
+  const t = useTranslation();
+
   const handleCardArtworkError = (event: SyntheticEvent<HTMLImageElement>): void => {
     const image = event.currentTarget;
     const fallbackStep = image.dataset.fallbackStep ?? 'initial';
@@ -27,7 +30,7 @@ export function CardArtwork({ cardId, cardName }: CardArtworkProps) {
       <img
         className={styles.cardArtworkImage}
         src={getCardArtPath(cardId)}
-        alt={`${cardName} 카드 일러스트`}
+        alt={t('cardArt', cardName)}
         loading="lazy"
         onError={handleCardArtworkError}
       />

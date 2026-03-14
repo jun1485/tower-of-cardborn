@@ -1,38 +1,41 @@
 // 상태 효과 배지 + 호버 툴팁
 
 import type { StatusEffect } from '@tower-of-cardborn/game-core/types/character';
+import { useTranslation } from '../../i18n';
+import type { TFunction } from '../../i18n';
 import styles from '../../styles/combat.module.css';
 
 interface StatusBadgeProps {
   readonly effect: StatusEffect;
 }
 
-/** 상태 효과별 아이콘/라벨/설명 */
-function getStatusInfo(effect: StatusEffect): { icon: string; label: string; description: string } {
+/** 상태 효과별 아이콘/라벨/설명 조합 */
+function getStatusInfo(effect: StatusEffect, t: TFunction): { icon: string; label: string; description: string } {
   switch (effect.type) {
     case 'vulnerable':
       return {
         icon: '💥',
-        label: `취약 ${effect.duration}`,
-        description: `받는 데미지 50% 증가 (${effect.duration}턴 남음)`,
+        label: `${t('vulnerable')} ${effect.duration}`,
+        description: `${t('vulnerableDesc')} (${effect.duration} ${t('turnsLeft')})`,
       };
     case 'weak':
       return {
         icon: '🔻',
-        label: `약화 ${effect.duration}`,
-        description: `주는 데미지 25% 감소 (${effect.duration}턴 남음)`,
+        label: `${t('weak')} ${effect.duration}`,
+        description: `${t('weakDesc')} (${effect.duration} ${t('turnsLeft')})`,
       };
     case 'strength':
       return {
         icon: '💪',
-        label: `힘 ${effect.duration}`,
-        description: `공격 카드 데미지 +${effect.duration} (영구)`,
+        label: `${t('strength')} ${effect.duration}`,
+        description: `${t('strengthDesc')} +${effect.duration} (${t('permanent')})`,
       };
   }
 }
 
 export function StatusBadge({ effect }: StatusBadgeProps) {
-  const info = getStatusInfo(effect);
+  const t = useTranslation();
+  const info = getStatusInfo(effect, t);
 
   return (
     <span className={styles.statusBadge}>

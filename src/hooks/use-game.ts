@@ -5,6 +5,7 @@ import type { CharacterClass, GameScreen, GameState } from '@tower-of-cardborn/g
 import type { GameMap } from '@tower-of-cardborn/game-core/types/map';
 import { STARTER_DECK, getStarterDeck, getRewardCards, getUpgradedId } from '@tower-of-cardborn/game-core/data/cards';
 import { loadGame, saveGame, clearSave } from '../utils/storage';
+import { playSfx } from '../utils/sound';
 import { generateMap, getAvailableNodeIds } from '@tower-of-cardborn/game-core/game/map-generator';
 import { initCombat } from '@tower-of-cardborn/game-core/game/combat-engine';
 import { useCombat } from './use-combat';
@@ -113,6 +114,7 @@ export function useGame() {
   useEffect(() => {
     if (!combat) return;
     if (combat.result === 'victory') {
+      playSfx('victory');
       clearCombat();
       setGameState((prev) => ({
         ...prev,
@@ -123,6 +125,7 @@ export function useGame() {
           : getRewardCards(3, prev.characterClass),
       }));
     } else if (combat.result === 'defeat') {
+      playSfx('defeat');
       clearCombat();
       setGameState((prev) => ({ ...prev, screen: 'game_over', rewardCards: [] }));
     }
@@ -149,6 +152,7 @@ export function useGame() {
 
   // #region 맵 노드 선택
   const selectMapNode = useCallback((nodeId: string) => {
+    playSfx('map_select');
     setGameState((prev) => {
       if (!prev.map) return prev;
       const availableIds = getAvailableNodeIds(prev.map);
@@ -217,6 +221,7 @@ export function useGame() {
   const pickRewardCard = useCallback((cardId: string) => {
     if (gameState.screen !== 'combat_reward') return;
     if (!gameState.rewardCards.includes(cardId)) return;
+    playSfx('reward_pick');
     setGameState((prev) => ({ ...prev, deck: [...prev.deck, cardId] }));
     afterCombatEnd();
   }, [afterCombatEnd, gameState.screen, gameState.rewardCards]);
@@ -229,6 +234,7 @@ export function useGame() {
 
   // #region 휴식 / 강화
   const rest = useCallback(() => {
+    playSfx('heal');
     setGameState((prev) => {
       if (prev.screen !== 'rest') return prev;
       const healAmount = Math.floor(prev.playerMaxHp * 0.3);
@@ -242,6 +248,7 @@ export function useGame() {
   }, []);
 
   const upgradeCard = useCallback((deckIndex: number) => {
+    playSfx('upgrade');
     setGameState((prev) => {
       if (prev.screen !== 'upgrade') return prev;
       const cardId = prev.deck[deckIndex];

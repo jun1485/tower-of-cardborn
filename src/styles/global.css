@@ -1,4 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
+/* 메이플스토리체 (한/영 지원, 넥슨 무료 라이선스) */
+@font-face {
+  font-family: 'Maplestory';
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: url('/assets/fonts/MaplestoryLight.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Maplestory';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/assets/fonts/MaplestoryBold.woff2') format('woff2');
+}
 
 /* 글로벌 스타일 */
 
@@ -61,7 +76,7 @@ html {
 }
 
 body {
-  font-family: 'Outfit', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: 'Maplestory', 'Outfit', 'Segoe UI', system-ui, -apple-system, sans-serif;
   background-color: var(--color-bg);
   color: var(--color-text);
   cursor: var(--cursor-game);
