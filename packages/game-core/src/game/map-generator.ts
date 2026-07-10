@@ -68,8 +68,8 @@ function pickEnemies(type: NodeType, mapIndex: number, floor: number): string[] 
     }
     case 'boss': {
       const pool = mapIndex >= 3
-        ? [['slime_boss', 'fungi_beast', 'fungi_beast']]
-        : mapIndex === 2 ? [['slime_boss', 'louse_red']] : BOSS_ENCOUNTERS;
+        ? [['tower_heart']]
+        : mapIndex === 2 ? [['stone_guardian']] : BOSS_ENCOUNTERS;
       return [...pool[Math.floor(random() * pool.length)]];
     }
     case 'rest':

@@ -13,6 +13,8 @@ export const ENEMY_DEFINITIONS: Record<string, EnemyDefinition> = {
   lagavulin: { id: 'lagavulin', name: 'Lagavulin', hp: 112, maxHp: 112 },
   // 보스
   slime_boss: { id: 'slime_boss', name: 'Slime Boss', hp: 150, maxHp: 150 },
+  stone_guardian: { id: 'stone_guardian', name: 'Stone Guardian', hp: 180, maxHp: 180 },
+  tower_heart: { id: 'tower_heart', name: 'Tower Heart', hp: 220, maxHp: 220 },
 };
 
 /** 일반 전투 인카운터 */

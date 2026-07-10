@@ -544,6 +544,14 @@
   filter: saturate(1.04) contrast(1.02) drop-shadow(0 14px 12px rgba(0, 0, 0, 0.62));
 }
 
+.stoneGuardianImage {
+  filter: grayscale(0.72) sepia(0.3) contrast(1.2) brightness(0.86) drop-shadow(0 14px 12px rgba(0, 0, 0, 0.62));
+}
+
+.towerHeartImage {
+  filter: hue-rotate(235deg) saturate(1.65) contrast(1.12) drop-shadow(0 14px 12px rgba(0, 0, 0, 0.62));
+}
+
 /* 체력바 */
 .healthBar {
   position: relative;

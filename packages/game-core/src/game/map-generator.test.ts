@@ -38,12 +38,12 @@ describe('맵 생성', () => {
     expect(getAvailableNodeIds({ ...map, currentNodeId: currentNode?.id ?? null })).toEqual(currentNode?.nextNodeIds);
   });
 
-  it('2·3액트 보스전에 지원 몬스터를 추가한다', () => {
+  it('액트별 고유 보스를 배치한다', () => {
     setRandomSource(createSeededRandom(400));
     const secondBoss = generateMap(2).nodes.find((node) => node.type === 'boss');
     const thirdBoss = generateMap(3).nodes.find((node) => node.type === 'boss');
 
-    expect(secondBoss?.enemyIds).toHaveLength(2);
-    expect(thirdBoss?.enemyIds).toHaveLength(3);
+    expect(secondBoss?.enemyIds).toEqual(['stone_guardian']);
+    expect(thirdBoss?.enemyIds).toEqual(['tower_heart']);
   });
 });

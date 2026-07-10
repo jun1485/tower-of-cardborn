@@ -104,6 +104,8 @@ const ENEMY_NAMES: Record<string, Record<Language, string>> = {
   gremlin_nob: { ko: '그렘린 귀족', en: 'Gremlin Nob', zh: '地精贵族' },
   lagavulin: { ko: '라가불린', en: 'Lagavulin', zh: '拉格弗林' },
   slime_boss: { ko: '슬라임 보스', en: 'Slime Boss', zh: '史莱姆Boss' },
+  stone_guardian: { ko: '석상 수호자', en: 'Stone Guardian', zh: '石像守卫' },
+  tower_heart: { ko: '탑의 심장', en: 'Tower Heart', zh: '高塔之心' },
 };
 // #endregion
 

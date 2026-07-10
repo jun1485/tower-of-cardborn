@@ -27,6 +27,8 @@ const ENEMY_IMAGE: Record<string, string> = {
   gremlin_nob: '/assets/monsters/gremlin_nob_hd.webp?v=7',
   lagavulin: '/assets/monsters/lagavulin_hd.webp?v=7',
   slime_boss: '/assets/monsters/slime_boss_hd.webp?v=7',
+  stone_guardian: '/assets/monsters/lagavulin_hd.webp?v=7',
+  tower_heart: '/assets/monsters/slime_boss_hd.webp?v=7',
 };
 
 export function EnemyArea({
@@ -97,7 +99,10 @@ function EnemyCard({
         ? `${t('intentBuff')} ${enemy.intent.value}`
         : `${t('intentDebuff')} ${enemy.intent.statusType === 'vulnerable' ? t('vulnerable') : t('weak')} ${enemy.intent.value}`;
   const enemySpriteClassName = `${styles.characterSprite} ${styles.enemySprite}`;
-  const enemyImageClassName = `${styles.characterImage} ${styles.enemyImage}`;
+  const enemyVariantClass = enemy.definitionId === 'stone_guardian'
+    ? styles.stoneGuardianImage
+    : enemy.definitionId === 'tower_heart' ? styles.towerHeartImage : '';
+  const enemyImageClassName = `${styles.characterImage} ${styles.enemyImage} ${enemyVariantClass}`;
   const className = [
     styles.enemyCard,
     isHit ? styles.shake : '',

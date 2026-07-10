@@ -33,6 +33,10 @@ function baseIntent(enemy: Enemy): Intent {
       return lagavulinIntent(enemy.turnCount);
     case 'slime_boss':
       return slimeBossIntent(enemy.turnCount);
+    case 'stone_guardian':
+      return stoneGuardianIntent(enemy.turnCount);
+    case 'tower_heart':
+      return towerHeartIntent(enemy.turnCount);
     default:
       return { type: 'attack', value: 6 };
   }
@@ -84,6 +88,24 @@ function slimeBossIntent(turnCount: number): Intent {
   return turnCount % 3 === 1
     ? { type: 'debuff', value: 2, statusType: 'vulnerable' }
     : { type: 'defend', value: 12 };
+}
+
+/** Stone Guardian 방어와 강화 및 강공격 반복 */
+function stoneGuardianIntent(turnCount: number): Intent {
+  if (turnCount % 3 === 0) return { type: 'defend', value: 18 };
+  return turnCount % 3 === 1
+    ? { type: 'buff', value: 3 }
+    : { type: 'attack', value: 24 };
+}
+
+/** Tower Heart 취약과 연속 공격 및 강화 반복 */
+function towerHeartIntent(turnCount: number): Intent {
+  switch (turnCount % 4) {
+    case 0: return { type: 'debuff', value: 2, statusType: 'vulnerable' };
+    case 1: return { type: 'attack', value: 28 };
+    case 2: return { type: 'buff', value: 2 };
+    default: return { type: 'attack', value: 20 };
+  }
 }
 
 

@@ -33,4 +33,10 @@ describe('적 AI 패턴', () => {
     expect(decideIntent(createEnemy('fungi_beast', 2))).toEqual({ type: 'debuff', value: 2, statusType: 'weak' });
     expect(decideIntent(createEnemy('slime_boss', 1))).toEqual({ type: 'debuff', value: 2, statusType: 'vulnerable' });
   });
+
+  it('2·3액트 보스가 고유 패턴을 사용한다', () => {
+    expect(decideIntent(createEnemy('stone_guardian', 1))).toEqual({ type: 'buff', value: 3 });
+    expect(decideIntent(createEnemy('tower_heart', 0))).toEqual({ type: 'debuff', value: 2, statusType: 'vulnerable' });
+    expect(decideIntent(createEnemy('tower_heart', 2))).toEqual({ type: 'buff', value: 2 });
+  });
 });
