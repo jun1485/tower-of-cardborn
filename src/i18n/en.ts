@@ -35,6 +35,10 @@ export const en: Translations = {
   energy: 'Energy',
   player: 'Player',
   enemy: 'Enemy',
+  intentAttack: 'Attack',
+  intentDefend: 'Block',
+  intentBuff: 'Buff',
+  intentDebuff: 'Debuff',
 
   vulnerable: 'Vulnerable',
   vulnerableDesc: 'Takes 50% more damage',

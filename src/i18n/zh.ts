@@ -35,6 +35,10 @@ export const zh: Translations = {
   energy: '能量',
   player: '玩家',
   enemy: '敌人',
+  intentAttack: '攻击',
+  intentDefend: '防御',
+  intentBuff: '强化',
+  intentDebuff: '减益',
 
   vulnerable: '易伤',
   vulnerableDesc: '受到伤害增加50%',

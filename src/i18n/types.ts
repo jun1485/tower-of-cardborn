@@ -39,6 +39,10 @@ export interface Translations {
   energy: string;
   player: string;
   enemy: string;
+  intentAttack: string;
+  intentDefend: string;
+  intentBuff: string;
+  intentDebuff: string;
 
   // 상태효과
   vulnerable: string;

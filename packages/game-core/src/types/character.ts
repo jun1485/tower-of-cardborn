@@ -17,11 +17,12 @@ export interface Player {
 }
 
 /** 적 행동 인텐트 */
-export type IntentType = 'attack' | 'defend' | 'buff';
+export type IntentType = 'attack' | 'defend' | 'buff' | 'debuff';
 
 export interface Intent {
   readonly type: IntentType;
   readonly value: number;
+  readonly statusType?: Exclude<StatusEffectType, 'strength'>;
 }
 
 export interface Enemy {

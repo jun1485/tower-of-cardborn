@@ -35,6 +35,10 @@ export const ko: Translations = {
   energy: '에너지',
   player: '플레이어',
   enemy: '적',
+  intentAttack: '공격',
+  intentDefend: '방어',
+  intentBuff: '강화',
+  intentDebuff: '상태이상',
 
   vulnerable: '취약',
   vulnerableDesc: '받는 데미지 50% 증가',

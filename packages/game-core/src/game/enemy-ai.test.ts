@@ -28,4 +28,9 @@ describe('적 AI 패턴', () => {
   it('액트와 승천 공격 배율을 함께 반영한다', () => {
     expect(decideIntent(createEnemy('jaw_worm', 0), 2, 3)).toEqual({ type: 'attack', value: 12 });
   });
+
+  it('균류 야수와 슬라임 보스가 상태이상을 예고한다', () => {
+    expect(decideIntent(createEnemy('fungi_beast', 2))).toEqual({ type: 'debuff', value: 2, statusType: 'weak' });
+    expect(decideIntent(createEnemy('slime_boss', 1))).toEqual({ type: 'debuff', value: 2, statusType: 'vulnerable' });
+  });
 });

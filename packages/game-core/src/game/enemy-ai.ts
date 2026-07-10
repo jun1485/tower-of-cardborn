@@ -57,10 +57,10 @@ function louseRedIntent(): Intent {
   return { type: 'attack', value: 4 + Math.floor(random() * 4) };
 }
 
-/** Fungi Beast: 공격(5) / 공격(5) / 방어(3) 반복 */
+/** Fungi Beast 공격과 약화 반복 */
 function fungiBeastIntent(turnCount: number): Intent {
   return turnCount % 3 === 2
-    ? { type: 'defend', value: 3 }
+    ? { type: 'debuff', value: 2, statusType: 'weak' }
     : { type: 'attack', value: 5 };
 }
 
@@ -78,11 +78,12 @@ function lagavulinIntent(turnCount: number): Intent {
     : { type: 'attack', value: 18 };
 }
 
-/** Slime Boss: 강공격(35) / 방어(10) 교대 */
+/** Slime Boss 강공격과 취약 및 방어 반복 */
 function slimeBossIntent(turnCount: number): Intent {
-  return turnCount % 2 === 0
-    ? { type: 'attack', value: 35 }
-    : { type: 'defend', value: 10 };
+  if (turnCount % 3 === 0) return { type: 'attack', value: 35 };
+  return turnCount % 3 === 1
+    ? { type: 'debuff', value: 2, statusType: 'vulnerable' }
+    : { type: 'defend', value: 12 };
 }
 
 

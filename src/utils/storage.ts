@@ -109,8 +109,11 @@ function isPlayer(value: unknown): value is Player {
 /** 적 인텐트 구조 확인 */
 function isIntent(value: unknown): value is Intent {
   return isRecord(value)
-    && (value.type === 'attack' || value.type === 'defend' || value.type === 'buff')
-    && isNonNegativeInteger(value.value);
+    && (value.type === 'attack' || value.type === 'defend' || value.type === 'buff' || value.type === 'debuff')
+    && isNonNegativeInteger(value.value)
+    && (value.type !== 'debuff'
+      || value.statusType === 'vulnerable'
+      || value.statusType === 'weak');
 }
 
 /** 적 상태 구조 확인 */

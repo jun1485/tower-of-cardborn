@@ -400,6 +400,10 @@ function executeEnemyAction(
         enemy: { ...enemy, statusEffects: addStatusEffect(enemy.statusEffects, 'strength', enemy.intent.value) },
         player,
       };
+    case 'debuff':
+      return enemy.intent.statusType
+        ? { enemy, player: addPlayerStatus(player, enemy.intent.statusType, enemy.intent.value + 1) }
+        : { enemy, player };
   }
 }
 

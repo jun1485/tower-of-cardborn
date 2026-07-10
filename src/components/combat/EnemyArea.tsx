@@ -89,6 +89,13 @@ function EnemyCard({
   const isHit = prevHp > enemy.hp;
   const enemyImage = ENEMY_IMAGE[enemy.definitionId] ?? '/assets/monsters/jaw_worm_hd.webp?v=7';
   const localizedName = getEnemyName(enemy.definitionId, lang);
+  const intentLabel = enemy.intent.type === 'attack'
+    ? `${t('intentAttack')} ${getDisplayedAttack(enemy)}`
+    : enemy.intent.type === 'defend'
+      ? `${t('intentDefend')} ${enemy.intent.value}`
+      : enemy.intent.type === 'buff'
+        ? `${t('intentBuff')} ${enemy.intent.value}`
+        : `${t('intentDebuff')} ${enemy.intent.statusType === 'vulnerable' ? t('vulnerable') : t('weak')} ${enemy.intent.value}`;
   const enemySpriteClassName = `${styles.characterSprite} ${styles.enemySprite}`;
   const enemyImageClassName = `${styles.characterImage} ${styles.enemyImage}`;
   const className = [
@@ -108,7 +115,7 @@ function EnemyCard({
       role={targetSelectable ? 'button' : undefined}
       tabIndex={targetSelectable ? 0 : undefined}
       aria-pressed={targetSelectable ? selected : undefined}
-      aria-label={targetSelectable ? localizedName : undefined}
+      aria-label={targetSelectable ? `${localizedName}, ${enemy.hp}/${enemy.maxHp}, ${intentLabel}` : undefined}
       onClick={() => targetSelectable && onSelectEnemy(enemy.id)}
       onKeyDown={(event) => {
         if (!targetSelectable || (event.key !== 'Enter' && event.key !== ' ')) return;
@@ -121,10 +128,11 @@ function EnemyCard({
       {targetSelectable && selected && !(targetingActive && hovered) && (
         <div className={styles.enemyTargetBadge}>🎯</div>
       )}
-      <div className={styles.enemyIntent}>
+      <div className={styles.enemyIntent} aria-label={intentLabel}>
         {enemy.intent.type === 'attack' && `⚔️ ${getDisplayedAttack(enemy)}`}
         {enemy.intent.type === 'defend' && `🛡 ${enemy.intent.value}`}
         {enemy.intent.type === 'buff' && `⬆️ ${enemy.intent.value}`}
+        {enemy.intent.type === 'debuff' && `${enemy.intent.statusType === 'vulnerable' ? '💥' : '🔻'} ${enemy.intent.value}`}
       </div>
       <div className={enemySpriteClassName}>
         <img className={enemyImageClassName} src={enemyImage} alt={localizedName} decoding="async" />

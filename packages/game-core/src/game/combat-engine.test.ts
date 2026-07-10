@@ -62,6 +62,12 @@ describe('적 인텐트', () => {
 
     expect(result.player.hp).toBe(72);
   });
+
+  it('디버프 인텐트로 플레이어 상태이상을 부여한다', () => {
+    const result = endPlayerTurn(createCombatState({ type: 'debuff', value: 2, statusType: 'weak' }));
+
+    expect(result.player.statusEffects).toContainEqual({ type: 'weak', duration: 2 });
+  });
 });
 
 describe('액트 난이도', () => {
