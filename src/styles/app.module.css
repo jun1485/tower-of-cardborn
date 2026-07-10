@@ -1,4 +1,4 @@
-/* 앱/타이틀/결과 화면 스타일 */
+/* 앱/타이틀/결과 화면 스타일: 게임 UI는 rem 스케일, 시스템 오버레이는 px 고정 */
 
 .titleScreen {
   display: flex;
@@ -6,15 +6,15 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  gap: 20px;
-  padding: calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+  gap: 1.25rem;
+  padding: calc(1.25rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right)) calc(1rem + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left));
   background: radial-gradient(circle at 50% 40%, #201a30 0%, #0d0c14 70%, #050508 100%);
   position: relative;
   overflow: hidden;
 }
 
 .title {
-  font-size: 40px;
+  font-size: max(22px, 2.5rem);
   font-weight: bold;
   background: linear-gradient(135deg, var(--color-accent), var(--color-energy));
   -webkit-background-clip: text;
@@ -23,27 +23,28 @@
 }
 
 .subtitle {
-  font-size: 16px;
+  font-size: max(11px, 1rem);
   color: var(--color-text-dim);
 }
 
 .startBtn {
-  padding: 16px 48px;
-  font-size: 22px;
+  padding: 1rem 3rem;
+  min-height: max(44px, 3.375rem);
+  font-size: max(14px, 1.375rem);
   font-weight: 800;
-  letter-spacing: 2px;
+  letter-spacing: 0.09em;
   background: linear-gradient(135deg, var(--color-accent), #8c1d30);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(194, 46, 71, 0.4);
+  border-radius: 0.75rem;
+  box-shadow: 0 0.25rem 0.9375rem rgba(194, 46, 71, 0.4);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   transition: all 0.2s ease;
 }
 
 .startBtn:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(233, 69, 96, 0.6);
+  box-shadow: 0 0.5rem 1.5625rem rgba(233, 69, 96, 0.6);
   border-color: rgba(255, 255, 255, 0.4);
 }
 
@@ -52,60 +53,78 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   justify-items: center;
-  gap: 16px;
+  gap: 1rem;
   width: 100%;
-  max-width: 640px;
-  padding: 0 16px;
+  max-width: 40rem;
+  padding: 0 1rem;
 }
 
 .classCard {
   width: 100%;
-  max-width: 280px;
-  min-height: 180px;
+  max-width: 17.5rem;
+  min-height: 11.25rem;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 24px 20px;
+  gap: 0.625rem;
+  padding: 1.5rem 1.25rem;
   background: linear-gradient(135deg, rgba(35, 38, 52, 0.8) 0%, rgba(20, 22, 30, 0.9) 100%);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
+  border-radius: 0.875rem;
   color: var(--color-text);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.5);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .classCard:hover {
-  transform: translateY(-6px);
+  transform: translateY(-0.375rem);
   border-color: var(--color-accent);
-  box-shadow: 0 12px 30px rgba(194, 46, 71, 0.4);
+  box-shadow: 0 0.75rem 1.875rem rgba(194, 46, 71, 0.4);
   background: linear-gradient(135deg, rgba(45, 48, 62, 0.9) 0%, rgba(25, 27, 35, 1) 100%);
 }
 
 .classIcon {
-  width: 60px;
-  height: 60px;
+  width: max(36px, 3.75rem);
+  height: max(36px, 3.75rem);
   object-fit: contain;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
 }
 
 .className {
-  font-size: 18px;
+  font-size: max(12px, 1.125rem);
   font-weight: bold;
 }
 
 .classDeck {
-  min-height: 36px;
+  min-height: 2.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   line-height: 1.5;
-  font-size: 12px;
+  font-size: max(9px, 0.75rem);
   color: var(--color-text-dim);
+}
+
+/* 낮은 화면(가로 모바일): 직업 카드 4열 배치 */
+@media (orientation: landscape) and (max-height: 520px) {
+  .classSelection {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-width: none;
+    gap: 0.75rem;
+  }
+
+  .classCard {
+    min-height: auto;
+    padding: 1rem 0.75rem;
+  }
+
+  .classDeck {
+    min-height: auto;
+  }
 }
 
 /* 결과 화면 */
@@ -115,15 +134,15 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  gap: 20px;
-  padding: calc(24px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+  gap: 1.25rem;
+  padding: calc(1.5rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right)) calc(1.5rem + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left));
   background: radial-gradient(circle at 50% 50%, #1c1a24 0%, #0a0a0f 100%);
   position: relative;
   overflow-y: auto;
 }
 
 .resultTitle {
-  font-size: 48px;
+  font-size: max(24px, 3rem);
   font-weight: bold;
 }
 
@@ -136,12 +155,13 @@
 }
 
 .resultBtn {
-  padding: 14px 36px;
-  font-size: 16px;
+  padding: 0.875rem 2.25rem;
+  min-height: max(40px, 3.25rem);
+  font-size: max(12px, 1rem);
   font-weight: bold;
   background: var(--color-primary);
   color: var(--color-text);
-  border-radius: 8px;
+  border-radius: 0.5rem;
   transition: background 0.15s;
   flex-shrink: 0;
 }
@@ -150,15 +170,161 @@
   background: var(--color-accent);
 }
 
+/* 골드 표시 배지 */
+.goldBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 213, 79, 0.35);
+  background: rgba(255, 213, 79, 0.12);
+  color: #ffd54f;
+  font-size: max(12px, 1.0625rem);
+  font-weight: 800;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+/* 상점 카드 가격 태그 */
+.shopPrice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: max(18px, 1.625rem);
+  padding: 0 0.75rem;
+  margin-top: 0.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 213, 79, 0.4);
+  background: rgba(10, 10, 14, 0.72);
+  color: #ffd54f;
+  font-size: max(10px, 0.8125rem);
+  font-weight: 800;
+}
+
+/* 카드 제거 화면: 파괴 강조 호버 */
+.removeCardBtn:hover {
+  border-color: var(--color-defeat);
+  box-shadow: 0 0.5rem 1.5rem rgba(232, 65, 24, 0.35);
+}
+
+/* 런 통계 라인 */
+.statsLine {
+  font-size: max(11px, 0.9375rem);
+  color: var(--color-text-dim);
+}
+
+/* 승천 레벨 선택 스테퍼 */
+.ascensionGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.ascensionRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ascensionStepBtn {
+  width: max(40px, 2.75rem);
+  height: max(40px, 2.75rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.625rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+  font-size: max(13px, 1rem);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ascensionStepBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.ascensionValue {
+  min-width: 7rem;
+  text-align: center;
+  font-size: max(13px, 1.125rem);
+  font-weight: 800;
+  color: var(--color-energy);
+}
+
+.ascensionDesc {
+  font-size: max(9px, 0.8125rem);
+  color: var(--color-text-dim);
+}
+
+/* 이벤트 화면 */
+.eventEmoji {
+  font-size: max(40px, 4.5rem);
+  line-height: 1;
+  filter: drop-shadow(0 0.5rem 0.75rem rgba(0, 0, 0, 0.5));
+}
+
+.eventTitle {
+  font-size: max(18px, 2rem);
+  font-weight: bold;
+  color: var(--color-text);
+}
+
+.eventBody {
+  max-width: 34rem;
+  text-align: center;
+  font-size: max(11px, 1.0625rem);
+  line-height: 1.7;
+  color: var(--color-text-dim);
+}
+
+.eventChoices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 30rem;
+}
+
+.eventChoiceBtn {
+  min-height: max(44px, 3.5rem);
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(135deg, rgba(35, 38, 52, 0.9) 0%, rgba(20, 22, 30, 0.95) 100%);
+  color: var(--color-text);
+  font-size: max(11px, 1rem);
+  font-weight: 700;
+  line-height: 1.4;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.eventChoiceBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--color-energy);
+  background: linear-gradient(135deg, rgba(50, 52, 64, 0.95) 0%, rgba(30, 32, 40, 1) 100%);
+}
+
+.eventResultText {
+  max-width: 34rem;
+  text-align: center;
+  font-size: max(12px, 1.125rem);
+  line-height: 1.7;
+  color: #f5e2b0;
+}
+
 /* 보상 카드 선택 영역 */
 .rewardCards {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 1rem;
   justify-content: center;
-  padding: 16px;
+  padding: 1rem;
   width: 100%;
-  max-width: 720px;
+  max-width: 45rem;
 }
 
 .rewardCard {
@@ -167,33 +333,35 @@
 }
 
 .rewardCard:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.5);
 }
 
 /* 카드 강화 선택 화면 */
 .upgradeGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 0.75rem;
   justify-content: center;
-  padding: 16px;
+  padding: 1rem;
   width: 100%;
-  max-width: 800px;
+  max-width: 50rem;
   max-height: 60vh;
+  max-height: 60dvh;
   overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .upgradeCard {
-  width: 196px;
-  min-height: 360px;
-  border-radius: 12px;
-  padding: 12px;
+  width: max(120px, 12.25rem);
+  min-height: max(210px, 22.5rem);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   color: var(--color-text);
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  border: max(1px, 0.125rem) solid rgba(255, 255, 255, 0.15);
   cursor: pointer;
   position: relative;
   font-family: inherit;
@@ -201,7 +369,7 @@
 }
 
 .upgradeCard:not(.upgradeCardDisabled):hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.5);
   border-color: var(--color-victory);
 }
 
@@ -211,21 +379,20 @@
 }
 
 .upgradePreview {
-  font-size: 11px;
+  font-size: max(8px, 0.6875rem);
   color: var(--color-victory);
   text-align: center;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 6px;
+  padding-top: 0.375rem;
   margin-top: auto;
 }
 
 .upgradeAlready {
-  font-size: 11px;
+  font-size: max(8px, 0.6875rem);
   color: rgba(255, 255, 255, 0.4);
   margin-top: auto;
 }
 
-/* 개인정보 처리방침 링크 */
 /* 확인 다이얼로그 */
 .confirmOverlay {
   position: fixed;
@@ -304,6 +471,7 @@
   width: calc(100% - 32px);
   max-width: 420px;
   max-height: 80vh;
+  max-height: 80dvh;
   overflow-y: auto;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -374,7 +542,7 @@
 }
 
 .langBtn {
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: transparent;
@@ -484,9 +652,9 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* 글로벌 설정 버튼 (모든 화면에서 표시) */
+/* 글로벌 설정 버튼 (게임 박스 우상단 고정) */
 .globalSettingsBtn {
-  position: fixed;
+  position: absolute;
   top: calc(12px + env(safe-area-inset-top));
   right: calc(12px + env(safe-area-inset-right));
   width: 40px;
@@ -539,6 +707,7 @@
   width: calc(100% - 32px);
   max-width: 600px;
   max-height: 80vh;
+  max-height: 80dvh;
   overflow-y: auto;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -586,177 +755,3 @@
 .policyContent p {
   margin: 0 0 12px;
 }
-
-/* 모바일 대응 (900px 이하) */
-@media (max-width: 900px) {
-  .titleScreen {
-    gap: 16px;
-    padding: 16px 10px calc(12px + env(safe-area-inset-bottom));
-  }
-
-  .title {
-    font-size: 32px;
-  }
-
-  .subtitle {
-    font-size: 13px;
-  }
-
-  .startBtn {
-    padding: 14px 32px;
-    font-size: 18px;
-    letter-spacing: 1.5px;
-  }
-
-  .classSelection {
-    gap: 12px;
-    padding: 0 8px;
-    max-width: 480px;
-  }
-
-  .classCard {
-    max-width: 220px;
-    min-height: 140px;
-    padding: 16px 14px;
-    gap: 8px;
-    border-radius: 12px;
-  }
-
-  .classIcon {
-    width: 48px;
-    height: 48px;
-  }
-
-  .className {
-    font-size: 15px;
-  }
-
-  .resultScreen {
-    gap: 16px;
-    padding: 20px 12px calc(20px + env(safe-area-inset-bottom));
-  }
-
-  .resultTitle {
-    font-size: 36px;
-  }
-
-  .resultBtn {
-    padding: 12px 28px;
-    font-size: 14px;
-  }
-
-  .rewardCards {
-    gap: 12px;
-    padding: 8px;
-  }
-
-  .upgradeGrid {
-    gap: 10px;
-    padding: 8px;
-    max-height: 55vh;
-  }
-
-  .upgradeCard {
-    width: 140px;
-    min-height: 260px;
-    padding: 8px;
-    gap: 6px;
-    border-radius: 10px;
-  }
-
-  .upgradePreview {
-    font-size: 9px;
-    padding-top: 4px;
-  }
-
-  .upgradeAlready {
-    font-size: 9px;
-  }
-}
-
-/* 모바일 대응 (640px 이하) */
-@media (max-width: 640px) {
-  .titleScreen {
-    gap: 14px;
-    padding: 12px 8px calc(10px + env(safe-area-inset-bottom));
-  }
-
-  .title {
-    font-size: 26px;
-  }
-
-  .startBtn {
-    padding: 12px 24px;
-    font-size: 16px;
-    letter-spacing: 1px;
-    width: calc(100% - 32px);
-    max-width: 320px;
-  }
-
-  .classSelection {
-    gap: 10px;
-    padding: 0 6px;
-    max-width: 360px;
-  }
-
-  .classCard {
-    max-width: none;
-    min-height: auto;
-    padding: 14px 12px;
-    gap: 6px;
-    border-radius: 10px;
-  }
-
-  .classIcon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .className {
-    font-size: 14px;
-  }
-
-  .classDeck {
-    font-size: 10px;
-    min-height: auto;
-  }
-
-  .resultScreen {
-    gap: 12px;
-    padding: 14px 8px calc(12px + env(safe-area-inset-bottom));
-  }
-
-  .resultTitle {
-    font-size: 26px;
-  }
-
-  .resultBtn {
-    padding: 10px 22px;
-    font-size: 13px;
-    width: calc(100% - 32px);
-    max-width: 280px;
-  }
-
-  .rewardCards {
-    gap: 8px;
-    padding: 4px;
-  }
-
-  .upgradeGrid {
-    gap: 8px;
-    padding: 4px;
-    max-height: 50vh;
-  }
-
-  .upgradeCard {
-    width: 120px;
-    min-height: 220px;
-    padding: 6px;
-    gap: 4px;
-  }
-
-  .upgradePreview {
-    font-size: 8px;
-  }
-}
-

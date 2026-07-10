@@ -1504,6 +1504,13 @@ export function getRewardCards(count = 3, characterClass: CharacterClass = 'warr
 }
 // #endregion
 
+/** 상점 카드 가격 산정 */
+export function getCardPrice(cardId: string): number {
+  const def = CARD_DEFINITIONS[cardId];
+  if (!def) return 50;
+  return 45 + def.cost * 10;
+}
+
 /** 업그레이드 가능한 카드인지 확인 */
 export function canUpgrade(cardId: string): boolean {
   const def = CARD_DEFINITIONS[cardId];

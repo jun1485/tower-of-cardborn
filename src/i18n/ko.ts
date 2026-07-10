@@ -49,14 +49,39 @@ export const ko: Translations = {
   nodecombat: '전투',
   nodeElite: '엘리트',
   nodeRest: '휴식',
+  nodeShop: '상점',
+  nodeEvent: '이벤트',
   nodeBoss: '보스',
   mapLabel: '맵',
   deckCount: '장',
   floor: 'F',
 
+  eventContinue: '계속',
+
+  ascensionLabel: '승천 {0}',
+  ascensionNormal: '일반',
+  ascDesc0: '기본 난이도',
+  ascDesc1: '적 HP +10%',
+  ascDesc2: '적 HP +10% · 적 공격 +10%',
+  ascDesc3: '적 HP +25% · 적 공격 +10% · 시작 골드 50',
+  ascDesc4: '적 HP +25% · 적 공격 +20% · 시작 HP 72',
+  ascDesc5: '적 HP +40% · 적 공격 +25% · 휴식 회복 25%',
+  ascensionUnlockedMsg: '승천 {0} 해금!',
+
   restTitle: '휴식',
   restHeal: '휴식 (HP +{0})',
   upgradeOption: '강화 (카드 1장 업그레이드)',
+  removeOption: '정비 (카드 1장 제거)',
+
+  removeTitle: '카드 제거',
+  removeSelect: '덱에서 제거할 카드를 선택하세요',
+
+  shopTitle: '상점',
+  shopSelect: '골드로 카드를 구매하세요',
+  shopRemoveService: '카드 제거 ({0} 골드)',
+  shopLeave: '나가기',
+
+  goldReward: '+{0} 골드',
 
   upgradeTitle: '카드 강화',
   upgradeSelect: '강화할 카드를 선택하세요',
@@ -65,6 +90,9 @@ export const ko: Translations = {
   victoryTitle: '게임 클리어!',
   defeatTitle: '패배...',
   deckStat: '덱 {0}장 · HP {1}/{2}',
+  runStats: '{0}층 도달 · 적 {1}명 처치 · {2} 골드',
+
+  metaStats: '도전 {0}회 · 승리 {1}회 ({2}%) · 최고 {3}층 · 누적 처치 {4}',
 
   settings: '설정',
   bgmVolume: 'BGM 볼륨',

@@ -49,14 +49,39 @@ export const zh: Translations = {
   nodecombat: '战斗',
   nodeElite: '精英',
   nodeRest: '休息',
+  nodeShop: '商店',
+  nodeEvent: '事件',
   nodeBoss: 'Boss',
   mapLabel: '地图',
   deckCount: '张',
   floor: 'F',
 
+  eventContinue: '继续',
+
+  ascensionLabel: '进阶 {0}',
+  ascensionNormal: '普通',
+  ascDesc0: '基础难度',
+  ascDesc1: '敌人HP +10%',
+  ascDesc2: '敌人HP +10% · 敌人攻击 +10%',
+  ascDesc3: '敌人HP +25% · 敌人攻击 +10% · 初始金币50',
+  ascDesc4: '敌人HP +25% · 敌人攻击 +20% · 初始HP 72',
+  ascDesc5: '敌人HP +40% · 敌人攻击 +25% · 休息恢复25%',
+  ascensionUnlockedMsg: '解锁进阶 {0}！',
+
   restTitle: '休息',
   restHeal: '休息 (HP +{0})',
   upgradeOption: '强化（升级1张卡牌）',
+  removeOption: '整备（移除1张卡牌）',
+
+  removeTitle: '移除卡牌',
+  removeSelect: '选择要从牌组中移除的卡牌',
+
+  shopTitle: '商店',
+  shopSelect: '用金币购买卡牌',
+  shopRemoveService: '移除卡牌（{0} 金币）',
+  shopLeave: '离开',
+
+  goldReward: '+{0} 金币',
 
   upgradeTitle: '卡牌强化',
   upgradeSelect: '选择要强化的卡牌',
@@ -65,6 +90,9 @@ export const zh: Translations = {
   victoryTitle: '通关！',
   defeatTitle: '失败...',
   deckStat: '牌组 {0}张 · HP {1}/{2}',
+  runStats: '到达 {0} 层 · 击败 {1} 名敌人 · {2} 金币',
+
+  metaStats: '挑战 {0} 次 · 胜利 {1} 次（{2}%）· 最高 {3} 层 · 累计击杀 {4}',
 
   settings: '设置',
   bgmVolume: 'BGM 音量',

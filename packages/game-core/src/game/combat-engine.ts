@@ -5,6 +5,7 @@ import type { CombatState } from '../types/combat';
 import type { Enemy, Player, StatusEffect } from '../types/character';
 import { CARD_DEFINITIONS } from '../data/cards';
 import { ENEMY_DEFINITIONS } from '../data/enemies';
+import { getAscensionModifier } from '../data/ascension';
 import { createDrawPile, discardHand, drawCards } from './deck-manager';
 import { decideIntent } from './enemy-ai';
 import { generateId } from '../utils/random';
@@ -13,12 +14,19 @@ const HAND_SIZE = 5;
 const STARTING_ENERGY = 3;
 
 // #region 전투 초기화
+/** 승천 레벨별 적 체력 배율 적용 */
+function scaleEnemyHp(hp: number, ascension: number): number {
+  const { enemyHpMul } = getAscensionModifier(ascension);
+  return enemyHpMul === 1 ? hp : Math.round(hp * enemyHpMul);
+}
+
 /** 전투 상태 초기 생성 */
 export function initCombat(
   deckIds: readonly string[],
   enemyIds: readonly string[],
   playerHp = 80,
   playerMaxHp = 80,
+  ascension = 0,
 ): CombatState {
   const drawPile = createDrawPile(deckIds);
   const enemies: Enemy[] = enemyIds.map((id) => {
@@ -26,15 +34,15 @@ export function initCombat(
     const enemy: Enemy = {
       id: generateId(),
       name: def.name,
-      hp: def.hp,
-      maxHp: def.maxHp,
+      hp: scaleEnemyHp(def.hp, ascension),
+      maxHp: scaleEnemyHp(def.maxHp, ascension),
       block: 0,
       intent: { type: 'attack', value: 0 },
       statusEffects: [],
       turnCount: 0,
       definitionId: def.id,
     };
-    return { ...enemy, intent: decideIntent(enemy) };
+    return { ...enemy, intent: decideIntent(enemy, ascension) };
   });
 
   const player: Player = {
@@ -58,6 +66,7 @@ export function initCombat(
     turn: 1,
     phase: 'player_turn',
     result: 'ongoing',
+    ascension,
   };
 }
 // #endregion
@@ -328,7 +337,7 @@ export function endPlayerTurn(state: CombatState): CombatState {
       turnCount: newTurnCount,
       statusEffects: tickStatusEffects(enemy.statusEffects),
     };
-    return { ...updatedEnemy, intent: decideIntent(updatedEnemy) };
+    return { ...updatedEnemy, intent: decideIntent(updatedEnemy, state.ascension) };
   });
 
   // 다음 턴: 플레이어 방어 초기화 + 에너지 충전 + 드로우
@@ -351,6 +360,7 @@ export function endPlayerTurn(state: CombatState): CombatState {
     turn: state.turn + 1,
     phase: 'player_turn',
     result: 'ongoing',
+    ascension: state.ascension,
   };
 }
 

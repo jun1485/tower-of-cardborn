@@ -11,6 +11,7 @@ import styles from '../../styles/combat.module.css';
 
 interface EnemyAreaProps {
   readonly enemies: readonly Enemy[];
+  readonly selectedEnemyId: string | null;
   readonly hoveredEnemyId: string | null;
   readonly lungingEnemyIds: readonly string[];
   readonly targetSelectable: boolean;
@@ -30,6 +31,7 @@ const ENEMY_IMAGE: Record<string, string> = {
 
 export function EnemyArea({
   enemies,
+  selectedEnemyId,
   hoveredEnemyId,
   lungingEnemyIds,
   targetSelectable,
@@ -42,6 +44,7 @@ export function EnemyArea({
         <EnemyCard
           key={enemy.id}
           enemy={enemy}
+          selected={selectedEnemyId === enemy.id}
           hovered={hoveredEnemyId === enemy.id}
           isLunging={lungingEnemyIds.includes(enemy.id)}
           targetSelectable={targetSelectable}
@@ -61,6 +64,7 @@ function getDisplayedAttack(enemy: Enemy): number {
 
 interface EnemyCardProps {
   readonly enemy: Enemy;
+  readonly selected: boolean;
   readonly hovered: boolean;
   readonly isLunging: boolean;
   readonly targetSelectable: boolean;
@@ -70,6 +74,7 @@ interface EnemyCardProps {
 
 function EnemyCard({
   enemy,
+  selected,
   hovered,
   isLunging,
   targetSelectable,
@@ -91,6 +96,7 @@ function EnemyCard({
     targetingActive ? styles.enemyDraggable : '',
     targetingActive && hovered ? styles.enemyDropTarget : '',
     targetSelectable ? styles.enemyTargetable : '',
+    targetSelectable && selected ? styles.enemySelected : '',
   ].join(' ');
 
   return (
@@ -99,7 +105,11 @@ function EnemyCard({
       data-enemy-id={enemy.id}
       onClick={() => targetSelectable && onSelectEnemy(enemy.id)}
     >
+      {/* 드래그 조준 배지 우선, 미조준 시 선택 타겟 배지 표시 */}
       {targetingActive && hovered && <div className={styles.enemyDropTargetBadge}>🎯</div>}
+      {targetSelectable && selected && !(targetingActive && hovered) && (
+        <div className={styles.enemyTargetBadge}>🎯</div>
+      )}
       <div className={styles.enemyIntent}>
         {enemy.intent.type === 'attack' && `⚔️ ${getDisplayedAttack(enemy)}`}
         {enemy.intent.type === 'defend' && `🛡 ${enemy.intent.value}`}

@@ -49,14 +49,39 @@ export const en: Translations = {
   nodecombat: 'Combat',
   nodeElite: 'Elite',
   nodeRest: 'Rest',
+  nodeShop: 'Shop',
+  nodeEvent: 'Event',
   nodeBoss: 'Boss',
   mapLabel: 'Map',
   deckCount: '',
   floor: 'F',
 
+  eventContinue: 'Continue',
+
+  ascensionLabel: 'Ascension {0}',
+  ascensionNormal: 'Normal',
+  ascDesc0: 'Base difficulty',
+  ascDesc1: 'Enemy HP +10%',
+  ascDesc2: 'Enemy HP +10% · Enemy ATK +10%',
+  ascDesc3: 'Enemy HP +25% · Enemy ATK +10% · Start with 50 Gold',
+  ascDesc4: 'Enemy HP +25% · Enemy ATK +20% · Start with 72 HP',
+  ascDesc5: 'Enemy HP +40% · Enemy ATK +25% · Rest heals 25%',
+  ascensionUnlockedMsg: 'Ascension {0} unlocked!',
+
   restTitle: 'Rest',
   restHeal: 'Rest (HP +{0})',
   upgradeOption: 'Upgrade (enhance 1 card)',
+  removeOption: 'Refine (remove 1 card)',
+
+  removeTitle: 'Remove Card',
+  removeSelect: 'Choose a card to remove from your deck',
+
+  shopTitle: 'Shop',
+  shopSelect: 'Buy cards with gold',
+  shopRemoveService: 'Remove a card ({0} gold)',
+  shopLeave: 'Leave',
+
+  goldReward: '+{0} Gold',
 
   upgradeTitle: 'Card Upgrade',
   upgradeSelect: 'Choose a card to upgrade',
@@ -65,6 +90,9 @@ export const en: Translations = {
   victoryTitle: 'Victory!',
   defeatTitle: 'Defeat...',
   deckStat: 'Deck {0} · HP {1}/{2}',
+  runStats: 'Floor {0} · {1} enemies slain · {2} gold',
+
+  metaStats: 'Runs {0} · Wins {1} ({2}%) · Best floor {3} · Total kills {4}',
 
   settings: 'Settings',
   bgmVolume: 'BGM Volume',

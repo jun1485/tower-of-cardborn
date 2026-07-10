@@ -1,5 +1,6 @@
-// 상태 효과 배지 + 호버 툴팁
+// 상태 효과 배지 + 호버/탭 툴팁
 
+import { useState } from 'react';
 import type { StatusEffect } from '@tower-of-cardborn/game-core/types/character';
 import { useTranslation } from '../../i18n';
 import type { TFunction } from '../../i18n';
@@ -35,12 +36,18 @@ function getStatusInfo(effect: StatusEffect, t: TFunction): { icon: string; labe
 
 export function StatusBadge({ effect }: StatusBadgeProps) {
   const t = useTranslation();
+  const [open, setOpen] = useState(false);
   const info = getStatusInfo(effect, t);
 
   return (
-    <span className={styles.statusBadge}>
+    <button
+      type="button"
+      className={`${styles.statusBadge} ${open ? styles.statusBadgeOpen : ''}`}
+      onClick={() => setOpen((prev) => !prev)}
+      onBlur={() => setOpen(false)}
+    >
       {info.icon} {info.label}
       <span className={styles.statusTooltip}>{info.description}</span>
-    </span>
+    </button>
   );
 }

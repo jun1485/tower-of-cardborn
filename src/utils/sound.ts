@@ -19,15 +19,12 @@ export function resumeAudioContext(): void {
 }
 
 // #region 효과음 이름 정의
-const SFX_NAMES = [
-  'card_attack', 'card_skill', 'card_power',
-  'enemy_hit', 'player_hit', 'block',
-  'turn_end', 'card_draw',
-  'heal', 'upgrade', 'reward_pick', 'map_select',
-  'button_click', 'victory', 'defeat',
-] as const;
-
-export type SfxName = (typeof SFX_NAMES)[number];
+export type SfxName =
+  | 'card_attack' | 'card_skill' | 'card_power'
+  | 'enemy_hit' | 'player_hit' | 'block'
+  | 'turn_end' | 'card_draw'
+  | 'heal' | 'upgrade' | 'reward_pick' | 'map_select'
+  | 'button_click' | 'victory' | 'defeat';
 
 /** 실제 .mp3 파일이 존재하는 효과음 목록 */
 const AVAILABLE_SFX = new Set<SfxName>([

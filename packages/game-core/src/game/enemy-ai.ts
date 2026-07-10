@@ -1,9 +1,21 @@
 // 적 AI: 인텐트 결정 및 행동 실행
 
 import type { Enemy, Intent } from '../types/character';
+import { getAscensionModifier } from '../data/ascension';
+
+/** 승천 레벨별 공격 인텐트 배율 적용 */
+function scaleIntent(intent: Intent, atkMul: number): Intent {
+  if (intent.type !== 'attack' || atkMul === 1) return intent;
+  return { ...intent, value: Math.round(intent.value * atkMul) };
+}
 
 /** 적 정의 ID 기반 인텐트 결정 */
-export function decideIntent(enemy: Enemy): Intent {
+export function decideIntent(enemy: Enemy, ascension = 0): Intent {
+  return scaleIntent(baseIntent(enemy), getAscensionModifier(ascension).enemyAtkMul);
+}
+
+/** 적 정의 ID 기반 기본 인텐트 산출 */
+function baseIntent(enemy: Enemy): Intent {
   switch (enemy.definitionId) {
     case 'jaw_worm':
       return jawWormIntent(enemy.turnCount);

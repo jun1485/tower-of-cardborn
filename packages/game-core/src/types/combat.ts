@@ -17,4 +17,6 @@ export interface CombatState {
   readonly turn: number;
   readonly phase: TurnPhase;
   readonly result: CombatResult;
+  /** 승천 난이도 레벨 (적 강화 배율 기준) */
+  readonly ascension: number;
 }

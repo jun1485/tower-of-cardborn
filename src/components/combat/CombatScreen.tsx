@@ -115,24 +115,14 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
     };
   }, [handleEndTurnWithAnimation]);
 
-  // #region 적 타겟 선택 동기화
-  useEffect(() => {
-    if (combat.enemies.length === 0) {
-      setSelectedEnemyId(null);
-      setHoveredEnemyId(null);
-      return;
-    }
-
-    const selectedAlive = selectedEnemyId && combat.enemies.some((enemy) => enemy.id === selectedEnemyId);
-    if (!selectedAlive) {
-      setSelectedEnemyId(combat.enemies[0].id);
-    }
-
-    const hoveredAlive = hoveredEnemyId && combat.enemies.some((enemy) => enemy.id === hoveredEnemyId);
-    if (!hoveredAlive) {
-      setHoveredEnemyId(null);
-    }
-  }, [combat.enemies, selectedEnemyId, hoveredEnemyId]);
+  // #region 적 타겟 선택 보정
+  // 선택/호버 대상 사망 시 생존 적 기준 파생 보정
+  const aliveSelectedEnemyId = combat.enemies.some((enemy) => enemy.id === selectedEnemyId)
+    ? selectedEnemyId
+    : combat.enemies[0]?.id ?? null;
+  const aliveHoveredEnemyId = combat.enemies.some((enemy) => enemy.id === hoveredEnemyId)
+    ? hoveredEnemyId
+    : null;
   // #endregion
 
   // #region 드래그 시작/이동/종료
@@ -145,8 +135,10 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
     screenRef.current?.setPointerCapture(pointerId);
   }, []);
 
+  const isDragging = drag !== null;
+
   useEffect(() => {
-    if (!drag) return;
+    if (!isDragging) return;
 
     const clearDragState = () => {
       if (dragPointerIdRef.current != null && screenRef.current) {
@@ -187,8 +179,8 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
           return;
         }
         const pointTargetEnemyId = resolveEnemyIdFromPoint(e.clientX, e.clientY);
-        const fallbackEnemyId = selectedEnemyId ?? combat.enemies[0].id;
-        const targetEnemyId = pointTargetEnemyId ?? hoveredEnemyId ?? fallbackEnemyId;
+        const fallbackEnemyId = aliveSelectedEnemyId ?? combat.enemies[0].id;
+        const targetEnemyId = pointTargetEnemyId ?? aliveHoveredEnemyId ?? fallbackEnemyId;
         const singleTarget = hasSingleTargetEffect(def);
 
         if (def.type === 'attack') {
@@ -220,7 +212,7 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
       el.removeEventListener('pointerup', handlePointerUp as EventListener);
       el.removeEventListener('pointercancel', handlePointerCancel as EventListener);
     };
-  }, [drag !== null, combat.enemies, combat.hand, onPlayCard, selectedEnemyId, hoveredEnemyId]);
+  }, [isDragging, combat.enemies, combat.hand, onPlayCard, aliveSelectedEnemyId, aliveHoveredEnemyId]);
   // #endregion
 
   // 드래그 중인 카드 정의
@@ -229,7 +221,7 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
     : null;
   const draggedDef = draggedCard ? CARD_DEFINITIONS[draggedCard.definitionId] : null;
   const draggedDescription = draggedDef
-    ? generatePreviewDescription(draggedDef, t, combat.player.statusEffects, combat.enemies, selectedEnemyId ?? undefined)
+    ? generatePreviewDescription(draggedDef, t, combat.player.statusEffects, combat.enemies, aliveSelectedEnemyId ?? undefined)
     : '';
 
   const getPileData = (): { title: string; pile: readonly CardInstance[] } => {
@@ -260,7 +252,8 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
         <PlayerArea player={combat.player} isAttacking={attacking} characterClass={characterClass} />
         <EnemyArea
           enemies={combat.enemies}
-          hoveredEnemyId={hoveredEnemyId}
+          selectedEnemyId={aliveSelectedEnemyId}
+          hoveredEnemyId={aliveHoveredEnemyId}
           lungingEnemyIds={lungingEnemyIds}
           targetSelectable={targetSelectable}
           targetingActive={targetingActive}
@@ -289,7 +282,7 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
           energy={combat.player.energy}
           playerStatusEffects={combat.player.statusEffects}
           enemies={combat.enemies}
-          targetEnemyId={selectedEnemyId ?? undefined}
+          targetEnemyId={aliveSelectedEnemyId ?? undefined}
           draggingInstanceId={drag?.instanceId ?? null}
           onDragStart={handleDragStart}
         />

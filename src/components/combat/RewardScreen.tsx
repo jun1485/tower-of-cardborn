@@ -11,6 +11,7 @@ import { CardArtwork } from '../card/CardArtwork';
 
 interface RewardScreenProps {
   readonly rewardCards: readonly string[];
+  readonly rewardGold: number;
   readonly onPick: (cardId: string) => void;
   readonly onSkip: () => void;
 }
@@ -34,7 +35,7 @@ function getKeywords(def: CardDefinition, t: TFunction): string[] {
   return keywords;
 }
 
-export function RewardScreen({ rewardCards, onPick, onSkip }: RewardScreenProps) {
+export function RewardScreen({ rewardCards, rewardGold, onPick, onSkip }: RewardScreenProps) {
   const t = useTranslation();
   const lang = useLanguage();
 
@@ -42,6 +43,7 @@ export function RewardScreen({ rewardCards, onPick, onSkip }: RewardScreenProps)
     <div className={styles.resultScreen}>
       <h1 className={`${styles.resultTitle} ${styles.victoryTitle}`}>{t('victory')}</h1>
       <p className={styles.subtitle}>{t('selectCard')}</p>
+      {rewardGold > 0 && <span className={styles.goldBadge}>{t('goldReward', rewardGold)}</span>}
       <div className={`${styles.rewardCards} card-list`}>
         {rewardCards.map((cardId) => {
           const def = CARD_DEFINITIONS[cardId];

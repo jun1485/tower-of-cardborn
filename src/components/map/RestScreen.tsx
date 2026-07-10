@@ -6,14 +6,16 @@ import styles from '../../styles/app.module.css';
 interface RestScreenProps {
   readonly playerHp: number;
   readonly playerMaxHp: number;
+  readonly deckSize: number;
+  readonly healAmount: number;
   readonly onRest: () => void;
   readonly onUpgrade: () => void;
+  readonly onRemove: () => void;
   readonly onSkip: () => void;
 }
 
-export function RestScreen({ playerHp, playerMaxHp, onRest, onUpgrade, onSkip }: RestScreenProps) {
+export function RestScreen({ playerHp, playerMaxHp, deckSize, healAmount, onRest, onUpgrade, onRemove, onSkip }: RestScreenProps) {
   const t = useTranslation();
-  const healAmount = Math.floor(playerMaxHp * 0.3);
   const actualHeal = Math.min(healAmount, playerMaxHp - playerHp);
 
   return (
@@ -25,6 +27,9 @@ export function RestScreen({ playerHp, playerMaxHp, onRest, onUpgrade, onSkip }:
       </button>
       <button className={styles.startBtn} onClick={onUpgrade}>
         {t('upgradeOption')}
+      </button>
+      <button className={styles.startBtn} disabled={deckSize === 0} onClick={onRemove}>
+        {t('removeOption')}
       </button>
       <button className={styles.resultBtn} onClick={onSkip}>
         {t('skip')}

@@ -57,15 +57,45 @@ export interface Translations {
   nodecombat: string;
   nodeElite: string;
   nodeRest: string;
+  nodeShop: string;
+  nodeEvent: string;
   nodeBoss: string;
   mapLabel: string;
   deckCount: string;
   floor: string;
 
+  // 이벤트
+  eventContinue: string;
+
+  // 승천
+  ascensionLabel: string;
+  ascensionNormal: string;
+  ascDesc0: string;
+  ascDesc1: string;
+  ascDesc2: string;
+  ascDesc3: string;
+  ascDesc4: string;
+  ascDesc5: string;
+  ascensionUnlockedMsg: string;
+
   // 휴식
   restTitle: string;
   restHeal: string;
   upgradeOption: string;
+  removeOption: string;
+
+  // 카드 제거
+  removeTitle: string;
+  removeSelect: string;
+
+  // 상점
+  shopTitle: string;
+  shopSelect: string;
+  shopRemoveService: string;
+  shopLeave: string;
+
+  // 골드/보상
+  goldReward: string;
 
   // 강화
   upgradeTitle: string;
@@ -76,6 +106,10 @@ export interface Translations {
   victoryTitle: string;
   defeatTitle: string;
   deckStat: string;
+  runStats: string;
+
+  // 메타 통계
+  metaStats: string;
 
   // 설정
   settings: string;

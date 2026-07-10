@@ -9,11 +9,12 @@ import { CardArtwork } from '../card/CardArtwork';
 
 interface UpgradeScreenProps {
   readonly deck: readonly string[];
+  readonly canSkip: boolean;
   readonly onUpgrade: (deckIndex: number) => void;
   readonly onSkip: () => void;
 }
 
-export function UpgradeScreen({ deck, onUpgrade, onSkip }: UpgradeScreenProps) {
+export function UpgradeScreen({ deck, canSkip, onUpgrade, onSkip }: UpgradeScreenProps) {
   const t = useTranslation();
   const lang = useLanguage();
 
@@ -62,9 +63,11 @@ export function UpgradeScreen({ deck, onUpgrade, onSkip }: UpgradeScreenProps) {
         })}
       </div>
 
-      <button className={styles.resultBtn} onClick={onSkip}>
-        {t('skip')}
-      </button>
+      {canSkip && (
+        <button className={styles.resultBtn} onClick={onSkip}>
+          {t('cancel')}
+        </button>
+      )}
     </div>
   );
 }
