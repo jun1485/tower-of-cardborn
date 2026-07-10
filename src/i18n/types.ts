@@ -8,6 +8,7 @@ export interface Translations {
   cancel: string;
   close: string;
   skip: string;
+  skipCard: string;
   titleBack: string;
   newGame: string;
   retry: string;
@@ -24,6 +25,8 @@ export interface Translations {
   dailyChallengeDesc: string;
   howToPlay: string;
   privacyPolicy: string;
+  relicReward: string;
+  relics: string;
 
   // 전투
   turn: string;

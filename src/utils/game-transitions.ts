@@ -8,6 +8,7 @@ import type { GameMap } from '@tower-of-cardborn/game-core/types/map';
 import { findCurrentNode } from './game-state';
 import { canUpgrade, getCardPrice, getUpgradedId } from '@tower-of-cardborn/game-core/data/cards';
 import { getAscensionModifier } from '@tower-of-cardborn/game-core/data/ascension';
+import type { RelicId } from '@tower-of-cardborn/game-core/types/relic';
 
 export const REMOVE_PRICE = 60;
 export const MIN_DECK_SIZE = 1;
@@ -36,7 +37,7 @@ export function enterMapNode(
     case 'combat':
     case 'elite':
     case 'boss':
-      return { ...state, screen: 'combat', map: updatedMap, rewardCards: [] };
+      return { ...state, screen: 'combat', map: updatedMap, rewardCards: [], rewardRelic: null };
     case 'rest':
       return { ...state, screen: 'rest', map: updatedMap, rewardCards: [] };
     case 'shop':
@@ -179,6 +180,7 @@ export function enterCombatRewardState(
   playerHp: number,
   rewardCards: readonly string[],
   rewardGold: number,
+  rewardRelic: RelicId | null,
 ): GameState {
   const currentNode = findCurrentNode(state.map);
   return {
@@ -187,6 +189,7 @@ export function enterCombatRewardState(
     playerHp,
     rewardCards,
     rewardGold,
+    rewardRelic,
     kills: state.kills + (currentNode?.enemyIds.length ?? 0),
   };
 }
@@ -197,6 +200,7 @@ export function enterGameOverState(state: GameState, defeatedEnemyCount = 0): Ga
     ...state,
     screen: 'game_over',
     rewardCards: [],
+    rewardRelic: null,
     kills: state.kills + Math.max(0, defeatedEnemyCount),
     runRecorded: true,
   };
@@ -209,10 +213,18 @@ export function completeCombatRewardState(
   newlyUnlocked: number | null,
 ): GameState {
   const currentNode = findCurrentNode(state.map);
+  const awardedRelic = state.rewardRelic && !state.relics.includes(state.rewardRelic)
+    ? state.rewardRelic
+    : null;
+  const maxHpGain = awardedRelic === 'iron_heart' ? 8 : 0;
   const base = {
     ...state,
     gold: state.gold + state.rewardGold,
+    playerMaxHp: state.playerMaxHp + maxHpGain,
+    playerHp: Math.min(state.playerMaxHp + maxHpGain, state.playerHp + maxHpGain),
+    relics: awardedRelic ? [...state.relics, awardedRelic] : state.relics,
     rewardGold: 0,
+    rewardRelic: null,
     combatState: null,
     rewardCards: [],
   };

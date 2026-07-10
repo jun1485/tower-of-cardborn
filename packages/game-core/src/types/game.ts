@@ -3,6 +3,7 @@
 import type { CombatState } from './combat';
 import type { GameMap } from './map';
 import type { EventId, EventResult } from './event';
+import type { RelicId } from './relic';
 
 export type GameScreen = 'title' | 'map' | 'combat' | 'combat_reward' | 'rest' | 'upgrade' | 'remove_card' | 'shop' | 'event' | 'game_over' | 'victory';
 
@@ -59,4 +60,8 @@ export interface GameState {
   readonly runSeed: number | null;
   /** 현재 런 난수 상태 */
   readonly randomState: number | null;
+  /** 현재 런 보유 유물 */
+  readonly relics: readonly RelicId[];
+  /** 전투 보상 유물 */
+  readonly rewardRelic: RelicId | null;
 }

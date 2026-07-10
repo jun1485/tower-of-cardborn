@@ -1,6 +1,6 @@
 # Tower of Cardborn
 
-직업별 덱을 구성하며 3개의 분기형 액트를 등반하는 덱빌딩 로그라이크 게임입니다. React·TypeScript·Vite 웹 앱을 Capacitor Android 앱으로 패키징합니다.
+직업별 덱과 유물을 구성하며 3개의 분기형 액트를 등반하는 덱빌딩 로그라이크 게임입니다. React·TypeScript·Vite 웹 앱을 Capacitor Android 앱으로 패키징합니다.
 
 ## 개발 환경
 

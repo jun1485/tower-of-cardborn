@@ -39,6 +39,8 @@ const GAME_STATE: GameState = {
   unlockedAscension: null,
   runSeed: null,
   randomState: null,
+  relics: [],
+  rewardRelic: null,
 };
 
 beforeEach(() => {
@@ -69,6 +71,15 @@ describe('게임 저장', () => {
     localStorage.setItem('tower-of-cardborn-save', JSON.stringify({
       version: 8,
       state: { ...GAME_STATE, deck: ['removed_card'] },
+    }));
+
+    expect(loadGame()).toBeNull();
+  });
+
+  it('존재하지 않는 유물 ID가 포함된 저장 상태를 제거한다', () => {
+    localStorage.setItem('tower-of-cardborn-save', JSON.stringify({
+      version: 8,
+      state: { ...GAME_STATE, relics: ['missing_relic'] },
     }));
 
     expect(loadGame()).toBeNull();

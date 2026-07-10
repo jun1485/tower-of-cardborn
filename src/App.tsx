@@ -26,6 +26,7 @@ import { SettingsModal } from './components/ui/SettingsModal';
 import { RunHistory } from './components/ui/RunHistory';
 import { HowToPlay } from './components/ui/HowToPlay';
 import { DeckViewer } from './components/ui/DeckViewer';
+import { RelicViewer } from './components/ui/RelicViewer';
 import type { Language, Translations } from './i18n/types';
 import type { CharacterClass } from '@tower-of-cardborn/game-core/types/game';
 import styles from './styles/app.module.css';
@@ -92,10 +93,11 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
   const [dailyChallenge, setDailyChallenge] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showDeck, setShowDeck] = useState(false);
+  const [showRelics, setShowRelics] = useState(false);
   const [combatOverlayOpen, setCombatOverlayOpen] = useState(false);
   const {
     screen, combat, deck, playerHp, playerMaxHp, map, characterClass, rewardCards,
-    gold, rewardGold, shopCards, kills, ascension, removeSource, upgradeSource,
+    gold, rewardGold, rewardRelic, relics, shopCards, kills, ascension, removeSource, upgradeSource,
     eventId, eventResult, unlockedAscension, restHealAmount, runSeed,
     startNewGame, selectMapNode, handlePlayCard, handleEndTurn,
     pickRewardCard, skipReward, rest, goToUpgrade, upgradeCard, skipUpgrade, skipRest,
@@ -113,14 +115,15 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
 
   /** 활성 모달 닫기 */
   const closeOverlay = useCallback(() => {
-    if (!showSettings && !showPrivacy && !showHistory && !showHelp && !showDeck) return false;
+    if (!showSettings && !showPrivacy && !showHistory && !showHelp && !showDeck && !showRelics) return false;
     setShowSettings(false);
     setShowPrivacy(false);
     setShowHistory(false);
     setShowHelp(false);
     setShowDeck(false);
+    setShowRelics(false);
     return true;
-  }, [showDeck, showHelp, showHistory, showPrivacy, showSettings]);
+  }, [showDeck, showHelp, showHistory, showPrivacy, showRelics, showSettings]);
 
   const { showConfirm, confirmBack, cancelBack } = useBackButton({ screen, goToTitle, closeOverlay });
 
@@ -227,10 +230,12 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
             playerHp={playerHp}
             playerMaxHp={playerMaxHp}
             deck={deck}
+            relics={relics}
             gold={gold}
             ascension={ascension}
             onSelectNode={selectMapNode}
             onOpenDeck={() => setShowDeck(true)}
+            onOpenRelics={() => setShowRelics(true)}
           />
         );
 
@@ -251,6 +256,7 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
           <RewardScreen
             rewardCards={rewardCards}
             rewardGold={rewardGold}
+            rewardRelic={rewardRelic}
             onPick={pickRewardCard}
             onSkip={skipReward}
           />
@@ -372,9 +378,11 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
           onResetSave={handleResetProgress}
           onQuitRun={screen === 'title' ? undefined : goToTitle}
           onOpenDeck={screen === 'title' ? undefined : () => setShowDeck(true)}
+          onOpenRelics={screen === 'title' || relics.length === 0 ? undefined : () => setShowRelics(true)}
         />
       )}
       {showDeck && <DeckViewer deck={deck} onClose={() => setShowDeck(false)} />}
+      {showRelics && <RelicViewer relics={relics} onClose={() => setShowRelics(false)} />}
       {showConfirm && (
         <ConfirmDialog
           message={confirmMessage}

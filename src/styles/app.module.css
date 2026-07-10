@@ -673,6 +673,53 @@
   backdrop-filter: blur(4px);
 }
 
+.relicReward {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: min(28rem, calc(100% - 2rem));
+  padding: 0.875rem 1rem;
+  border: 1px solid rgba(255, 214, 92, 0.55);
+  border-radius: 0.875rem;
+  background: rgba(55, 39, 10, 0.72);
+  color: #ffe9a6;
+}
+
+.relicReward p {
+  margin-top: 0.25rem;
+  color: var(--color-text-dim);
+  font-size: max(10px, 0.75rem);
+  line-height: 1.45;
+}
+
+.relicIcon {
+  font-size: max(26px, 2.25rem);
+}
+
+.relicList {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  list-style: none;
+}
+
+.relicListItem {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid rgba(255, 214, 92, 0.28);
+  border-radius: 0.75rem;
+  background: rgba(255, 214, 92, 0.07);
+}
+
+.relicListItem p {
+  margin-top: 0.25rem;
+  color: var(--color-text-dim);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
 .saveError {
   position: fixed;
   left: 50%;

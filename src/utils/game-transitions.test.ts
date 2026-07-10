@@ -43,6 +43,8 @@ const MAP_STATE: GameState = {
   unlockedAscension: null,
   runSeed: 1234,
   randomState: 1234,
+  relics: [],
+  rewardRelic: null,
 };
 
 describe('맵 노드 전환', () => {
@@ -165,12 +167,13 @@ describe('전투 보상 전환', () => {
           : node),
       },
     };
-    const result = enterCombatRewardState(combatState, 55, ['bash'], 20);
+    const result = enterCombatRewardState(combatState, 55, ['bash'], 20, 'iron_heart');
 
     expect(result.screen).toBe('combat_reward');
     expect(result.playerHp).toBe(55);
     expect(result.rewardCards).toEqual(['bash']);
     expect(result.rewardGold).toBe(20);
+    expect(result.rewardRelic).toBe('iron_heart');
     expect(result.kills).toBe(1);
   });
 
@@ -189,5 +192,20 @@ describe('전투 보상 전환', () => {
     expect(result.screen).toBe('map');
     expect(result.gold).toBe(80);
     expect(result.rewardGold).toBe(0);
+  });
+
+  it('철의 심장 유물 획득 시 최대 HP와 현재 HP를 높인다', () => {
+    const rewardState: GameState = {
+      ...MAP_STATE,
+      screen: 'combat_reward',
+      playerHp: 50,
+      rewardRelic: 'iron_heart',
+    };
+    const result = completeCombatRewardState(rewardState, null, null);
+
+    expect(result.relics).toEqual(['iron_heart']);
+    expect(result.playerHp).toBe(58);
+    expect(result.playerMaxHp).toBe(88);
+    expect(result.rewardRelic).toBeNull();
   });
 });

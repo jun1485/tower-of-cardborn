@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { GameMap, MapNode, NodeType } from '@tower-of-cardborn/game-core/types/map';
 import { getAvailableNodeIds } from '@tower-of-cardborn/game-core/game/map-generator';
-import { useTranslation } from '../../i18n';
+import { useLanguage, useTranslation } from '../../i18n';
+import { RELIC_DEFINITIONS } from '@tower-of-cardborn/game-core/data/relics';
+import type { RelicId } from '@tower-of-cardborn/game-core/types/relic';
+import { getRelicName } from '../../i18n/relic-text';
 import styles from '../../styles/map.module.css';
 
 interface MapScreenProps {
@@ -11,10 +14,12 @@ interface MapScreenProps {
   readonly playerHp: number;
   readonly playerMaxHp: number;
   readonly deck: readonly string[];
+  readonly relics: readonly RelicId[];
   readonly gold: number;
   readonly ascension: number;
   readonly onSelectNode: (nodeId: string) => void;
   readonly onOpenDeck: () => void;
+  readonly onOpenRelics: () => void;
 }
 
 const NODE_ICON: Record<NodeType, string> = {
@@ -51,8 +56,9 @@ function getNodeCoords(node: MapNode, floors: number): { x: number; y: number } 
   };
 }
 
-export function MapScreen({ map, playerHp, playerMaxHp, deck, gold, ascension, onSelectNode, onOpenDeck }: MapScreenProps) {
+export function MapScreen({ map, playerHp, playerMaxHp, deck, relics, gold, ascension, onSelectNode, onOpenDeck, onOpenRelics }: MapScreenProps) {
   const t = useTranslation();
+  const lang = useLanguage();
   const availableIds = getAvailableNodeIds(map);
   const themeIndex = (map.mapIndex - 1) % 3;
   const mapThemeClass = [styles.mapTheme1, styles.mapTheme2, styles.mapTheme3][themeIndex] ?? styles.mapTheme1;
@@ -96,6 +102,19 @@ export function MapScreen({ map, playerHp, playerMaxHp, deck, gold, ascension, o
           <img className={styles.headerIcon} src="/assets/ui/deck.png" alt="" />
           {t('deck')} {deck.length}{t('deckCount')}
         </button>
+        {relics.length > 0 && (
+          <button
+            className={`${styles.headerStat} ${styles.headerButton}`}
+            aria-label={`${t('relics')} ${relics.map((relicId) => getRelicName(relicId, lang)).join(', ')}`}
+            onClick={onOpenRelics}
+          >
+            {relics.map((relicId) => (
+              <span key={relicId} title={getRelicName(relicId, lang)} aria-hidden="true">
+                {RELIC_DEFINITIONS[relicId].emoji}
+              </span>
+            ))}
+          </button>
+        )}
       </div>
 
       <div className={styles.mapContainer} ref={containerRef}>

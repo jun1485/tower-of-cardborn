@@ -2,13 +2,22 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CombatState } from '@tower-of-cardborn/game-core/types/combat';
+import type { RelicCombatBonuses } from '@tower-of-cardborn/game-core/types/relic';
 import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
 import { endPlayerTurn, initCombat, playCard } from '@tower-of-cardborn/game-core/game/combat-engine';
 import { playSfx } from '../utils/sound';
 
 interface UseCombatReturn {
   readonly combat: CombatState | null;
-  readonly startCombat: (deckIds: readonly string[], enemyIds: readonly string[], hp?: number, maxHp?: number, ascension?: number, mapIndex?: number) => void;
+  readonly startCombat: (
+    deckIds: readonly string[],
+    enemyIds: readonly string[],
+    hp?: number,
+    maxHp?: number,
+    ascension?: number,
+    mapIndex?: number,
+    relicBonuses?: RelicCombatBonuses,
+  ) => void;
   readonly handlePlayCard: (cardInstanceId: string, targetEnemyId?: string) => void;
   readonly handleEndTurn: () => void;
   readonly clearCombat: () => void;
@@ -45,8 +54,16 @@ export function useCombat(
     }
   }, []);
 
-  const startCombat = useCallback((deckIds: readonly string[], enemyIds: readonly string[], hp?: number, maxHp?: number, ascension?: number, mapIndex?: number) => {
-    const next = initCombat(deckIds, enemyIds, hp, maxHp, ascension, mapIndex);
+  const startCombat = useCallback((
+    deckIds: readonly string[],
+    enemyIds: readonly string[],
+    hp?: number,
+    maxHp?: number,
+    ascension?: number,
+    mapIndex?: number,
+    relicBonuses?: RelicCombatBonuses,
+  ) => {
+    const next = initCombat(deckIds, enemyIds, hp, maxHp, ascension, mapIndex, relicBonuses);
     combatRef.current = next;
     setCombat(next);
   }, []);

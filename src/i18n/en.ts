@@ -6,6 +6,7 @@ export const en: Translations = {
   cancel: 'Cancel',
   close: 'Close',
   skip: 'Skip',
+  skipCard: 'Skip Card',
   titleBack: 'Title',
   newGame: 'New Game',
   retry: 'Retry',
@@ -21,6 +22,8 @@ export const en: Translations = {
   dailyChallengeDesc: 'Play the same daily seed as every other player',
   howToPlay: 'How to Play',
   privacyPolicy: 'Privacy Policy',
+  relicReward: 'Relic Acquired',
+  relics: 'Relics',
 
   turn: 'Turn',
   deck: 'Deck',

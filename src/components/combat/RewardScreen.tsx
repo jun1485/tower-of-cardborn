@@ -8,10 +8,14 @@ import { getCardName, generateCardDescription, getCardRarityName, getCardTypeNam
 import styles from '../../styles/app.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
+import { RELIC_DEFINITIONS } from '@tower-of-cardborn/game-core/data/relics';
+import type { RelicId } from '@tower-of-cardborn/game-core/types/relic';
+import { getRelicDescription, getRelicName } from '../../i18n/relic-text';
 
 interface RewardScreenProps {
   readonly rewardCards: readonly string[];
   readonly rewardGold: number;
+  readonly rewardRelic: RelicId | null;
   readonly onPick: (cardId: string) => void;
   readonly onSkip: () => void;
 }
@@ -35,7 +39,7 @@ function getKeywords(def: CardDefinition, t: TFunction): string[] {
   return keywords;
 }
 
-export function RewardScreen({ rewardCards, rewardGold, onPick, onSkip }: RewardScreenProps) {
+export function RewardScreen({ rewardCards, rewardGold, rewardRelic, onPick, onSkip }: RewardScreenProps) {
   const t = useTranslation();
   const lang = useLanguage();
 
@@ -44,6 +48,15 @@ export function RewardScreen({ rewardCards, rewardGold, onPick, onSkip }: Reward
       <h1 className={`${styles.resultTitle} ${styles.victoryTitle}`}>{t('victory')}</h1>
       <p className={styles.subtitle}>{t('selectCard')}</p>
       {rewardGold > 0 && <span className={styles.goldBadge}>{t('goldReward', rewardGold)}</span>}
+      {rewardRelic && (
+        <section className={styles.relicReward} aria-label={t('relicReward')}>
+          <span className={styles.relicIcon} aria-hidden="true">{RELIC_DEFINITIONS[rewardRelic].emoji}</span>
+          <div>
+            <strong>{t('relicReward')}: {getRelicName(rewardRelic, lang)}</strong>
+            <p>{getRelicDescription(rewardRelic, lang)}</p>
+          </div>
+        </section>
+      )}
       <div className={`${styles.rewardCards} card-list`}>
         {rewardCards.map((cardId) => {
           const def = CARD_DEFINITIONS[cardId];
@@ -82,7 +95,7 @@ export function RewardScreen({ rewardCards, rewardGold, onPick, onSkip }: Reward
         })}
       </div>
       <button className={styles.resultBtn} onClick={onSkip}>
-        {t('skip')}
+        {t('skipCard')}
       </button>
     </div>
   );

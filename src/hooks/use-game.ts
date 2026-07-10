@@ -22,6 +22,7 @@ import { useCombat } from './use-combat';
 import {
   generateRandomSeed, getRandomState, resetRandomSource, setRandomSeed,
 } from '@tower-of-cardborn/game-core/utils/random';
+import { applyRelicGoldBonus, getRelicCombatBonuses, getRelicReward } from '@tower-of-cardborn/game-core/data/relics';
 
 const SHOP_CARD_COUNT = 5;
 
@@ -45,9 +46,14 @@ export function useGame() {
     if (finished.result === 'victory') {
       playSfx('victory');
       const current = stateRef.current;
+      const currentNode = findCurrentNode(current.map);
       const rewardCards = current.rewardCards.length > 0 ? current.rewardCards : getRewardCards(3, current.characterClass);
-      const rewardGold = current.rewardGold > 0 ? current.rewardGold : rollGoldReward(findCurrentNode(current.map)?.type);
-      setGameState((prev) => enterCombatRewardState(prev, finished.player.hp, rewardCards, rewardGold));
+      const rewardGold = current.rewardGold > 0
+        ? current.rewardGold
+        : applyRelicGoldBonus(rollGoldReward(currentNode?.type), current.relics);
+      const rewardRelic = current.rewardRelic
+        ?? (currentNode?.type === 'elite' || currentNode?.type === 'boss' ? getRelicReward(current.relics) : null);
+      setGameState((prev) => enterCombatRewardState(prev, finished.player.hp, rewardCards, rewardGold, rewardRelic));
     } else if (finished.result === 'defeat') {
       playSfx('defeat');
       const current = stateRef.current;
@@ -127,8 +133,16 @@ export function useGame() {
     const node = gameState.map.nodes.find((n) => n.id === gameState.map!.currentNodeId);
     if (!node || node.enemyIds.length === 0) return;
 
-    startCombat(gameState.deck, node.enemyIds, gameState.playerHp, gameState.playerMaxHp, gameState.ascension, gameState.map.mapIndex);
-  }, [gameState.screen, combat, gameState.map, gameState.deck, gameState.playerHp, gameState.playerMaxHp, gameState.ascension, startCombat]);
+    startCombat(
+      gameState.deck,
+      node.enemyIds,
+      gameState.playerHp,
+      gameState.playerMaxHp,
+      gameState.ascension,
+      gameState.map.mapIndex,
+      getRelicCombatBonuses(gameState.relics),
+    );
+  }, [gameState.screen, combat, gameState.map, gameState.deck, gameState.playerHp, gameState.playerMaxHp, gameState.ascension, gameState.relics, startCombat]);
   // #endregion
 
   // #region 이벤트 진행
@@ -207,8 +221,9 @@ export function useGame() {
   const skipReward = useCallback(() => {
     if (gameState.screen !== 'combat_reward' || rewardSelectionLockRef.current) return;
     rewardSelectionLockRef.current = true;
+    if (gameState.rewardRelic) playSfx('reward_pick');
     afterCombatEnd();
-  }, [afterCombatEnd, gameState.screen]);
+  }, [afterCombatEnd, gameState.rewardRelic, gameState.screen]);
   // #endregion
 
   // #region 휴식 / 강화 / 카드 제거
@@ -300,6 +315,8 @@ export function useGame() {
     rewardCards: gameState.rewardCards,
     gold: gameState.gold,
     rewardGold: gameState.rewardGold,
+    rewardRelic: gameState.rewardRelic,
+    relics: gameState.relics,
     shopCards: gameState.shopCards,
     removeSource: gameState.removeSource,
     upgradeSource: gameState.upgradeSource,

@@ -7,6 +7,7 @@ import { getFloorsClimbed } from '@tower-of-cardborn/game-core/game/map-generato
 import type { GameState } from '@tower-of-cardborn/game-core/types/game';
 import type { GameMap, NodeType } from '@tower-of-cardborn/game-core/types/map';
 import { random, resetRandomSource, restoreRandomState } from '@tower-of-cardborn/game-core/utils/random';
+import { applyRelicGoldBonus, getRelicCombatBonuses, getRelicReward } from '@tower-of-cardborn/game-core/data/relics';
 import { recordRunEnd } from './meta';
 import { clearSave, loadGame } from './storage';
 
@@ -35,6 +36,8 @@ export const DEFAULT_GAME_STATE: GameState = {
   unlockedAscension: null,
   runSeed: null,
   randomState: null,
+  relics: [],
+  rewardRelic: null,
 };
 
 /** 노드 타입별 승리 보상 골드 산정 */
@@ -95,6 +98,8 @@ export function loadValidGameState(): GameState {
     combatState: migratedCombatState,
     runSeed: saved.runSeed ?? null,
     randomState: saved.randomState ?? null,
+    relics: saved.relics ?? [],
+    rewardRelic: saved.rewardRelic ?? null,
   };
 
   if (baseState.screen === 'combat') {
@@ -105,7 +110,11 @@ export function loadValidGameState(): GameState {
         screen: 'combat_reward',
         playerHp: baseState.combatState.player.hp,
         rewardCards: baseState.rewardCards.length > 0 ? baseState.rewardCards : getRewardCards(3, baseState.characterClass),
-        rewardGold: baseState.rewardGold > 0 ? baseState.rewardGold : rollGoldReward(currentNode?.type),
+        rewardGold: baseState.rewardGold > 0
+          ? baseState.rewardGold
+          : applyRelicGoldBonus(rollGoldReward(currentNode?.type), baseState.relics),
+        rewardRelic: baseState.rewardRelic
+          ?? (currentNode?.type === 'elite' || currentNode?.type === 'boss' ? getRelicReward(baseState.relics) : null),
         kills: baseState.kills + (currentNode?.enemyIds.length ?? 0),
         combatState: null,
       };
@@ -128,15 +137,19 @@ export function loadValidGameState(): GameState {
           baseState.playerMaxHp,
           baseState.ascension,
           baseState.map?.mapIndex ?? 1,
+          getRelicCombatBonuses(baseState.relics),
         ),
       };
     }
   }
 
   if (baseState.screen === 'combat_reward') {
+    const currentNode = findCurrentNode(baseState.map);
     return {
       ...baseState,
       rewardCards: baseState.rewardCards.length > 0 ? baseState.rewardCards : getRewardCards(3, baseState.characterClass),
+      rewardRelic: baseState.rewardRelic
+        ?? (currentNode?.type === 'elite' || currentNode?.type === 'boss' ? getRelicReward(baseState.relics) : null),
       combatState: null,
     };
   }

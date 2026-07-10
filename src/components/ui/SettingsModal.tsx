@@ -14,9 +14,10 @@ interface SettingsModalProps {
   readonly onResetSave: () => void;
   readonly onQuitRun?: () => void;
   readonly onOpenDeck?: () => void;
+  readonly onOpenRelics?: () => void;
 }
 
-export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, onOpenDeck }: SettingsModalProps) {
+export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, onOpenDeck, onOpenRelics }: SettingsModalProps) {
   const t = useTranslation();
   const [settings, setSettings] = useState<GameSettings>(loadSettings);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -56,6 +57,12 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
     onClose();
     onOpenDeck?.();
   }, [onClose, onOpenDeck]);
+
+  /** 설정 종료 후 현재 유물 열기 */
+  const handleOpenRelics = useCallback(() => {
+    onClose();
+    onOpenRelics?.();
+  }, [onClose, onOpenRelics]);
 
   // 설정 초기화
   const handleResetSettings = useCallback(() => {
@@ -138,6 +145,11 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
           {onOpenDeck && (
             <button className={styles.resetSettingsBtn} onClick={handleOpenDeck}>
               {t('deck')}
+            </button>
+          )}
+          {onOpenRelics && (
+            <button className={styles.resetSettingsBtn} onClick={handleOpenRelics}>
+              {t('relics')}
             </button>
           )}
 

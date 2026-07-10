@@ -6,6 +6,7 @@ export const zh: Translations = {
   cancel: '取消',
   close: '关闭',
   skip: '跳过',
+  skipCard: '跳过卡牌',
   titleBack: '返回标题',
   newGame: '新游戏',
   retry: '重新开始',
@@ -21,6 +22,8 @@ export const zh: Translations = {
   dailyChallengeDesc: '使用所有玩家相同的每日种子挑战',
   howToPlay: '游戏方法',
   privacyPolicy: '隐私政策',
+  relicReward: '获得遗物',
+  relics: '遗物',
 
   turn: '回合',
   deck: '牌组',

@@ -6,6 +6,7 @@ export const ko: Translations = {
   cancel: '취소',
   close: '닫기',
   skip: '건너뛰기',
+  skipCard: '카드 건너뛰기',
   titleBack: '타이틀로',
   newGame: '새 게임',
   retry: '다시 시작',
@@ -21,6 +22,8 @@ export const ko: Translations = {
   dailyChallengeDesc: '모든 플레이어가 같은 날짜 시드로 도전',
   howToPlay: '게임 방법',
   privacyPolicy: '개인정보 처리방침',
+  relicReward: '유물 획득',
+  relics: '유물',
 
   turn: '턴',
   deck: '덱',

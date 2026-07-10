@@ -9,9 +9,11 @@ import { getActModifier, getAscensionModifier } from '../data/ascension';
 import { createDrawPile, discardHand, drawCards } from './deck-manager';
 import { decideIntent } from './enemy-ai';
 import { generateId } from '../utils/random';
+import type { RelicCombatBonuses } from '../types/relic';
 
 const HAND_SIZE = 5;
 const STARTING_ENERGY = 3;
+const NO_RELIC_BONUSES: RelicCombatBonuses = { energy: 0, strength: 0 };
 
 // #region 전투 초기화
 /** 승천 레벨별 적 체력 배율 적용 */
@@ -28,6 +30,7 @@ export function initCombat(
   playerMaxHp = 80,
   ascension = 0,
   mapIndex = 1,
+  relicBonuses: RelicCombatBonuses = NO_RELIC_BONUSES,
 ): CombatState {
   const drawPile = createDrawPile(deckIds);
   const enemies: Enemy[] = enemyIds.map((id) => {
@@ -50,9 +53,11 @@ export function initCombat(
     hp: playerHp,
     maxHp: playerMaxHp,
     block: 0,
-    energy: STARTING_ENERGY,
-    maxEnergy: STARTING_ENERGY,
-    statusEffects: [],
+    energy: STARTING_ENERGY + relicBonuses.energy,
+    maxEnergy: STARTING_ENERGY + relicBonuses.energy,
+    statusEffects: relicBonuses.strength > 0
+      ? [{ type: 'strength', duration: relicBonuses.strength }]
+      : [],
   };
 
   const { hand, drawPile: remainingDraw, discardPile } = drawCards(drawPile, [], [], HAND_SIZE);

@@ -74,6 +74,16 @@ describe('액트 난이도', () => {
   });
 });
 
+describe('유물 전투 보너스', () => {
+  it('추가 에너지와 시작 힘을 전투 상태에 반영한다', () => {
+    const result = initCombat(['strike'], ['jaw_worm'], 80, 80, 0, 1, { energy: 1, strength: 1 });
+
+    expect(result.player.energy).toBe(4);
+    expect(result.player.maxEnergy).toBe(4);
+    expect(result.player.statusEffects).toContainEqual({ type: 'strength', duration: 1 });
+  });
+});
+
 describe('자해 카드', () => {
   it('카드 효과 완료 후 HP가 0이면 패배한다', () => {
     const state: CombatState = {

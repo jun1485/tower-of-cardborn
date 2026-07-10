@@ -8,6 +8,8 @@ import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
 import { ENEMY_DEFINITIONS } from '@tower-of-cardborn/game-core/data/enemies';
 import { EVENTS } from '@tower-of-cardborn/game-core/data/events';
 import { MAX_ASCENSION } from '@tower-of-cardborn/game-core/data/ascension';
+import { RELIC_DEFINITIONS } from '@tower-of-cardborn/game-core/data/relics';
+import type { RelicId } from '@tower-of-cardborn/game-core/types/relic';
 import type { EventId } from '@tower-of-cardborn/game-core/types/event';
 
 const SAVE_KEY = 'tower-of-cardborn-save';
@@ -58,6 +60,18 @@ function isCardIdArray(value: unknown): value is string[] {
 /** 적 ID 배열 확인 */
 function isEnemyIdArray(value: unknown): value is string[] {
   return isStringArray(value) && value.every((enemyId) => ENEMY_DEFINITIONS[enemyId] !== undefined);
+}
+
+/** 유물 ID 확인 */
+function isRelicId(value: unknown): value is RelicId {
+  return typeof value === 'string' && Object.hasOwn(RELIC_DEFINITIONS, value);
+}
+
+/** 유물 ID 배열 확인 */
+function isRelicIdArray(value: unknown): value is RelicId[] {
+  return isStringArray(value)
+    && value.every(isRelicId)
+    && new Set(value).size === value.length;
 }
 
 /** 이벤트 ID 확인 */
@@ -223,7 +237,9 @@ function isGameState(value: unknown): value is GameState {
     && (value.unlockedAscension === null
       || (isNonNegativeInteger(value.unlockedAscension) && value.unlockedAscension <= MAX_ASCENSION))
     && (value.runSeed === undefined || value.runSeed === null || isRandomSeed(value.runSeed))
-    && (value.randomState === undefined || value.randomState === null || isRandomSeed(value.randomState));
+    && (value.randomState === undefined || value.randomState === null || isRandomSeed(value.randomState))
+    && (value.relics === undefined || isRelicIdArray(value.relics))
+    && (value.rewardRelic === undefined || value.rewardRelic === null || isRelicId(value.rewardRelic));
 }
 
 /** 손상 저장 데이터 정리 */
