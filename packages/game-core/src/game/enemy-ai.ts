@@ -1,7 +1,8 @@
 // 적 AI: 인텐트 결정 및 행동 실행
 
 import type { Enemy, Intent } from '../types/character';
-import { getAscensionModifier } from '../data/ascension';
+import { getActModifier, getAscensionModifier } from '../data/ascension';
+import { random } from '../utils/random';
 
 /** 승천 레벨별 공격 인텐트 배율 적용 */
 function scaleIntent(intent: Intent, atkMul: number): Intent {
@@ -10,8 +11,9 @@ function scaleIntent(intent: Intent, atkMul: number): Intent {
 }
 
 /** 적 정의 ID 기반 인텐트 결정 */
-export function decideIntent(enemy: Enemy, ascension = 0): Intent {
-  return scaleIntent(baseIntent(enemy), getAscensionModifier(ascension).enemyAtkMul);
+export function decideIntent(enemy: Enemy, ascension = 0, mapIndex = 1): Intent {
+  const atkMul = getAscensionModifier(ascension).enemyAtkMul * getActModifier(mapIndex).enemyAtkMul;
+  return scaleIntent(baseIntent(enemy), atkMul);
 }
 
 /** 적 정의 ID 기반 기본 인텐트 산출 */
@@ -43,14 +45,16 @@ function jawWormIntent(turnCount: number): Intent {
     : { type: 'defend', value: 5 };
 }
 
-/** Cultist: 매턴 공격력 증가 (5→6→7...) */
+/** Cultist 주기적 힘 버프와 공격 반복 */
 function cultistIntent(turnCount: number): Intent {
-  return { type: 'attack', value: 5 + turnCount };
+  return turnCount % 3 === 0
+    ? { type: 'buff', value: 2 }
+    : { type: 'attack', value: 5 + turnCount };
 }
 
 /** Red Louse: 항상 공격 (4~7 고정 랜덤) */
 function louseRedIntent(): Intent {
-  return { type: 'attack', value: 4 + Math.floor(Math.random() * 4) };
+  return { type: 'attack', value: 4 + Math.floor(random() * 4) };
 }
 
 /** Fungi Beast: 공격(5) / 공격(5) / 방어(3) 반복 */

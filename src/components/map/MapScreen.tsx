@@ -10,10 +10,11 @@ interface MapScreenProps {
   readonly map: GameMap;
   readonly playerHp: number;
   readonly playerMaxHp: number;
-  readonly deckSize: number;
+  readonly deck: readonly string[];
   readonly gold: number;
   readonly ascension: number;
   readonly onSelectNode: (nodeId: string) => void;
+  readonly onOpenDeck: () => void;
 }
 
 const NODE_ICON: Record<NodeType, string> = {
@@ -50,7 +51,7 @@ function getNodeCoords(node: MapNode, floors: number): { x: number; y: number } 
   };
 }
 
-export function MapScreen({ map, playerHp, playerMaxHp, deckSize, gold, ascension, onSelectNode }: MapScreenProps) {
+export function MapScreen({ map, playerHp, playerMaxHp, deck, gold, ascension, onSelectNode, onOpenDeck }: MapScreenProps) {
   const t = useTranslation();
   const availableIds = getAvailableNodeIds(map);
   const themeIndex = (map.mapIndex - 1) % 3;
@@ -91,15 +92,15 @@ export function MapScreen({ map, playerHp, playerMaxHp, deckSize, gold, ascensio
         <span className={styles.headerStat}>💰 {gold}</span>
         {ascension > 0 && <span className={styles.headerStat}>⛰️ {t('ascensionLabel', ascension)}</span>}
         <span className={styles.headerStat}>🗺️ {t('mapLabel')} {map.mapIndex}/{map.totalMaps}</span>
-        <span className={styles.headerStat}>
-          <img className={styles.headerIcon} src="/assets/ui/deck.png" alt={t('deck')} />
-          {t('deck')} {deckSize}{t('deckCount')}
-        </span>
+        <button className={`${styles.headerStat} ${styles.headerButton}`} onClick={onOpenDeck}>
+          <img className={styles.headerIcon} src="/assets/ui/deck.png" alt="" />
+          {t('deck')} {deck.length}{t('deckCount')}
+        </button>
       </div>
 
       <div className={styles.mapContainer} ref={containerRef}>
         <div className={styles.mapGraph} style={{ height: `calc(${floors} * max(72px, ${FLOOR_ROW_REM}rem))` }}>
-          <svg className={styles.mapEdges} viewBox="0 0 100 100" preserveAspectRatio="none">
+          <svg className={styles.mapEdges} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {edges.map((edge) => {
               const from = getNodeCoords(edge.from, floors);
               const to = getNodeCoords(edge.to, floors);

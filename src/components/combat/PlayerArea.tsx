@@ -10,10 +10,10 @@ import { usePrevious } from '../../hooks/use-previous';
 import styles from '../../styles/combat.module.css';
 
 const CLASS_IMAGE: Record<CharacterClass, string> = {
-  warrior: '/assets/classes/warrior.png?v=7',
-  archer: '/assets/classes/archer.png?v=7',
-  mage: '/assets/classes/mage.png?v=7',
-  assassin: '/assets/classes/assassin.png?v=7',
+  warrior: '/assets/classes/warrior.webp?v=8',
+  archer: '/assets/classes/archer.webp?v=8',
+  mage: '/assets/classes/mage.webp?v=8',
+  assassin: '/assets/classes/assassin.webp?v=8',
 };
 
 const CLASS_NAME_KEY: Record<CharacterClass, 'warrior' | 'archer' | 'mage' | 'assassin'> = {
@@ -39,7 +39,7 @@ export function PlayerArea({ player, isAttacking, characterClass }: PlayerAreaPr
   return (
     <div className={`${styles.playerArea} ${isHit ? styles.shake : ''} ${isAttacking ? styles.playerLunge : ''}`}>
       <div className={styles.characterSprite}>
-        <img className={styles.characterImage} src={CLASS_IMAGE[characterClass]} alt={t(CLASS_NAME_KEY[characterClass])} />
+        <img className={styles.characterImage} src={CLASS_IMAGE[characterClass]} alt={t(CLASS_NAME_KEY[characterClass])} decoding="async" />
         <FloatingNumber currentValue={player.hp} previousValue={prevHp} mode="hp" />
         {gainedBlock && (
           <span className={`${styles.floatingNumber} ${styles.floatingBlock} ${styles.floatingOnce}`}>
@@ -64,4 +64,3 @@ export function PlayerArea({ player, isAttacking, characterClass }: PlayerAreaPr
     </div>
   );
 }
-

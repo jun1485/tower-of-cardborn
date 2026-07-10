@@ -4,6 +4,7 @@ import type { EventChoice, EventEffect, EventResult, GameEvent } from '../types/
 import type { CharacterClass } from '../types/game';
 import { EVENTS } from '../data/events';
 import { getRewardCards } from '../data/cards';
+import { random } from '../utils/random';
 
 export interface EventChoiceContext {
   readonly hp: number;
@@ -61,11 +62,12 @@ function applyEffects(
     switch (effect.type) {
       case 'hp': {
         // 음수: 사망 방지 하한 1, 양수: 최대 HP 상한
+        const before = state.hp;
         state.hp = effect.value < 0
           ? Math.max(1, state.hp + effect.value)
           : Math.min(state.maxHp, state.hp + effect.value);
-        // 단일 효과 선택지만 HP 변화량을 결과 인자로 노출
-        if (effects.length === 1) args.push(Math.abs(effect.value));
+        // 단일 효과 선택지만 클램프 반영 실제 변화량을 결과 인자로 노출
+        if (effects.length === 1) args.push(Math.abs(state.hp - before));
         break;
       }
       case 'max_hp': {
@@ -80,7 +82,7 @@ function applyEffects(
       }
       case 'gold': {
         const rolled = effect.variance !== undefined
-          ? effect.value + Math.floor(Math.random() * (effect.variance + 1))
+          ? effect.value + Math.floor(random() * (effect.variance + 1))
           : effect.value;
         state.gold = Math.max(0, state.gold + rolled);
         if (rolled > 0) args.push(rolled);
@@ -130,7 +132,7 @@ export function resolveEventChoice(
 
   // 도박 효과: 판정 후 해당 분기 효과·결과문 적용
   if (gamble && gamble.type === 'gamble') {
-    const won = Math.random() < gamble.chance;
+    const won = random() < gamble.chance;
     const branch = won ? gamble.win : gamble.lose;
     const branchArgs = applyEffects(branch, state, ctx.characterClass);
     return {
@@ -159,5 +161,5 @@ export function resolveEventChoice(
 export function pickRandomEvent(seenEventIds: readonly string[]): GameEvent {
   const unseen = EVENTS.filter((event) => !seenEventIds.includes(event.id));
   const pool = unseen.length > 0 ? unseen : EVENTS;
-  return pool[Math.floor(Math.random() * pool.length)];
+  return pool[Math.floor(random() * pool.length)];
 }

@@ -1,6 +1,7 @@
 // 휴식 화면: HP 회복 또는 카드 강화 선택
 
 import { useTranslation } from '../../i18n';
+import { MIN_DECK_SIZE } from '../../utils/game-transitions';
 import styles from '../../styles/app.module.css';
 
 interface RestScreenProps {
@@ -28,7 +29,7 @@ export function RestScreen({ playerHp, playerMaxHp, deckSize, healAmount, onRest
       <button className={styles.startBtn} onClick={onUpgrade}>
         {t('upgradeOption')}
       </button>
-      <button className={styles.startBtn} disabled={deckSize === 0} onClick={onRemove}>
+      <button className={styles.startBtn} disabled={deckSize <= MIN_DECK_SIZE} onClick={onRemove}>
         {t('removeOption')}
       </button>
       <button className={styles.resultBtn} onClick={onSkip}>

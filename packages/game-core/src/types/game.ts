@@ -55,4 +55,8 @@ export interface GameState {
   readonly runRecorded: boolean;
   /** 이번 런 신규 해금 승천 레벨 (승리 화면 배지용) */
   readonly unlockedAscension: number | null;
+  /** 현재 런 재현 시드 */
+  readonly runSeed: number | null;
+  /** 현재 런 난수 상태 */
+  readonly randomState: number | null;
 }

@@ -4,9 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CombatState } from '@tower-of-cardborn/game-core/types/combat';
 import type { CardDefinition, CardInstance } from '@tower-of-cardborn/game-core/types/card';
 import type { CharacterClass } from '@tower-of-cardborn/game-core/types/game';
-import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
+import { CARD_DEFINITIONS, getCardRarity } from '@tower-of-cardborn/game-core/data/cards';
 import { useTranslation, useLanguage } from '../../i18n';
-import { getCardName, getCardTypeName, generatePreviewDescription } from '../../i18n/card-text';
+import { getCardName, getCardRarityName, getCardTypeName, generatePreviewDescription } from '../../i18n/card-text';
 import { PlayerArea } from './PlayerArea';
 import { EnemyArea } from './EnemyArea';
 import { HandArea } from './HandArea';
@@ -21,6 +21,7 @@ interface CombatScreenProps {
   readonly characterClass: CharacterClass;
   readonly onPlayCard: (cardInstanceId: string, targetEnemyId?: string) => void;
   readonly onEndTurn: () => void;
+  readonly onOverlayChange: (open: boolean) => void;
 }
 
 interface DragState {
@@ -53,6 +54,12 @@ function resolveEnemyIdFromPoint(x: number, y: number): string | null {
   return enemyId ?? null;
 }
 
+/** 키보드 입력 대상의 상호작용 요소 여부 판별 */
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  return target instanceof Element
+    && target.closest('button, a, input, textarea, select, [role="button"], [contenteditable="true"]') !== null;
+}
+
 /** 드로우 파일 카드 이름별 그룹핑 (툴팁 표시용) */
 function groupDrawPile(drawPile: readonly CardInstance[], lang: import('../../i18n/types').Language): string[] {
   const counts = new Map<string, number>();
@@ -64,7 +71,7 @@ function groupDrawPile(drawPile: readonly CardInstance[], lang: import('../../i1
   return Array.from(counts.entries()).map(([name, count]) => `${name} x${count}`);
 }
 
-export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: CombatScreenProps) {
+export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn, onOverlayChange }: CombatScreenProps) {
   const t = useTranslation();
   const lang = useLanguage();
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -77,22 +84,44 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
   const screenRef = useRef<HTMLDivElement>(null);
   const bottomAreaRef = useRef<HTMLDivElement>(null);
   const [viewingPile, setViewingPile] = useState<PileType>(null);
+  const [turnEnding, setTurnEnding] = useState(false);
   const endTurnLockRef = useRef(false);
+  const endTurnTimerRef = useRef<number | null>(null);
+  const attackTimerRef = useRef<number | null>(null);
+
+  // 전투 내부 모달 표시 상태 통지
+  useEffect(() => {
+    onOverlayChange(viewingPile !== null);
+    return () => onOverlayChange(false);
+  }, [onOverlayChange, viewingPile]);
+
+  // 전투 연출 타이머 정리
+  useEffect(() => () => {
+    if (endTurnTimerRef.current !== null) window.clearTimeout(endTurnTimerRef.current);
+    if (attackTimerRef.current !== null) window.clearTimeout(attackTimerRef.current);
+  }, []);
+
+  // 다음 턴 진입 시 턴 종료 잠금 해제
+  useEffect(() => {
+    endTurnLockRef.current = false;
+    setTurnEnding(false);
+  }, [combat.turn]);
 
   /** 적 공격 돌진 애니메이션 후 실제 턴 종료 처리 */
   const handleEndTurnWithAnimation = useCallback(() => {
     if (endTurnLockRef.current) return;
+    endTurnLockRef.current = true;
+    setTurnEnding(true);
     const attackerIds = combat.enemies
       .filter((e) => e.intent.type === 'attack')
       .map((e) => e.id);
 
     if (attackerIds.length > 0) {
-      endTurnLockRef.current = true;
       setLungingEnemyIds(attackerIds);
-      setTimeout(() => {
+      endTurnTimerRef.current = window.setTimeout(() => {
         setLungingEnemyIds([]);
         onEndTurn();
-        endTurnLockRef.current = false;
+        endTurnTimerRef.current = null;
       }, 350);
     } else {
       onEndTurn();
@@ -102,9 +131,7 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code !== 'Space' || e.repeat) return;
-      const target = e.target as HTMLElement | null;
-      const tagName = target?.tagName;
-      if (tagName === 'INPUT' || tagName === 'TEXTAREA') return;
+      if (isInteractiveTarget(e.target)) return;
       e.preventDefault();
       handleEndTurnWithAnimation();
     };
@@ -127,6 +154,7 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
 
   // #region 드래그 시작/이동/종료
   const handleDragStart = useCallback((instanceId: string, x: number, y: number, pointerId: number) => {
+    if (endTurnLockRef.current) return;
     const state: DragState = { instanceId, x, y, startX: x, startY: y };
     setDrag(state);
     dragRef.current = state;
@@ -168,6 +196,10 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
     const handlePointerUp = (e: PointerEvent) => {
       const current = dragRef.current;
       if (!current) return;
+      if (endTurnLockRef.current) {
+        clearDragState();
+        return;
+      }
 
       const droppedInsideHand = isInsideBottomArea(e.clientY, bottomAreaRef.current);
 
@@ -187,8 +219,10 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
           // 공격 카드 → 즉시 카드 사용 후 돌진 애니메이션만 유지
           setAttacking(true);
           onPlayCard(current.instanceId, singleTarget ? targetEnemyId : undefined);
-          setTimeout(() => {
+          if (attackTimerRef.current !== null) window.clearTimeout(attackTimerRef.current);
+          attackTimerRef.current = window.setTimeout(() => {
             setAttacking(false);
+            attackTimerRef.current = null;
           }, 200);
         } else {
           // 스킬/파워 → 즉시 사용
@@ -284,18 +318,22 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
           enemies={combat.enemies}
           targetEnemyId={aliveSelectedEnemyId ?? undefined}
           draggingInstanceId={drag?.instanceId ?? null}
+          disabled={turnEnding}
           onDragStart={handleDragStart}
+          onPlayCard={onPlayCard}
         />
 
-        <button className={styles.endTurnBtn} onClick={handleEndTurnWithAnimation}>
+        <button className={styles.endTurnBtn} disabled={turnEnding} onClick={handleEndTurnWithAnimation}>
           {t('endTurn')}
         </button>
 
         <div className={styles.pileBtnGroup}>
           <button className={styles.pileBtn} onClick={() => setViewingPile('discard')}>
+            <span className="sr-only">{t('discardPile')}</span>
             <strong className={styles.utilityCount}>{combat.discardPile.length}</strong>
           </button>
           <button className={styles.pileBtn} onClick={() => setViewingPile('exhaust')}>
+            <span className="sr-only">{t('exhaustPile')}</span>
             <strong className={styles.utilityCount}>{combat.exhaustPile.length}</strong>
           </button>
         </div>
@@ -305,13 +343,17 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn }: 
       {drag && draggedDef && (
         <div
           className={`${cardStyles.card} ${cardStyles.cardGhost} ${typeMap[draggedDef.type]}`}
+          aria-hidden="true"
+          data-rarity={getCardRarity(draggedDef.id)}
           style={{ left: drag.x, top: drag.y }}
         >
           <div className={cardStyles.cardCost}>{draggedDef.cost}</div>
           <div className={cardStyles.cardName}>{getCardName(draggedDef.id, lang)}</div>
           <CardArtwork cardId={draggedDef.id} cardName={getCardName(draggedDef.id, lang)} />
           <div className={cardStyles.cardDescription}>{draggedDescription}</div>
-          <div className={cardStyles.cardType}>{getCardTypeName(draggedDef.type, t)}</div>
+          <div className={cardStyles.cardType}>
+            {getCardTypeName(draggedDef.type, t)} · {getCardRarityName(getCardRarity(draggedDef.id), t)}
+          </div>
         </div>
       )}
 

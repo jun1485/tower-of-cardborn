@@ -11,7 +11,7 @@ interface EnergyDisplayProps {
 export function EnergyDisplay({ energy, maxEnergy }: EnergyDisplayProps) {
   const t = useTranslation();
   return (
-    <div className={styles.energyOrb}>
+    <div className={styles.energyOrb} role="status" aria-label={`${t('energy')} ${energy}/${maxEnergy}`}>
       <span className={styles.energyLabel}>{t('energy')}</span>
       <div className={styles.energyValueGroup}>
         <span className={styles.energyText}>{energy}</span>

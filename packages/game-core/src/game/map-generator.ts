@@ -2,7 +2,7 @@
 
 import type { GameMap, MapNode, NodeType } from '../types/map';
 import { NORMAL_ENCOUNTERS, ELITE_ENCOUNTERS, BOSS_ENCOUNTERS } from '../data/enemies';
-import { generateId } from '../utils/random';
+import { generateId, random } from '../utils/random';
 
 export const FLOORS_PER_MAP = 10;
 export const DEFAULT_TOTAL_MAPS = 3;
@@ -22,7 +22,7 @@ const FORCED_EVENT_FLOOR = 7;
 function getFloorNodeCount(floor: number): number {
   if (floor === FLOORS_PER_MAP) return 1;
   if (floor === 1 || floor === PRE_BOSS_REST_FLOOR) return 2;
-  return 2 + Math.floor(Math.random() * 2);
+  return 2 + Math.floor(random() * 2);
 }
 
 /** 층별 노드 타입 배열 결정 */
@@ -31,13 +31,13 @@ function getFloorNodeTypes(floor: number, count: number): NodeType[] {
   if (floor === PRE_BOSS_REST_FLOOR) return Array.from({ length: count }, () => 'rest');
 
   const types: NodeType[] = Array.from({ length: count }, () => 'combat');
-  const specialIndex = Math.floor(Math.random() * count);
+  const specialIndex = Math.floor(random() * count);
 
   // 특수 층: 엘리트 1개 보장(추가 확률), 상점 1개 보장, 중반 휴식 1개 보장
   if (floor === ELITE_FLOOR) {
     types[specialIndex] = 'elite';
     for (let i = 0; i < count; i++) {
-      if (i !== specialIndex && Math.random() < 0.4) types[i] = 'elite';
+      if (i !== specialIndex && random() < 0.4) types[i] = 'elite';
     }
   } else if (floor === SHOP_FLOOR) {
     types[specialIndex] = 'shop';
@@ -55,17 +55,22 @@ function pickEnemies(type: NodeType, mapIndex: number, floor: number): string[] 
     case 'combat': {
       const pool = NORMAL_ENCOUNTERS;
       const maxGroupSize = progressionFloor >= 10 ? 3 : progressionFloor >= 4 ? 2 : 1;
-      const sizedPool = pool.filter((encounter) => encounter.length <= maxGroupSize);
+      const minGroupSize = mapIndex >= 2 ? 2 : 1;
+      const sizedPool = pool.filter((encounter) => encounter.length >= minGroupSize && encounter.length <= maxGroupSize);
       const targetPool = sizedPool.length > 0 ? sizedPool : pool;
-      return [...targetPool[Math.floor(Math.random() * targetPool.length)]];
+      return [...targetPool[Math.floor(random() * targetPool.length)]];
     }
     case 'elite': {
-      const pool = ELITE_ENCOUNTERS;
-      return [...pool[Math.floor(Math.random() * pool.length)]];
+      const pool = mapIndex >= 3
+        ? [...ELITE_ENCOUNTERS, ['gremlin_nob', 'fungi_beast'], ['lagavulin', 'louse_red']]
+        : mapIndex === 2 ? [...ELITE_ENCOUNTERS, ['gremlin_nob', 'louse_red']] : ELITE_ENCOUNTERS;
+      return [...pool[Math.floor(random() * pool.length)]];
     }
     case 'boss': {
-      const pool = BOSS_ENCOUNTERS;
-      return [...pool[Math.floor(Math.random() * pool.length)]];
+      const pool = mapIndex >= 3
+        ? [['slime_boss', 'fungi_beast', 'fungi_beast']]
+        : mapIndex === 2 ? [['slime_boss', 'louse_red']] : BOSS_ENCOUNTERS;
+      return [...pool[Math.floor(random() * pool.length)]];
     }
     case 'rest':
     case 'shop':
@@ -94,9 +99,9 @@ function connectFloors(current: MapNode[], next: MapNode[]): MapNode[] {
 
   // 인접 노드 추가 연결로 경로 선택지 확장 (교차 간선 제외)
   for (let i = 0; i < n; i++) {
-    if (Math.random() >= 0.4) continue;
+    if (random() >= 0.4) continue;
     const primary = n === 1 ? 0 : Math.round((i * (m - 1)) / (n - 1));
-    const alt = primary + (Math.random() < 0.5 ? -1 : 1);
+    const alt = primary + (random() < 0.5 ? -1 : 1);
     if (alt >= 0 && alt < m && !crossesAny(linkSets, i, alt)) linkSets[i].add(alt);
   }
 
@@ -123,8 +128,8 @@ export function generateMap(mapIndex = 1, totalMaps = DEFAULT_TOTAL_MAPS): GameM
   for (let floor = 1; floor <= FLOORS_PER_MAP; floor++) {
     const count = getFloorNodeCount(floor);
     const types = getFloorNodeTypes(floor, count);
-    if (EVENT_CANDIDATE_FLOORS.includes(floor) && eventCount < MAX_EVENTS_PER_MAP && Math.random() < EVENT_CHANCE) {
-      types[Math.floor(Math.random() * count)] = 'event';
+    if (EVENT_CANDIDATE_FLOORS.includes(floor) && eventCount < MAX_EVENTS_PER_MAP && random() < EVENT_CHANCE) {
+      types[Math.floor(random() * count)] = 'event';
       eventCount++;
     }
     const nodes: MapNode[] = types.map((type, i) => ({
@@ -141,7 +146,7 @@ export function generateMap(mapIndex = 1, totalMaps = DEFAULT_TOTAL_MAPS): GameM
   // 이벤트 미배치 맵 보정: 강제 배치 층 노드 1개 치환
   if (eventCount === 0) {
     const forcedFloor = floorNodes[FORCED_EVENT_FLOOR - 1];
-    const idx = Math.floor(Math.random() * forcedFloor.length);
+    const idx = Math.floor(random() * forcedFloor.length);
     forcedFloor[idx] = { ...forcedFloor[idx], type: 'event', enemyIds: [] };
   }
 

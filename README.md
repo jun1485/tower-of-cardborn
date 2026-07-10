@@ -1,78 +1,65 @@
-# tower-of-cardborn
+# Tower of Cardborn
 
-## Monorepo workspace
+직업별 덱을 구성하며 3개의 분기형 액트를 등반하는 덱빌딩 로그라이크 게임입니다. React·TypeScript·Vite 웹 앱을 Capacitor Android 앱으로 패키징합니다.
 
-- `packages/game-core`: 웹/모바일에서 함께 쓰는 게임 로직/데이터/타입 패키지
-- 웹 앱은 해당 패키지를 `@tower-of-cardborn/game-core/*` 경로로 import 하도록 구성
+## 개발 환경
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- Node.js 22 이상
+- npm 10 이상
+- JDK 17 이상
+- Android Studio Otter 2025.2.1 이상
+- Android SDK 36
 
-Currently, two official plugins are available:
+## 주요 명령어
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 개발 서버: `npm run dev`
+- lint: `npm run lint`
+- 타입 검사: `npm run typecheck`
+- 단위 테스트: `npm test`
+- 웹 빌드: `npm run build`
+- Android 동기화: `npm run cap:sync`
+- Android Studio 실행: `npm run cap:open`
 
-## React Compiler
+## 프로젝트 구조
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `packages/game-core`: 전투·맵·이벤트·카드 로직과 공용 타입
+- `src/components`: 타이틀·맵·전투·설정 화면
+- `src/hooks`: 게임 상태·전투·Android 수명주기 연결
+- `src/utils/game-state.ts`: 기본 상태와 저장 복원 정규화
+- `src/utils/game-transitions.ts`: 화면별 순수 상태 전환
+- `src/i18n`: 한국어·영어·중국어 번역
+- `public/assets`: 카드·캐릭터·몬스터·배경·효과음
+- `android`: Capacitor Android 네이티브 프로젝트
 
-## Expanding the ESLint configuration
+## 조작
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- 카드 사용: 전장으로 드래그 또는 키보드 포커스 후 Enter·Space
+- 적 선택: 클릭·탭 또는 키보드 포커스 후 Enter·Space
+- 턴 종료: 턴 종료 버튼 또는 Space
+- 모달 닫기: Escape
+- Android 뒤로가기: 활성 모달 닫기 또는 종료 확인
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 저장과 개인정보
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- 현재 런·설정·통계를 기기 `localStorage`에만 저장
+- 저장 포맷 버전과 카드·적·이벤트·맵 연결 구조 검증
+- 외부 분석·광고·추적 SDK 미사용
+- Android 자동 백업과 평문 네트워크 통신 비활성화
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Android 릴리스
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- 버전 코드: Gradle `VERSION_CODE` 속성
+- 버전 이름: Gradle `VERSION_NAME` 속성
+- 기본 빌드값: `versionCode 1`, `versionName 1.0.0`
+- 릴리스 전 Node.js 22 환경에서 lint·타입 검사·테스트·웹 빌드·Capacitor 동기화 필요
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 에셋 생성
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- 카드 이미지: `npm run generate:card-art`
+- 직업 이미지: `npm run generate:class-art`
+- 월드 이미지: `npm run generate:world-art`
+- 효과음: `npm run generate:sfx`
+- 릴리스 이미지 최적화: `npm run optimize:assets`
+- 웹 빌드 전 카드·캐릭터·몬스터·배경 WebP 파생본 자동 갱신
+- 프로덕션 산출물에는 실제 사용하는 최적화 자산만 포함
+- 생성 API 키는 환경 변수로만 전달하고 저장소에 포함하지 않음

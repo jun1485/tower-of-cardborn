@@ -1,6 +1,7 @@
 // 카드 시스템 타입 정의
 
 export type CardType = 'attack' | 'skill' | 'power';
+export type CardRarity = 'starter' | 'common' | 'uncommon' | 'rare';
 
 export type TargetType = 'single' | 'all';
 

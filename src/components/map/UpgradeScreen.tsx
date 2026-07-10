@@ -1,6 +1,6 @@
 // 카드 강화 선택 화면: 덱에서 업그레이드 가능한 카드를 선택
 
-import { CARD_DEFINITIONS, canUpgrade, getUpgradedId } from '@tower-of-cardborn/game-core/data/cards';
+import { CARD_DEFINITIONS, canUpgrade, getCardRarity, getUpgradedId } from '@tower-of-cardborn/game-core/data/cards';
 import { useTranslation, useLanguage } from '../../i18n';
 import { getCardName, generateCardDescription } from '../../i18n/card-text';
 import styles from '../../styles/app.module.css';
@@ -44,6 +44,7 @@ export function UpgradeScreen({ deck, canSkip, onUpgrade, onSkip }: UpgradeScree
               key={index}
               className={`${styles.upgradeCard} card-item ${typeClass} ${!upgradable ? styles.upgradeCardDisabled : ''}`}
               disabled={!upgradable}
+              data-rarity={getCardRarity(cardId)}
               onClick={() => upgradable && onUpgrade(index)}
             >
               <div className={cardStyles.cardCost}>{def.cost}</div>

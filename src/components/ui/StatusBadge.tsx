@@ -43,6 +43,8 @@ export function StatusBadge({ effect }: StatusBadgeProps) {
     <button
       type="button"
       className={`${styles.statusBadge} ${open ? styles.statusBadgeOpen : ''}`}
+      aria-expanded={open}
+      aria-label={info.description}
       onClick={() => setOpen((prev) => !prev)}
       onBlur={() => setOpen(false)}
     >

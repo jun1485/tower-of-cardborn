@@ -673,6 +673,73 @@
   backdrop-filter: blur(4px);
 }
 
+.saveError {
+  position: fixed;
+  left: 50%;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: calc(100% - 2rem);
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 125, 125, 0.7);
+  border-radius: 0.75rem;
+  background: rgba(74, 18, 24, 0.96);
+  color: var(--color-text);
+  transform: translateX(-50%);
+  box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.4);
+}
+
+.saveError button {
+  padding: 0.125rem 0.375rem;
+  background: transparent;
+  color: inherit;
+  font-size: 1.25rem;
+}
+
+.runHistoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-left: 1.5rem;
+}
+
+.runHistoryItem {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.625rem;
+  background: rgba(255, 255, 255, 0.05);
+  line-height: 1.5;
+}
+
+.achievementList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  list-style: none;
+}
+
+.achievementUnlocked,
+.achievementLocked {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem;
+  border-radius: 0.625rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.achievementUnlocked {
+  color: #ffe58a;
+}
+
+.achievementLocked {
+  color: var(--color-text-dim);
+  opacity: 0.55;
+}
+
 .globalSettingsBtn:hover {
   background: rgba(0, 0, 0, 0.6);
   color: var(--color-text);
@@ -690,6 +757,28 @@
 
 .privacyLink:hover {
   opacity: 1;
+}
+
+.dailyChallengeBtn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  padding: 0.625rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.75rem;
+  background: rgba(8, 14, 28, 0.72);
+  color: var(--color-text-dim);
+}
+
+.dailyChallengeBtn span {
+  font-size: 0.6875rem;
+}
+
+.dailyChallengeBtnActive {
+  border-color: rgba(255, 214, 92, 0.9);
+  color: #ffe58a;
+  box-shadow: 0 0 1rem rgba(255, 193, 46, 0.25);
 }
 
 /* 개인정보 처리방침 모달 */

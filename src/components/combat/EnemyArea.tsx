@@ -20,13 +20,13 @@ interface EnemyAreaProps {
 }
 
 const ENEMY_IMAGE: Record<string, string> = {
-  jaw_worm: '/assets/monsters/jaw_worm_hd.png?v=6',
-  cultist: '/assets/monsters/cultist_hd.png?v=6',
-  louse_red: '/assets/monsters/louse_red_hd.png?v=6',
-  fungi_beast: '/assets/monsters/fungi_beast_hd.png?v=6',
-  gremlin_nob: '/assets/monsters/gremlin_nob_hd.png?v=6',
-  lagavulin: '/assets/monsters/lagavulin_hd.png?v=6',
-  slime_boss: '/assets/monsters/slime_boss_hd.png?v=6',
+  jaw_worm: '/assets/monsters/jaw_worm_hd.webp?v=7',
+  cultist: '/assets/monsters/cultist_hd.webp?v=7',
+  louse_red: '/assets/monsters/louse_red_hd.webp?v=7',
+  fungi_beast: '/assets/monsters/fungi_beast_hd.webp?v=7',
+  gremlin_nob: '/assets/monsters/gremlin_nob_hd.webp?v=7',
+  lagavulin: '/assets/monsters/lagavulin_hd.webp?v=7',
+  slime_boss: '/assets/monsters/slime_boss_hd.webp?v=7',
 };
 
 export function EnemyArea({
@@ -58,8 +58,10 @@ export function EnemyArea({
 
 /** 약화 반영된 실제 공격 데미지 계산 */
 function getDisplayedAttack(enemy: Enemy): number {
+  const strength = enemy.statusEffects.find((status) => status.type === 'strength')?.duration ?? 0;
   const isWeak = enemy.statusEffects.some((s) => s.type === 'weak' && s.duration > 0);
-  return isWeak ? Math.floor(enemy.intent.value * 0.75) : enemy.intent.value;
+  const damage = enemy.intent.value + strength;
+  return isWeak ? Math.floor(damage * 0.75) : damage;
 }
 
 interface EnemyCardProps {
@@ -85,7 +87,7 @@ function EnemyCard({
   const lang = useLanguage();
   const prevHp = usePrevious(enemy.hp);
   const isHit = prevHp > enemy.hp;
-  const enemyImage = ENEMY_IMAGE[enemy.definitionId] ?? '/assets/monsters/jaw_worm_hd.png?v=6';
+  const enemyImage = ENEMY_IMAGE[enemy.definitionId] ?? '/assets/monsters/jaw_worm_hd.webp?v=7';
   const localizedName = getEnemyName(enemy.definitionId, lang);
   const enemySpriteClassName = `${styles.characterSprite} ${styles.enemySprite}`;
   const enemyImageClassName = `${styles.characterImage} ${styles.enemyImage}`;
@@ -103,7 +105,16 @@ function EnemyCard({
     <div
       className={className}
       data-enemy-id={enemy.id}
+      role={targetSelectable ? 'button' : undefined}
+      tabIndex={targetSelectable ? 0 : undefined}
+      aria-pressed={targetSelectable ? selected : undefined}
+      aria-label={targetSelectable ? localizedName : undefined}
       onClick={() => targetSelectable && onSelectEnemy(enemy.id)}
+      onKeyDown={(event) => {
+        if (!targetSelectable || (event.key !== 'Enter' && event.key !== ' ')) return;
+        event.preventDefault();
+        onSelectEnemy(enemy.id);
+      }}
     >
       {/* 드래그 조준 배지 우선, 미조준 시 선택 타겟 배지 표시 */}
       {targetingActive && hovered && <div className={styles.enemyDropTargetBadge}>🎯</div>}
@@ -113,10 +124,10 @@ function EnemyCard({
       <div className={styles.enemyIntent}>
         {enemy.intent.type === 'attack' && `⚔️ ${getDisplayedAttack(enemy)}`}
         {enemy.intent.type === 'defend' && `🛡 ${enemy.intent.value}`}
-        {enemy.intent.type === 'buff' && `⬆️`}
+        {enemy.intent.type === 'buff' && `⬆️ ${enemy.intent.value}`}
       </div>
       <div className={enemySpriteClassName}>
-        <img className={enemyImageClassName} src={enemyImage} alt={localizedName} />
+        <img className={enemyImageClassName} src={enemyImage} alt={localizedName} decoding="async" />
         <FloatingNumber currentValue={enemy.hp} previousValue={prevHp} mode="damage" />
       </div>
       <div className={`${styles.combatantPanel} ${styles.enemyPanel}`}>

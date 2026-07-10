@@ -14,7 +14,14 @@ export function HealthBar({ hp, maxHp, block }: HealthBarProps) {
   const percentage = Math.max(0, (hp / maxHp) * 100);
 
   return (
-    <div className={styles.healthBar}>
+    <div
+      className={styles.healthBar}
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={maxHp}
+      aria-valuenow={Math.min(maxHp, Math.max(0, hp))}
+      aria-label={`${hp}/${maxHp}${block > 0 ? ` ${t('block')} ${block}` : ''}`}
+    >
       <div
         className={styles.healthBarFill}
         style={{ width: `${percentage}%` }}

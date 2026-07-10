@@ -1,7 +1,7 @@
 const CARD_ART_DIRECTORY = '/assets/cards';
 const CARD_ART_PLACEHOLDER_FILE = 'placeholder.svg';
-const CARD_ART_EXTENSION = 'png';
-const CARD_ART_CACHE_VERSION = 'v4';
+const CARD_ART_EXTENSION = 'webp';
+const CARD_ART_CACHE_VERSION = 'v5';
 const UPGRADE_SUFFIX = '+';
 
 function resolveBaseCardArtId(cardId: string): string {

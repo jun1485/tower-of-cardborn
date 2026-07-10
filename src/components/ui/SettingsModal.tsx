@@ -3,29 +3,33 @@
 import { useCallback, useState } from 'react';
 import type { GameSettings } from '../../utils/settings';
 import { loadSettings, saveSettings, resetSettings } from '../../utils/settings';
-import { clearSave } from '../../utils/storage';
 import { useTranslation, LANGUAGES, LANGUAGE_LABELS } from '../../i18n';
 import type { Language } from '../../i18n';
+import { useModalKeyboard } from '../../hooks/use-modal-keyboard';
 import styles from '../../styles/app.module.css';
 
 interface SettingsModalProps {
   readonly onClose: () => void;
   readonly onLangChange: (lang: Language) => void;
+  readonly onResetSave: () => void;
+  readonly onQuitRun?: () => void;
+  readonly onOpenDeck?: () => void;
 }
 
-export function SettingsModal({ onClose, onLangChange }: SettingsModalProps) {
+export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, onOpenDeck }: SettingsModalProps) {
   const t = useTranslation();
   const [settings, setSettings] = useState<GameSettings>(loadSettings);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+  const modalRef = useModalKeyboard(onClose);
 
   // 설정값 변경 후 즉시 저장
   const updateSetting = useCallback(<K extends keyof GameSettings>(key: K, value: GameSettings[K]) => {
-    setSettings((prev) => {
-      const next = { ...prev, [key]: value };
-      saveSettings(next);
-      return next;
-    });
-  }, []);
+    const next = { ...settings, [key]: value };
+    setSettings(next);
+    setSaveFailed(!saveSettings(next));
+  }, [settings]);
 
   /** 언어 변경 시 settings 저장 + 상위 컴포넌트 알림 */
   const handleLangChange = useCallback((lang: Language) => {
@@ -35,27 +39,53 @@ export function SettingsModal({ onClose, onLangChange }: SettingsModalProps) {
 
   // 세이브 데이터 초기화
   const handleResetSave = useCallback(() => {
-    clearSave();
+    onResetSave();
     setShowResetConfirm(false);
-  }, []);
+    onClose();
+  }, [onClose, onResetSave]);
+
+  /** 진행 중 런 포기 후 타이틀 복귀 */
+  const handleQuitRun = useCallback(() => {
+    onQuitRun?.();
+    setShowQuitConfirm(false);
+    onClose();
+  }, [onClose, onQuitRun]);
+
+  /** 설정 종료 후 현재 덱 열기 */
+  const handleOpenDeck = useCallback(() => {
+    onClose();
+    onOpenDeck?.();
+  }, [onClose, onOpenDeck]);
 
   // 설정 초기화
   const handleResetSettings = useCallback(() => {
-    resetSettings();
+    if (!resetSettings()) {
+      setSaveFailed(true);
+      return;
+    }
     const fresh = loadSettings();
     setSettings(fresh);
+    setSaveFailed(false);
     onLangChange(fresh.language);
   }, [onLangChange]);
 
   return (
     <div className={styles.settingsOverlay} onClick={onClose}>
-      <div className={styles.settingsModal} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={styles.settingsModal}
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className={styles.settingsHeader}>
-          <h2>{t('settings')}</h2>
-          <button className={styles.policyCloseBtn} onClick={onClose}>&times;</button>
+          <h2 id="settings-title">{t('settings')}</h2>
+          <button className={styles.policyCloseBtn} aria-label={t('close')} onClick={onClose}>&times;</button>
         </div>
 
         <div className={styles.settingsContent}>
+          {saveFailed && <p className={styles.resetWarning} role="alert">{t('settingsSaveError')}</p>}
           {/* 언어 선택 */}
           <div className={styles.settingsRow}>
             <label className={styles.settingsLabel}>{t('language')}</label>
@@ -64,6 +94,7 @@ export function SettingsModal({ onClose, onLangChange }: SettingsModalProps) {
                 <button
                   key={lang}
                   className={`${styles.langBtn} ${settings.language === lang ? styles.langBtnActive : ''}`}
+                  aria-pressed={settings.language === lang}
                   onClick={() => handleLangChange(lang)}
                 >
                   {LANGUAGE_LABELS[lang]}
@@ -72,28 +103,13 @@ export function SettingsModal({ onClose, onLangChange }: SettingsModalProps) {
             </div>
           </div>
 
-          {/* BGM 볼륨 */}
-          <div className={styles.settingsRow}>
-            <label className={styles.settingsLabel}>{t('bgmVolume')}</label>
-            <div className={styles.sliderGroup}>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={settings.bgmVolume}
-                className={styles.slider}
-                onChange={(e) => updateSetting('bgmVolume', Number(e.target.value))}
-              />
-              <span className={styles.sliderValue}>{settings.bgmVolume}</span>
-            </div>
-          </div>
-
           {/* 효과음 볼륨 */}
           <div className={styles.settingsRow}>
-            <label className={styles.settingsLabel}>{t('sfxVolume')}</label>
+            <label className={styles.settingsLabel} htmlFor="sfx-volume">{t('sfxVolume')}</label>
             <div className={styles.sliderGroup}>
               <input
                 type="range"
+                id="sfx-volume"
                 min={0}
                 max={100}
                 value={settings.sfxVolume}
@@ -109,6 +125,8 @@ export function SettingsModal({ onClose, onLangChange }: SettingsModalProps) {
             <label className={styles.settingsLabel}>{t('confirmOnExit')}</label>
             <button
               className={`${styles.toggle} ${settings.confirmOnExit ? styles.toggleOn : ''}`}
+              aria-pressed={settings.confirmOnExit}
+              aria-label={t('confirmOnExit')}
               onClick={() => updateSetting('confirmOnExit', !settings.confirmOnExit)}
             >
               <span className={styles.toggleKnob} />
@@ -117,9 +135,41 @@ export function SettingsModal({ onClose, onLangChange }: SettingsModalProps) {
 
           <div className={styles.settingsDivider} />
 
+          {onOpenDeck && (
+            <button className={styles.resetSettingsBtn} onClick={handleOpenDeck}>
+              {t('deck')}
+            </button>
+          )}
+
+          {onQuitRun && (!showQuitConfirm ? (
+            <button
+              className={styles.dangerBtn}
+              onClick={() => {
+                setShowResetConfirm(false);
+                setShowQuitConfirm(true);
+              }}
+            >
+              {t('titleBack')}
+            </button>
+          ) : (
+            <div className={styles.resetConfirmGroup}>
+              <p className={styles.resetWarning}>{t('backToTitleConfirm')}</p>
+              <div className={styles.resetActions}>
+                <button className={styles.dangerBtn} onClick={handleQuitRun}>{t('confirm')}</button>
+                <button className={styles.cancelBtn} onClick={() => setShowQuitConfirm(false)}>{t('cancel')}</button>
+              </div>
+            </div>
+          ))}
+
           {/* 세이브 초기화 */}
           {!showResetConfirm ? (
-            <button className={styles.dangerBtn} onClick={() => setShowResetConfirm(true)}>
+            <button
+              className={styles.dangerBtn}
+              onClick={() => {
+                setShowQuitConfirm(false);
+                setShowResetConfirm(true);
+              }}
+            >
               {t('resetSave')}
             </button>
           ) : (

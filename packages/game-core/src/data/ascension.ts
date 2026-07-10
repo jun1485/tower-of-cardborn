@@ -10,6 +10,11 @@ export interface AscensionModifier {
   readonly restHealRate: number;
 }
 
+export interface ActModifier {
+  readonly enemyHpMul: number;
+  readonly enemyAtkMul: number;
+}
+
 const ASCENSION_TABLE: readonly AscensionModifier[] = [
   { enemyHpMul: 1.0, enemyAtkMul: 1.0, startGold: 60, startHp: 80, restHealRate: 0.3 },
   { enemyHpMul: 1.1, enemyAtkMul: 1.0, startGold: 60, startHp: 80, restHealRate: 0.3 },
@@ -23,4 +28,11 @@ const ASCENSION_TABLE: readonly AscensionModifier[] = [
 export function getAscensionModifier(level: number): AscensionModifier {
   const clamped = Math.max(0, Math.min(MAX_ASCENSION, Math.floor(level)));
   return ASCENSION_TABLE[clamped];
+}
+
+/** 액트별 적 강화 배율 조회 */
+export function getActModifier(mapIndex: number): ActModifier {
+  if (mapIndex >= 3) return { enemyHpMul: 1.38, enemyAtkMul: 1.2 };
+  if (mapIndex === 2) return { enemyHpMul: 1.18, enemyAtkMul: 1.1 };
+  return { enemyHpMul: 1, enemyAtkMul: 1 };
 }

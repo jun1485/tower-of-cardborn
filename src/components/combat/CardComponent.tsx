@@ -1,10 +1,11 @@
 // 개별 카드 UI 컴포넌트 (포인터 드래그 지원 + 키워드 툴팁)
 
-import type { PointerEvent as ReactPointerEvent } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import type { CardDefinition } from '@tower-of-cardborn/game-core/types/card';
+import { getCardRarity } from '@tower-of-cardborn/game-core/data/cards';
 import { useTranslation, useLanguage } from '../../i18n';
 import type { TFunction } from '../../i18n';
-import { getCardName, generateCardDescription, getCardTypeName } from '../../i18n/card-text';
+import { getCardName, generateCardDescription, getCardRarityName, getCardTypeName } from '../../i18n/card-text';
 import styles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
 
@@ -15,6 +16,7 @@ interface CardComponentProps {
   readonly isDragging: boolean;
   readonly previewDescription?: string;
   readonly onDragStart: (instanceId: string, x: number, y: number, pointerId: number) => void;
+  readonly onActivate: (instanceId: string) => void;
 }
 
 /** 카드 효과에서 키워드 설명 추출 */
@@ -43,6 +45,7 @@ export function CardComponent({
   isDragging,
   previewDescription,
   onDragStart,
+  onActivate,
 }: CardComponentProps) {
   const t = useTranslation();
   const lang = useLanguage();
@@ -51,6 +54,7 @@ export function CardComponent({
   const keywords = getKeywords(definition, t);
   const cardName = getCardName(definition.id, lang);
   const cardDesc = previewDescription ?? generateCardDescription(definition, t);
+  const rarity = getCardRarity(definition.id);
 
   const handlePointerDown = (e: ReactPointerEvent) => {
     if (!canPlay) return;
@@ -58,17 +62,30 @@ export function CardComponent({
     onDragStart(instanceId, e.clientX, e.clientY, e.pointerId);
   };
 
+  /** 카드 키보드 사용 */
+  const handleKeyDown = (event: ReactKeyboardEvent) => {
+    if (!canPlay || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    onActivate(instanceId);
+  };
+
   return (
     <div
       className={`${styles.card} card-item ${typeClass} ${canPlay ? '' : styles.cardDisabled} ${isDragging ? `${styles.cardDragging} card-dragging` : ''}`}
+      role="button"
+      tabIndex={0}
+      aria-disabled={!canPlay}
+      aria-label={`${cardName}. ${definition.cost} ${t('energy')}. ${cardDesc}`}
+      data-rarity={rarity}
       onPointerDown={handlePointerDown}
+      onKeyDown={handleKeyDown}
     >
       <div className={styles.cardCost}>{definition.cost}</div>
       <div className={styles.cardName}>{cardName}</div>
       <CardArtwork cardId={definition.id} cardName={cardName} />
       <div className={styles.cardDescription}>{cardDesc}</div>
       <div className={styles.cardType}>
-        {getCardTypeName(definition.type, t)}
+        {getCardTypeName(definition.type, t)} · {getCardRarityName(rarity, t)}
         {definition.exhaust && ` · ${t('exhaust')}`}
       </div>
       {keywords.length > 0 && (

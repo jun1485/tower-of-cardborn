@@ -1,8 +1,9 @@
 // 카드 제거 선택 화면: 덱에서 제거할 카드 선택
 
-import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
+import { CARD_DEFINITIONS, getCardRarity } from '@tower-of-cardborn/game-core/data/cards';
 import { useTranslation, useLanguage } from '../../i18n';
 import { getCardName, generateCardDescription } from '../../i18n/card-text';
+import { MIN_DECK_SIZE } from '../../utils/game-transitions';
 import styles from '../../styles/app.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
@@ -39,6 +40,8 @@ export function RemoveScreen({ deck, canSkip, onRemove, onSkip }: RemoveScreenPr
             <button
               key={index}
               className={`${styles.upgradeCard} ${styles.removeCardBtn} card-item ${typeClassMap[def.type]}`}
+              disabled={deck.length <= MIN_DECK_SIZE}
+              data-rarity={getCardRarity(cardId)}
               onClick={() => onRemove(index)}
             >
               <div className={cardStyles.cardCost}>{def.cost}</div>

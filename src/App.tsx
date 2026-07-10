@@ -1,14 +1,17 @@
 // 루트 컴포넌트: 화면 라우팅 + i18n Provider
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useGame } from './hooks/use-game';
 import { useBackButton } from './hooks/use-back-button';
+import { useAudioLifecycle } from './hooks/use-audio-lifecycle';
 import { I18nProvider, LangProvider, createT, useTranslation } from './i18n';
 import { getCardName } from './i18n/card-text';
 import { loadSettings } from './utils/settings';
 import { loadMeta } from './utils/meta';
 import { resumeAudioContext } from './utils/sound';
 import { getFloorsClimbed } from '@tower-of-cardborn/game-core/game/map-generator';
+import { getStarterDeck } from '@tower-of-cardborn/game-core/data/cards';
+import { getDailySeed } from '@tower-of-cardborn/game-core/utils/random';
 import { CombatScreen } from './components/combat/CombatScreen';
 import { RewardScreen } from './components/combat/RewardScreen';
 import { MapScreen } from './components/map/MapScreen';
@@ -20,6 +23,9 @@ import { EventScreen } from './components/map/EventScreen';
 import { ConfirmDialog } from './components/ui/ConfirmDialog';
 import { PrivacyPolicy } from './components/ui/PrivacyPolicy';
 import { SettingsModal } from './components/ui/SettingsModal';
+import { RunHistory } from './components/ui/RunHistory';
+import { HowToPlay } from './components/ui/HowToPlay';
+import { DeckViewer } from './components/ui/DeckViewer';
 import type { Language, Translations } from './i18n/types';
 import type { CharacterClass } from '@tower-of-cardborn/game-core/types/game';
 import styles from './styles/app.module.css';
@@ -28,10 +34,10 @@ import styles from './styles/app.module.css';
 const ASC_DESC_KEYS: readonly (keyof Translations)[] = ['ascDesc0', 'ascDesc1', 'ascDesc2', 'ascDesc3', 'ascDesc4', 'ascDesc5'];
 
 const CLASS_IMAGE: Record<CharacterClass, string> = {
-  warrior: '/assets/classes/warrior.png?v=4',
-  archer: '/assets/classes/archer.png?v=4',
-  mage: '/assets/classes/mage.png?v=4',
-  assassin: '/assets/classes/assassin.png?v=4',
+  warrior: '/assets/classes/warrior.webp?v=5',
+  archer: '/assets/classes/archer.webp?v=5',
+  mage: '/assets/classes/mage.webp?v=5',
+  assassin: '/assets/classes/assassin.webp?v=5',
 };
 
 // 직업별 번역 키 매핑
@@ -42,17 +48,16 @@ const CLASS_NAME_KEY = {
   assassin: 'assassin',
 } as const;
 
-// 직업별 시작 덱 구성 (카드ID + 수량)
-const CLASS_STARTER_DECK: Record<CharacterClass, readonly { id: string; count: number }[]> = {
-  warrior: [{ id: 'strike', count: 5 }, { id: 'defend', count: 4 }, { id: 'bash', count: 1 }],
-  archer: [{ id: 'quick_shot', count: 5 }, { id: 'dodge', count: 4 }, { id: 'aimed_shot', count: 1 }],
-  mage: [{ id: 'magic_bolt', count: 5 }, { id: 'arcane_barrier', count: 4 }, { id: 'mana_blast', count: 1 }],
-  assassin: [{ id: 'shadow_strike', count: 5 }, { id: 'evasive_step', count: 4 }, { id: 'blood_drain', count: 1 }],
-};
-
 function App() {
   const [lang, setLang] = useState<Language>(() => loadSettings().language);
   const tFn = useMemo(() => createT(lang), [lang]);
+
+  // 문서 언어 정보 갱신
+  useEffect(() => {
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
+    document.title = tFn('gameTitle');
+    document.querySelector('meta[name="description"]')?.setAttribute('content', tFn('appDescription'));
+  }, [lang, tFn]);
 
   return (
     <LangProvider value={lang}>
@@ -70,24 +75,34 @@ interface AppInnerProps {
 
 /** 직업 시작 덱 설명 동적 생성 (카드 이름 번역 적용) */
 function buildDeckLabel(cls: CharacterClass, lang: import('./i18n/types').Language): string {
-  return CLASS_STARTER_DECK[cls]
-    .map(({ id, count }) => `${getCardName(id, lang)} x${count}`)
+  const counts = new Map<string, number>();
+  for (const id of getStarterDeck(cls)) counts.set(id, (counts.get(id) ?? 0) + 1);
+  return [...counts]
+    .map(([id, count]) => `${getCardName(id, lang)} x${count}`)
     .join(' · ');
 }
 
 // 실제 라우팅 렌더링 (I18nProvider 하위)
 function AppInner({ lang, onLangChange }: AppInnerProps) {
   const t = useTranslation();
+  useAudioLifecycle();
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [dailyChallenge, setDailyChallenge] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showDeck, setShowDeck] = useState(false);
+  const [combatOverlayOpen, setCombatOverlayOpen] = useState(false);
   const {
     screen, combat, deck, playerHp, playerMaxHp, map, characterClass, rewardCards,
     gold, rewardGold, shopCards, kills, ascension, removeSource, upgradeSource,
-    eventId, eventResult, unlockedAscension, restHealAmount,
+    eventId, eventResult, unlockedAscension, restHealAmount, runSeed,
     startNewGame, selectMapNode, handlePlayCard, handleEndTurn,
     pickRewardCard, skipReward, rest, goToUpgrade, upgradeCard, skipUpgrade, skipRest,
     goToRemove, removeCard, skipRemove, chooseEventOption, finishEvent,
     buyCard, leaveShop, goToTitle,
+    resetProgress,
+    saveError, dismissSaveError,
   } = useGame();
 
   // 타이틀 승천 레벨 선택값 (해금 범위 클램프)
@@ -96,7 +111,24 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
     return Math.min(meta.lastAscension, meta.ascensionUnlocked);
   });
 
-  const { showConfirm, confirmBack, cancelBack } = useBackButton({ screen, goToTitle });
+  /** 활성 모달 닫기 */
+  const closeOverlay = useCallback(() => {
+    if (!showSettings && !showPrivacy && !showHistory && !showHelp && !showDeck) return false;
+    setShowSettings(false);
+    setShowPrivacy(false);
+    setShowHistory(false);
+    setShowHelp(false);
+    setShowDeck(false);
+    return true;
+  }, [showDeck, showHelp, showHistory, showPrivacy, showSettings]);
+
+  const { showConfirm, confirmBack, cancelBack } = useBackButton({ screen, goToTitle, closeOverlay });
+
+  /** 진행도와 승천 선택값 초기화 */
+  const handleResetProgress = () => {
+    resetProgress();
+    setSelectedAscension(0);
+  };
 
   // 첫 사용자 제스처 시 AudioContext 활성화
   useEffect(() => {
@@ -130,6 +162,7 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
                   <button
                     className={styles.ascensionStepBtn}
                     disabled={selectedAscension <= 0}
+                    aria-label={t('ascensionDecrease')}
                     onClick={() => setSelectedAscension((prev) => Math.max(0, prev - 1))}
                   >
                     ◀
@@ -140,6 +173,7 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
                   <button
                     className={styles.ascensionStepBtn}
                     disabled={selectedAscension >= meta.ascensionUnlocked}
+                    aria-label={t('ascensionIncrease')}
                     onClick={() => setSelectedAscension((prev) => Math.min(meta.ascensionUnlocked, prev + 1))}
                   >
                     ▶
@@ -148,19 +182,39 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
                 <span className={styles.ascensionDesc}>{t(ASC_DESC_KEYS[selectedAscension])}</span>
               </div>
             )}
+            <button
+              className={`${styles.dailyChallengeBtn} ${dailyChallenge ? styles.dailyChallengeBtnActive : ''}`}
+              aria-pressed={dailyChallenge}
+              onClick={() => setDailyChallenge((enabled) => !enabled)}
+            >
+              <strong>{t('dailyChallenge')}</strong>
+              <span>{t('dailyChallengeDesc')}</span>
+            </button>
             <div className={styles.classSelection}>
               {(['warrior', 'archer', 'mage', 'assassin'] as const).map((cls) => (
-                <button key={cls} className={styles.classCard} onClick={() => startNewGame(cls, selectedAscension)}>
-                  <img className={styles.classIcon} src={CLASS_IMAGE[cls]} alt={t(CLASS_NAME_KEY[cls])} />
+                <button
+                  key={cls}
+                  className={styles.classCard}
+                  onClick={() => startNewGame(cls, selectedAscension, dailyChallenge ? getDailySeed() : undefined)}
+                >
+                  <img className={styles.classIcon} src={CLASS_IMAGE[cls]} alt="" decoding="async" />
                   <span className={styles.className}>{t(CLASS_NAME_KEY[cls])}</span>
                   <span className={styles.classDeck}>{buildDeckLabel(cls, lang)}</span>
                 </button>
               ))}
             </div>
             <button className={styles.privacyLink} onClick={() => setShowPrivacy(true)}>
-              Privacy Policy
+              {t('privacyPolicy')}
+            </button>
+            <button className={styles.privacyLink} onClick={() => setShowHistory(true)}>
+              {t('runHistory')}
+            </button>
+            <button className={styles.privacyLink} onClick={() => setShowHelp(true)}>
+              {t('howToPlay')}
             </button>
             {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+            {showHistory && <RunHistory onClose={() => setShowHistory(false)} />}
+            {showHelp && <HowToPlay onClose={() => setShowHelp(false)} />}
           </div>
         );
       }
@@ -172,10 +226,11 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
             map={map}
             playerHp={playerHp}
             playerMaxHp={playerMaxHp}
-            deckSize={deck.length}
+            deck={deck}
             gold={gold}
             ascension={ascension}
             onSelectNode={selectMapNode}
+            onOpenDeck={() => setShowDeck(true)}
           />
         );
 
@@ -187,6 +242,7 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
             characterClass={characterClass}
             onPlayCard={handlePlayCard}
             onEndTurn={handleEndTurn}
+            onOverlayChange={setCombatOverlayOpen}
           />
         );
 
@@ -270,6 +326,7 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
             )}
             <p className={styles.subtitle}>{t('deckStat', deck.length, playerHp, playerMaxHp)}</p>
             <p className={styles.statsLine}>{t('runStats', floorsClimbed, kills, gold)}</p>
+            {runSeed !== null && <p className={styles.statsLine}>{t('runSeedLabel', runSeed)}</p>}
             <button className={styles.resultBtn} onClick={() => startNewGame(characterClass, ascension)}>
               {t('newGame')}
             </button>
@@ -284,7 +341,8 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
           <div className={styles.resultScreen}>
             <h1 className={`${styles.resultTitle} ${styles.defeatTitle}`}>{t('defeatTitle')}</h1>
             <p className={styles.statsLine}>{t('runStats', floorsClimbed, kills, gold)}</p>
-            <button className={styles.resultBtn} onClick={() => startNewGame(characterClass, ascension)}>
+            {runSeed !== null && <p className={styles.statsLine}>{t('runSeedLabel', runSeed)}</p>}
+            <button className={styles.resultBtn} onClick={() => startNewGame(characterClass, ascension, runSeed ?? undefined)}>
               {t('retry')}
             </button>
             <button className={styles.resultBtn} onClick={goToTitle}>
@@ -298,13 +356,25 @@ function AppInner({ lang, onLangChange }: AppInnerProps) {
   return (
     <>
       {renderScreen()}
-      <button className={styles.globalSettingsBtn} onClick={() => setShowSettings(true)}>⚙</button>
+      {saveError && (
+        <div className={styles.saveError} role="alert">
+          <span>{t('saveError')}</span>
+          <button type="button" aria-label={t('close')} onClick={dismissSaveError}>×</button>
+        </div>
+      )}
+      {!combatOverlayOpen && (
+        <button className={styles.globalSettingsBtn} aria-label={t('settings')} onClick={() => setShowSettings(true)}>⚙</button>
+      )}
       {showSettings && (
         <SettingsModal
           onClose={() => setShowSettings(false)}
           onLangChange={onLangChange}
+          onResetSave={handleResetProgress}
+          onQuitRun={screen === 'title' ? undefined : goToTitle}
+          onOpenDeck={screen === 'title' ? undefined : () => setShowDeck(true)}
         />
       )}
+      {showDeck && <DeckViewer deck={deck} onClose={() => setShowDeck(false)} />}
       {showConfirm && (
         <ConfirmDialog
           message={confirmMessage}

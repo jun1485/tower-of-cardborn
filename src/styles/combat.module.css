@@ -27,7 +27,7 @@
   content: '';
   position: absolute;
   inset: -4% -2%;
-  background-image: url('/assets/ui/bg_combat_hd.svg?v=4');
+  background-image: url('/assets/ui/bg_combat_hd.webp?v=5');
   background-size: cover;
   background-position: center 56%;
   opacity: 0.98;
@@ -894,7 +894,7 @@
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.74);
-  z-index: 900;
+  z-index: 1000;
 }
 
 .pileModal {

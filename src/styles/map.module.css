@@ -34,15 +34,15 @@
 }
 
 .mapTheme1 {
-  --map-bg-image: url('/assets/ui/bg_map_1.svg');
+  --map-bg-image: url('/assets/ui/bg_map_1.webp');
 }
 
 .mapTheme2 {
-  --map-bg-image: url('/assets/ui/bg_map_2.svg');
+  --map-bg-image: url('/assets/ui/bg_map_2.webp');
 }
 
 .mapTheme3 {
-  --map-bg-image: url('/assets/ui/bg_map_3.svg');
+  --map-bg-image: url('/assets/ui/bg_map_3.webp');
 }
 
 .mapHeader {
@@ -63,6 +63,21 @@
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
+}
+
+.headerButton {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.headerButton:focus-visible {
+  outline: 2px solid var(--color-energy);
+  outline-offset: 4px;
+  border-radius: 0.25rem;
 }
 
 .headerIcon {

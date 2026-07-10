@@ -8,7 +8,7 @@ import { playSfx } from '../utils/sound';
 
 interface UseCombatReturn {
   readonly combat: CombatState | null;
-  readonly startCombat: (deckIds: readonly string[], enemyIds: readonly string[], hp?: number, maxHp?: number, ascension?: number) => void;
+  readonly startCombat: (deckIds: readonly string[], enemyIds: readonly string[], hp?: number, maxHp?: number, ascension?: number, mapIndex?: number) => void;
   readonly handlePlayCard: (cardInstanceId: string, targetEnemyId?: string) => void;
   readonly handleEndTurn: () => void;
   readonly clearCombat: () => void;
@@ -21,6 +21,7 @@ export function useCombat(
   const [combat, setCombat] = useState<CombatState | null>(initialState ?? null);
   const combatRef = useRef(combat);
   const onResultRef = useRef(onResult);
+  const sfxTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     combatRef.current = combat;
@@ -29,6 +30,11 @@ export function useCombat(
   useEffect(() => {
     onResultRef.current = onResult;
   }, [onResult]);
+
+  // 적 행동 효과음 타이머 정리
+  useEffect(() => () => {
+    if (sfxTimerRef.current !== null) window.clearTimeout(sfxTimerRef.current);
+  }, []);
 
   /** 전투 상태 갱신 + 종료 결과 통지 */
   const applyCombat = useCallback((next: CombatState) => {
@@ -39,8 +45,8 @@ export function useCombat(
     }
   }, []);
 
-  const startCombat = useCallback((deckIds: readonly string[], enemyIds: readonly string[], hp?: number, maxHp?: number, ascension?: number) => {
-    const next = initCombat(deckIds, enemyIds, hp, maxHp, ascension);
+  const startCombat = useCallback((deckIds: readonly string[], enemyIds: readonly string[], hp?: number, maxHp?: number, ascension?: number, mapIndex?: number) => {
+    const next = initCombat(deckIds, enemyIds, hp, maxHp, ascension, mapIndex);
     combatRef.current = next;
     setCombat(next);
   }, []);
@@ -52,6 +58,8 @@ export function useCombat(
     if (!prev || prev.result !== 'ongoing') return;
 
     const cardInst = prev.hand.find((c) => c.instanceId === cardInstanceId);
+    const next = playCard(prev, cardInstanceId, targetEnemyId);
+    if (next === prev) return;
     if (cardInst) {
       const def = CARD_DEFINITIONS[cardInst.definitionId];
       if (def) {
@@ -59,8 +67,11 @@ export function useCombat(
         playSfx(sfx);
       }
     }
+    const enemyHpBefore = prev.enemies.reduce((sum, enemy) => sum + enemy.hp, 0);
+    const enemyHpAfter = next.enemies.reduce((sum, enemy) => sum + enemy.hp, 0);
+    if (enemyHpAfter < enemyHpBefore) playSfx('enemy_hit');
 
-    applyCombat(playCard(prev, cardInstanceId, targetEnemyId));
+    applyCombat(next);
   }, [applyCombat]);
 
   // 턴 종료 효과음 + 적 공격 피격음
@@ -72,11 +83,14 @@ export function useCombat(
     playSfx('turn_end');
     const hpBefore = prev.player.hp;
     const blockBefore = prev.player.block;
+    const hadEnemyAttack = prev.enemies.some((enemy) => enemy.intent.type === 'attack');
     const next = endPlayerTurn(prev);
     // 적 공격 후 피격/방어 효과음 (약간 딜레이)
-    setTimeout(() => {
+    if (sfxTimerRef.current !== null) window.clearTimeout(sfxTimerRef.current);
+    sfxTimerRef.current = window.setTimeout(() => {
       if (next.player.hp < hpBefore) playSfx('player_hit');
-      else if (blockBefore > 0 && next.player.block < blockBefore) playSfx('block');
+      else if (hadEnemyAttack && blockBefore > 0) playSfx('block');
+      sfxTimerRef.current = null;
     }, 400);
 
     applyCombat(next);

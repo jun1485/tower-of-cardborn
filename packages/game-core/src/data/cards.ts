@@ -1,7 +1,8 @@
 // 카드 데이터 정의 (전사/궁수/마법사 기본 + 업그레이드)
 
-import type { CardDefinition } from '../types/card';
+import type { CardDefinition, CardRarity } from '../types/card';
 import type { CharacterClass } from '../types/game';
+import { random } from '../utils/random';
 
 export const CARD_DEFINITIONS: Record<string, CardDefinition> = {
   // #region 기본 카드
@@ -1486,6 +1487,35 @@ const ASSASSIN_REWARD_POOL: readonly string[] = [
   'execution_blade', 'siphon_strike', 'crimson_ritual',
 ];
 
+const STARTER_CARD_IDS = new Set([
+  'strike', 'defend', 'bash', 'quick_shot', 'dodge', 'aimed_shot',
+  'magic_bolt', 'arcane_barrier', 'mana_blast', 'shadow_strike', 'evasive_step', 'blood_drain',
+]);
+
+const RARE_CARD_IDS = new Set([
+  'bludgeon', 'impervious', 'offering', 'arrow_barrage', 'smoke_bomb', 'headshot',
+  'meteor', 'starfall', 'elemental_orb', 'overcharge', 'execution_blade', 'crimson_ritual', 'shadow_dance',
+]);
+
+/** 카드 희귀도 조회 */
+export function getCardRarity(cardId: string): CardRarity {
+  const baseId = cardId.endsWith('+') ? cardId.slice(0, -1) : cardId;
+  if (STARTER_CARD_IDS.has(baseId)) return 'starter';
+  if (RARE_CARD_IDS.has(baseId)) return 'rare';
+  const definition = CARD_DEFINITIONS[baseId];
+  return definition && (definition.cost >= 2 || definition.type === 'power' || definition.exhaust)
+    ? 'uncommon'
+    : 'common';
+}
+
+/** 카드 희귀도별 보상 가중치 조회 */
+function getRewardWeight(cardId: string): number {
+  const rarity = getCardRarity(cardId);
+  if (rarity === 'rare') return 10;
+  if (rarity === 'uncommon') return 30;
+  return 60;
+}
+
 /** 직업별 보상 카드 랜덤 선택 (중복 없이) */
 export function getRewardCards(count = 3, characterClass: CharacterClass = 'warrior'): string[] {
   const poolMap: Record<CharacterClass, readonly string[]> = {
@@ -1497,7 +1527,12 @@ export function getRewardCards(count = 3, characterClass: CharacterClass = 'warr
   const pool = [...poolMap[characterClass]];
   const result: string[] = [];
   for (let i = 0; i < count && pool.length > 0; i++) {
-    const idx = Math.floor(Math.random() * pool.length);
+    const totalWeight = pool.reduce((sum, cardId) => sum + getRewardWeight(cardId), 0);
+    let roll = random() * totalWeight;
+    const idx = Math.max(0, pool.findIndex((cardId) => {
+      roll -= getRewardWeight(cardId);
+      return roll < 0;
+    }));
     result.push(pool.splice(idx, 1)[0]);
   }
   return result;
@@ -1508,7 +1543,9 @@ export function getRewardCards(count = 3, characterClass: CharacterClass = 'warr
 export function getCardPrice(cardId: string): number {
   const def = CARD_DEFINITIONS[cardId];
   if (!def) return 50;
-  return 45 + def.cost * 10;
+  const rarity = getCardRarity(cardId);
+  const rarityPrice = rarity === 'rare' ? 45 : rarity === 'uncommon' ? 20 : 0;
+  return 45 + rarityPrice + def.cost * 10;
 }
 
 /** 업그레이드 가능한 카드인지 확인 */

@@ -25,8 +25,12 @@ export const NORMAL_ENCOUNTERS: readonly (readonly string[])[] = [
   ['fungi_beast', 'louse_red'],
   ['jaw_worm', 'louse_red'],
   ['cultist', 'louse_red'],
+  ['jaw_worm', 'fungi_beast'],
+  ['cultist', 'fungi_beast'],
   ['fungi_beast', 'fungi_beast'],
   ['louse_red', 'louse_red', 'fungi_beast'],
+  ['jaw_worm', 'louse_red', 'fungi_beast'],
+  ['cultist', 'louse_red', 'fungi_beast'],
 ];
 
 /** 엘리트 인카운터 */

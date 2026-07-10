@@ -19,4 +19,6 @@ export interface CombatState {
   readonly result: CombatResult;
   /** 승천 난이도 레벨 (적 강화 배율 기준) */
   readonly ascension: number;
+  /** 현재 액트 번호 */
+  readonly mapIndex: number;
 }

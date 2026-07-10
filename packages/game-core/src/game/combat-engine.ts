@@ -5,7 +5,7 @@ import type { CombatState } from '../types/combat';
 import type { Enemy, Player, StatusEffect } from '../types/character';
 import { CARD_DEFINITIONS } from '../data/cards';
 import { ENEMY_DEFINITIONS } from '../data/enemies';
-import { getAscensionModifier } from '../data/ascension';
+import { getActModifier, getAscensionModifier } from '../data/ascension';
 import { createDrawPile, discardHand, drawCards } from './deck-manager';
 import { decideIntent } from './enemy-ai';
 import { generateId } from '../utils/random';
@@ -15,8 +15,8 @@ const STARTING_ENERGY = 3;
 
 // #region 전투 초기화
 /** 승천 레벨별 적 체력 배율 적용 */
-function scaleEnemyHp(hp: number, ascension: number): number {
-  const { enemyHpMul } = getAscensionModifier(ascension);
+function scaleEnemyHp(hp: number, ascension: number, mapIndex: number): number {
+  const enemyHpMul = getAscensionModifier(ascension).enemyHpMul * getActModifier(mapIndex).enemyHpMul;
   return enemyHpMul === 1 ? hp : Math.round(hp * enemyHpMul);
 }
 
@@ -27,6 +27,7 @@ export function initCombat(
   playerHp = 80,
   playerMaxHp = 80,
   ascension = 0,
+  mapIndex = 1,
 ): CombatState {
   const drawPile = createDrawPile(deckIds);
   const enemies: Enemy[] = enemyIds.map((id) => {
@@ -34,15 +35,15 @@ export function initCombat(
     const enemy: Enemy = {
       id: generateId(),
       name: def.name,
-      hp: scaleEnemyHp(def.hp, ascension),
-      maxHp: scaleEnemyHp(def.maxHp, ascension),
+      hp: scaleEnemyHp(def.hp, ascension, mapIndex),
+      maxHp: scaleEnemyHp(def.maxHp, ascension, mapIndex),
       block: 0,
       intent: { type: 'attack', value: 0 },
       statusEffects: [],
       turnCount: 0,
       definitionId: def.id,
     };
-    return { ...enemy, intent: decideIntent(enemy, ascension) };
+    return { ...enemy, intent: decideIntent(enemy, ascension, mapIndex) };
   });
 
   const player: Player = {
@@ -67,6 +68,7 @@ export function initCombat(
     phase: 'player_turn',
     result: 'ongoing',
     ascension,
+    mapIndex,
   };
 }
 // #endregion
@@ -87,6 +89,11 @@ export function playCard(
   const definition = CARD_DEFINITIONS[cardInstance.definitionId];
   if (!definition) return state;
   if (state.player.energy < definition.cost) return state;
+  const requiresEnemyTarget = definition.effects.some((effect) => effect.target === 'single');
+  if (requiresEnemyTarget && (
+    state.enemies.length === 0
+    || (targetEnemyId !== undefined && !state.enemies.some((enemy) => enemy.id === targetEnemyId))
+  )) return state;
 
   // 에너지 소비
   let player: Player = {
@@ -122,8 +129,8 @@ export function playCard(
   // 사망한 적 제거
   enemies = enemies.filter((e) => e.hp > 0);
 
-  // 승리 체크
-  const result = enemies.length === 0 ? 'victory' as const : 'ongoing' as const;
+  // 플레이어 사망 우선 결과 판정
+  const result = player.hp <= 0 ? 'defeat' as const : enemies.length === 0 ? 'victory' as const : 'ongoing' as const;
 
   return {
     ...state,
@@ -223,16 +230,19 @@ function applyEffect(
 
 /** 플레이어에게 상태 효과 추가/누적 */
 function addPlayerStatus(player: Player, statusType: StatusEffect['type'], value: number): Player {
-  const existing = player.statusEffects.findIndex((s) => s.type === statusType);
-  let newEffects: StatusEffect[];
-  if (existing >= 0) {
-    newEffects = player.statusEffects.map((s, i) =>
-      i === existing ? { ...s, duration: s.duration + value } : s,
-    ) as StatusEffect[];
-  } else {
-    newEffects = [...player.statusEffects, { type: statusType, duration: value }];
-  }
-  return { ...player, statusEffects: newEffects };
+  return { ...player, statusEffects: addStatusEffect(player.statusEffects, statusType, value) };
+}
+
+/** 상태 효과 지속시간 누적 */
+function addStatusEffect(
+  effects: readonly StatusEffect[],
+  statusType: StatusEffect['type'],
+  value: number,
+): StatusEffect[] {
+  const existing = effects.findIndex((effect) => effect.type === statusType);
+  return existing >= 0
+    ? effects.map((effect, index) => index === existing ? { ...effect, duration: effect.duration + value } : effect)
+    : [...effects, { type: statusType, duration: value }];
 }
 
 /** 데미지 계산 (힘 + 약화 + 취약 반영) */
@@ -284,16 +294,7 @@ function applyStatusEffect(
   return enemies.map((enemy) => {
     if (targetEnemyId && enemy.id !== targetEnemyId) return enemy;
     if (!targetEnemyId && enemies.indexOf(enemy) !== 0) return enemy;
-    const existing = enemy.statusEffects.findIndex((s) => s.type === effect.statusType);
-    let newEffects: StatusEffect[];
-    if (existing >= 0) {
-      newEffects = enemy.statusEffects.map((s, i) =>
-        i === existing ? { ...s, duration: s.duration + effect.value } : s,
-      );
-    } else {
-      newEffects = [...enemy.statusEffects, { type: effect.statusType!, duration: effect.value }];
-    }
-    return { ...enemy, statusEffects: newEffects };
+    return { ...enemy, statusEffects: addStatusEffect(enemy.statusEffects, effect.statusType, effect.value) };
   });
 }
 // #endregion
@@ -306,13 +307,14 @@ export function endPlayerTurn(state: CombatState): CombatState {
   // 패 전체 버리기
   const { hand: emptyHand, discardPile: newDiscard } = discardHand(state.hand, state.discardPile);
 
-  // 적 행동 실행
+  // 적 방어도 초기화 후 행동 실행
   let player = { ...state.player };
-  let enemies = state.enemies.map((enemy) => ({ ...enemy }));
+  let enemies = state.enemies.map((enemy) => ({ ...enemy, block: 0 }));
 
-  for (const enemy of enemies) {
-    const actionResult = executeEnemyAction(enemy, player);
+  for (let index = 0; index < enemies.length; index++) {
+    const actionResult = executeEnemyAction(enemies[index], player);
     player = actionResult.player;
+    enemies[index] = actionResult.enemy;
   }
 
   // 패배 체크
@@ -328,16 +330,15 @@ export function endPlayerTurn(state: CombatState): CombatState {
     };
   }
 
-  // 적 상태이상 턴 감소 + 방어 초기화 + 다음 인텐트 결정
+  // 적 상태이상 턴 감소 + 다음 인텐트 결정
   enemies = enemies.map((enemy) => {
     const newTurnCount = enemy.turnCount + 1;
     const updatedEnemy: Enemy = {
       ...enemy,
-      block: 0,
       turnCount: newTurnCount,
       statusEffects: tickStatusEffects(enemy.statusEffects),
     };
-    return { ...updatedEnemy, intent: decideIntent(updatedEnemy, state.ascension) };
+    return { ...updatedEnemy, intent: decideIntent(updatedEnemy, state.ascension, state.mapIndex) };
   });
 
   // 다음 턴: 플레이어 방어 초기화 + 에너지 충전 + 드로우
@@ -361,6 +362,7 @@ export function endPlayerTurn(state: CombatState): CombatState {
     phase: 'player_turn',
     result: 'ongoing',
     ascension: state.ascension,
+    mapIndex: state.mapIndex,
   };
 }
 
@@ -368,15 +370,17 @@ export function endPlayerTurn(state: CombatState): CombatState {
 function executeEnemyAction(
   enemy: Enemy,
   player: Player,
-): { player: Player } {
+): { enemy: Enemy; player: Player } {
   switch (enemy.intent.type) {
     case 'attack': {
+      const strength = enemy.statusEffects.find((status) => status.type === 'strength')?.duration ?? 0;
       const isWeak = enemy.statusEffects.some((s) => s.type === 'weak' && s.duration > 0);
       const isPlayerVulnerable = player.statusEffects.some((s) => s.type === 'vulnerable' && s.duration > 0);
-      const damage = calculateDamage(enemy.intent.value, 0, isWeak, isPlayerVulnerable);
+      const damage = calculateDamage(enemy.intent.value, strength, isWeak, isPlayerVulnerable);
       const blockedDamage = Math.min(player.block, damage);
       const remainingDamage = damage - blockedDamage;
       return {
+        enemy,
         player: {
           ...player,
           block: player.block - blockedDamage,
@@ -385,9 +389,12 @@ function executeEnemyAction(
       };
     }
     case 'defend':
-      return { player };
+      return { enemy: { ...enemy, block: enemy.block + enemy.intent.value }, player };
     case 'buff':
-      return { player };
+      return {
+        enemy: { ...enemy, statusEffects: addStatusEffect(enemy.statusEffects, 'strength', enemy.intent.value) },
+        player,
+      };
   }
 }
 

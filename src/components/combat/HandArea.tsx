@@ -15,7 +15,9 @@ interface HandAreaProps {
   readonly enemies: readonly Enemy[];
   readonly targetEnemyId: string | undefined;
   readonly draggingInstanceId: string | null;
+  readonly disabled: boolean;
   readonly onDragStart: (instanceId: string, x: number, y: number, pointerId: number) => void;
+  readonly onPlayCard: (cardInstanceId: string, targetEnemyId?: string) => void;
 }
 
 export function HandArea({
@@ -25,7 +27,9 @@ export function HandArea({
   enemies,
   targetEnemyId,
   draggingInstanceId,
+  disabled,
   onDragStart,
+  onPlayCard,
 }: HandAreaProps) {
   const t = useTranslation();
 
@@ -41,10 +45,14 @@ export function HandArea({
               key={card.instanceId}
               instanceId={card.instanceId}
               definition={definition}
-              canPlay={energy >= definition.cost}
+              canPlay={!disabled && energy >= definition.cost}
               isDragging={draggingInstanceId === card.instanceId}
               previewDescription={previewDescription}
               onDragStart={onDragStart}
+              onActivate={(instanceId) => onPlayCard(
+                instanceId,
+                definition.effects.some((effect) => effect.target === 'single') ? targetEnemyId : undefined,
+              )}
             />
           );
         })}

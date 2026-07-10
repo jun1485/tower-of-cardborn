@@ -1,39 +1,276 @@
-// localStorage 저장/복원 래퍼 (버전 관리 포함)
+// localStorage 저장/복원 래퍼 (버전 및 구조 검증 포함)
 
-import type { GameState } from '@tower-of-cardborn/game-core/types/game';
+import type { CombatState } from '@tower-of-cardborn/game-core/types/combat';
+import type { Enemy, Intent, Player, StatusEffect } from '@tower-of-cardborn/game-core/types/character';
+import type { GameScreen, GameState } from '@tower-of-cardborn/game-core/types/game';
+import type { GameMap, MapNode, NodeType } from '@tower-of-cardborn/game-core/types/map';
+import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
+import { ENEMY_DEFINITIONS } from '@tower-of-cardborn/game-core/data/enemies';
+import { EVENTS } from '@tower-of-cardborn/game-core/data/events';
+import { MAX_ASCENSION } from '@tower-of-cardborn/game-core/data/ascension';
+import type { EventId } from '@tower-of-cardborn/game-core/types/event';
 
 const SAVE_KEY = 'tower-of-cardborn-save';
-
-/** 저장 포맷 버전 — 타입/구조 변경 시 숫자를 올리면 이전 세이브 자동 무효화 */
 const SAVE_VERSION = 8;
+
+const GAME_SCREENS: readonly GameScreen[] = [
+  'title', 'map', 'combat', 'combat_reward', 'rest', 'upgrade',
+  'remove_card', 'shop', 'event', 'game_over', 'victory',
+];
+const NODE_TYPES: readonly NodeType[] = ['combat', 'elite', 'rest', 'shop', 'event', 'boss'];
+const STATUS_TYPES: readonly StatusEffect['type'][] = ['vulnerable', 'weak', 'strength'];
 
 interface SaveData {
   readonly version: number;
   readonly state: GameState;
 }
 
-export function saveGame(state: GameState): void {
-  const data: SaveData = { version: SAVE_VERSION, state };
-  localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+/** JSON 객체 형태 확인 */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-export function loadGame(): GameState | null {
-  const raw = localStorage.getItem(SAVE_KEY);
-  if (!raw) return null;
+/** 유한 숫자 확인 */
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+/** 0 이상 정수 확인 */
+function isNonNegativeInteger(value: unknown): value is number {
+  return isFiniteNumber(value) && Number.isInteger(value) && value >= 0;
+}
+
+/** 런 시드 범위 확인 */
+function isRandomSeed(value: unknown): value is number {
+  return isFiniteNumber(value) && Number.isInteger(value) && value >= 0 && value <= 0xFFFFFFFF;
+}
+
+/** 문자열 배열 확인 */
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+/** 카드 ID 배열 확인 */
+function isCardIdArray(value: unknown): value is string[] {
+  return isStringArray(value) && value.every((cardId) => CARD_DEFINITIONS[cardId] !== undefined);
+}
+
+/** 적 ID 배열 확인 */
+function isEnemyIdArray(value: unknown): value is string[] {
+  return isStringArray(value) && value.every((enemyId) => ENEMY_DEFINITIONS[enemyId] !== undefined);
+}
+
+/** 이벤트 ID 확인 */
+function isEventId(value: unknown): value is EventId {
+  return typeof value === 'string' && EVENTS.some((event) => event.id === value);
+}
+
+/** 이벤트 ID 배열 확인 */
+function isEventIdArray(value: unknown): value is EventId[] {
+  return Array.isArray(value) && value.every(isEventId);
+}
+
+/** 상태 효과 구조 확인 */
+function isStatusEffect(value: unknown): value is StatusEffect {
+  return isRecord(value)
+    && STATUS_TYPES.includes(value.type as StatusEffect['type'])
+    && isNonNegativeInteger(value.duration)
+    && value.duration > 0;
+}
+
+/** 플레이어 상태 구조 확인 */
+function isPlayer(value: unknown): value is Player {
+  return isRecord(value)
+    && isNonNegativeInteger(value.hp)
+    && isNonNegativeInteger(value.maxHp)
+    && isNonNegativeInteger(value.block)
+    && isNonNegativeInteger(value.energy)
+    && isNonNegativeInteger(value.maxEnergy)
+    && value.maxHp > 0
+    && value.hp <= value.maxHp
+    && Array.isArray(value.statusEffects)
+    && value.statusEffects.every(isStatusEffect);
+}
+
+/** 적 인텐트 구조 확인 */
+function isIntent(value: unknown): value is Intent {
+  return isRecord(value)
+    && (value.type === 'attack' || value.type === 'defend' || value.type === 'buff')
+    && isNonNegativeInteger(value.value);
+}
+
+/** 적 상태 구조 확인 */
+function isEnemy(value: unknown): value is Enemy {
+  return isRecord(value)
+    && typeof value.id === 'string'
+    && typeof value.name === 'string'
+    && typeof value.definitionId === 'string'
+    && ENEMY_DEFINITIONS[value.definitionId] !== undefined
+    && isNonNegativeInteger(value.hp)
+    && isNonNegativeInteger(value.maxHp)
+    && isNonNegativeInteger(value.block)
+    && isNonNegativeInteger(value.turnCount)
+    && value.maxHp > 0
+    && value.hp <= value.maxHp
+    && isIntent(value.intent)
+    && Array.isArray(value.statusEffects)
+    && value.statusEffects.every(isStatusEffect);
+}
+
+/** 카드 파일 구조 확인 */
+function isCardPile(value: unknown): boolean {
+  return Array.isArray(value) && value.every((card) => (
+    isRecord(card)
+    && typeof card.instanceId === 'string'
+    && typeof card.definitionId === 'string'
+    && CARD_DEFINITIONS[card.definitionId] !== undefined
+  ));
+}
+
+/** 전투 상태 구조 확인 */
+function isCombatState(value: unknown): value is CombatState {
+  return isRecord(value)
+    && isPlayer(value.player)
+    && Array.isArray(value.enemies)
+    && value.enemies.every(isEnemy)
+    && isCardPile(value.drawPile)
+    && isCardPile(value.hand)
+    && isCardPile(value.discardPile)
+    && (value.exhaustPile === undefined || isCardPile(value.exhaustPile))
+    && isNonNegativeInteger(value.turn)
+    && value.turn >= 1
+    && (value.phase === 'player_turn' || value.phase === 'enemy_turn')
+    && (value.result === 'ongoing' || value.result === 'victory' || value.result === 'defeat')
+    && isNonNegativeInteger(value.ascension)
+    && value.ascension <= MAX_ASCENSION
+    && (value.mapIndex === undefined || (isNonNegativeInteger(value.mapIndex) && value.mapIndex >= 1));
+}
+
+/** 맵 노드 구조 확인 */
+function isMapNode(value: unknown): value is MapNode {
+  return isRecord(value)
+    && typeof value.id === 'string'
+    && isNonNegativeInteger(value.floor)
+    && isFiniteNumber(value.pos)
+    && value.floor >= 1
+    && value.pos >= 0
+    && value.pos <= 1
+    && NODE_TYPES.includes(value.type as NodeType)
+    && isStringArray(value.nextNodeIds)
+    && isEnemyIdArray(value.enemyIds)
+    && ((value.type === 'combat' || value.type === 'elite' || value.type === 'boss')
+      ? value.enemyIds.length > 0
+      : value.enemyIds.length === 0);
+}
+
+/** 맵 상태 구조 확인 */
+function isGameMap(value: unknown): value is GameMap {
+  if (!isRecord(value) || !Array.isArray(value.nodes) || !value.nodes.every(isMapNode)) return false;
+  if ((value.currentNodeId !== null && typeof value.currentNodeId !== 'string')
+    || !isStringArray(value.visitedNodeIds)
+    || !isNonNegativeInteger(value.mapIndex)
+    || !isNonNegativeInteger(value.totalMaps)
+    || !isNonNegativeInteger(value.totalFloorsPerMap)) return false;
+  const nodeIds = new Set(value.nodes.map((node) => node.id));
+  const nodesById = new Map(value.nodes.map((node) => [node.id, node]));
+  return nodeIds.size === value.nodes.length
+    && value.mapIndex >= 1
+    && value.totalMaps >= value.mapIndex
+    && value.totalFloorsPerMap >= 1
+    && (value.currentNodeId === null || nodeIds.has(value.currentNodeId))
+    && value.visitedNodeIds.every((nodeId) => nodeIds.has(nodeId))
+    && value.nodes.every((node) => node.floor <= value.totalFloorsPerMap)
+    && value.nodes.every((node) => node.nextNodeIds.every((nodeId) => nodesById.get(nodeId)?.floor === node.floor + 1));
+}
+
+/** 이벤트 결과 구조 확인 */
+function isEventResult(value: unknown): boolean {
+  return isRecord(value)
+    && typeof value.key === 'string'
+    && Array.isArray(value.args)
+    && value.args.every((arg) => typeof arg === 'string' || isFiniteNumber(arg));
+}
+
+/** 게임 저장 상태 구조 확인 */
+function isGameState(value: unknown): value is GameState {
+  if (!isRecord(value)) return false;
+  return GAME_SCREENS.includes(value.screen as GameScreen)
+    && (value.combatState === null || isCombatState(value.combatState))
+    && isCardIdArray(value.deck)
+    && isNonNegativeInteger(value.playerHp)
+    && isNonNegativeInteger(value.playerMaxHp)
+    && value.playerMaxHp > 0
+    && value.playerHp <= value.playerMaxHp
+    && (value.map === null || isGameMap(value.map))
+    && (value.characterClass === 'warrior' || value.characterClass === 'archer'
+      || value.characterClass === 'mage' || value.characterClass === 'assassin')
+    && isCardIdArray(value.rewardCards)
+    && isNonNegativeInteger(value.gold)
+    && isNonNegativeInteger(value.rewardGold)
+    && isCardIdArray(value.shopCards)
+    && (value.removeSource === null || value.removeSource === 'rest'
+      || value.removeSource === 'shop' || value.removeSource === 'event')
+    && isNonNegativeInteger(value.kills)
+    && isNonNegativeInteger(value.ascension)
+    && value.ascension <= MAX_ASCENSION
+    && (value.eventId === null || isEventId(value.eventId))
+    && (value.eventResult === null || isEventResult(value.eventResult))
+    && isEventIdArray(value.seenEventIds)
+    && isNonNegativeInteger(value.pendingRemoveCount)
+    && isNonNegativeInteger(value.pendingUpgradeCount)
+    && (value.upgradeSource === null || value.upgradeSource === 'rest' || value.upgradeSource === 'event')
+    && typeof value.runRecorded === 'boolean'
+    && (value.unlockedAscension === null
+      || (isNonNegativeInteger(value.unlockedAscension) && value.unlockedAscension <= MAX_ASCENSION))
+    && (value.runSeed === undefined || value.runSeed === null || isRandomSeed(value.runSeed))
+    && (value.randomState === undefined || value.randomState === null || isRandomSeed(value.randomState));
+}
+
+/** 손상 저장 데이터 정리 */
+function removeInvalidSave(): void {
   try {
-    const parsed = JSON.parse(raw) as SaveData;
-    // 버전 불일치 또는 구버전 포맷 → 삭제 후 null 반환
-    if (!parsed.version || parsed.version !== SAVE_VERSION) {
-      localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem(SAVE_KEY);
+  } catch {
+    console.error('손상된 게임 저장 데이터를 정리하지 못했습니다.');
+  }
+}
+
+/** 게임 상태 저장 */
+export function saveGame(state: GameState): boolean {
+  try {
+    const data: SaveData = { version: SAVE_VERSION, state };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    return true;
+  } catch {
+    console.error('게임 상태를 저장하지 못했습니다.');
+    return false;
+  }
+}
+
+/** 게임 상태 복원 */
+export function loadGame(): GameState | null {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (!isRecord(parsed) || parsed.version !== SAVE_VERSION || !isGameState(parsed.state)) {
+      removeInvalidSave();
       return null;
     }
     return parsed.state;
   } catch {
-    localStorage.removeItem(SAVE_KEY);
+    removeInvalidSave();
     return null;
   }
 }
 
-export function clearSave(): void {
-  localStorage.removeItem(SAVE_KEY);
+/** 게임 저장 데이터 삭제 */
+export function clearSave(): boolean {
+  try {
+    localStorage.removeItem(SAVE_KEY);
+    return true;
+  } catch {
+    console.error('게임 저장 데이터를 삭제하지 못했습니다.');
+    return false;
+  }
 }

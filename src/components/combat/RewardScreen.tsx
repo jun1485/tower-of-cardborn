@@ -1,10 +1,10 @@
 // 전투 보상 카드 선택 화면
 
-import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
+import { CARD_DEFINITIONS, getCardRarity } from '@tower-of-cardborn/game-core/data/cards';
 import type { CardDefinition } from '@tower-of-cardborn/game-core/types/card';
 import { useTranslation, useLanguage } from '../../i18n';
 import type { TFunction } from '../../i18n';
-import { getCardName, generateCardDescription, getCardTypeName } from '../../i18n/card-text';
+import { getCardName, generateCardDescription, getCardRarityName, getCardTypeName } from '../../i18n/card-text';
 import styles from '../../styles/app.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
@@ -51,6 +51,7 @@ export function RewardScreen({ rewardCards, rewardGold, onPick, onSkip }: Reward
           const keywords = getKeywords(def, t);
           const name = getCardName(def.id, lang);
           const desc = generateCardDescription(def, t);
+          const rarity = getCardRarity(cardId);
           const typeClassMap = {
             attack: cardStyles.cardAttack,
             skill: cardStyles.cardSkill,
@@ -61,13 +62,14 @@ export function RewardScreen({ rewardCards, rewardGold, onPick, onSkip }: Reward
             <button
               key={cardId}
               className={`${cardStyles.card} card-item ${typeClass} ${styles.rewardCard}`}
+              data-rarity={rarity}
               onClick={() => onPick(cardId)}
             >
               <div className={cardStyles.cardCost}>{def.cost}</div>
               <div className={cardStyles.cardName}>{name}</div>
               <CardArtwork cardId={def.id} cardName={name} />
               <div className={cardStyles.cardDescription}>{desc}</div>
-              <div className={cardStyles.cardType}>{getCardTypeName(def.type, t)}</div>
+              <div className={cardStyles.cardType}>{getCardTypeName(def.type, t)} · {getCardRarityName(rarity, t)}</div>
               {keywords.length > 0 && (
                 <div className={cardStyles.cardTooltip}>
                   {keywords.map((kw) => (

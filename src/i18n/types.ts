@@ -6,6 +6,7 @@ export interface Translations {
   // 공통
   confirm: string;
   cancel: string;
+  close: string;
   skip: string;
   titleBack: string;
   newGame: string;
@@ -13,11 +14,16 @@ export interface Translations {
 
   // 타이틀
   gameTitle: string;
+  appDescription: string;
   selectClass: string;
   warrior: string;
   archer: string;
   mage: string;
   assassin: string;
+  dailyChallenge: string;
+  dailyChallengeDesc: string;
+  howToPlay: string;
+  privacyPolicy: string;
 
   // 전투
   turn: string;
@@ -70,6 +76,8 @@ export interface Translations {
   // 승천
   ascensionLabel: string;
   ascensionNormal: string;
+  ascensionDecrease: string;
+  ascensionIncrease: string;
   ascDesc0: string;
   ascDesc1: string;
   ascDesc2: string;
@@ -107,13 +115,23 @@ export interface Translations {
   defeatTitle: string;
   deckStat: string;
   runStats: string;
+  runSeedLabel: string;
 
   // 메타 통계
   metaStats: string;
+  runHistory: string;
+  noRunHistory: string;
+  runHistoryItem: string;
+  runWon: string;
+  runLost: string;
+  achievements: string;
+  achievementFirstWin: string;
+  achievementSlayer: string;
+  achievementTowerClear: string;
+  achievementAscensionMaster: string;
 
   // 설정
   settings: string;
-  bgmVolume: string;
   sfxVolume: string;
   confirmOnExit: string;
   resetSave: string;
@@ -121,6 +139,8 @@ export interface Translations {
   deleteSave: string;
   resetSettings: string;
   language: string;
+  saveError: string;
+  settingsSaveError: string;
 
   // 카드 공통
   exhaust: string;
@@ -128,6 +148,10 @@ export interface Translations {
   cardTypeAttack: string;
   cardTypeSkill: string;
   cardTypePower: string;
+  rarityStarter: string;
+  rarityCommon: string;
+  rarityUncommon: string;
+  rarityRare: string;
 
   // 카드 설명 템플릿 ({0}=값, {1}=횟수)
   cdDamage: string;

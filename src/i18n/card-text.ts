@@ -1,6 +1,6 @@
 // 카드/적 이름 번역 + 효과 기반 설명 자동 생성
 
-import type { CardDefinition, CardEffect } from '@tower-of-cardborn/game-core/types/card';
+import type { CardDefinition, CardEffect, CardRarity } from '@tower-of-cardborn/game-core/types/card';
 import type { Enemy, StatusEffect } from '@tower-of-cardborn/game-core/types/character';
 import type { TFunction } from './index';
 import type { Language } from './types';
@@ -133,6 +133,17 @@ const CARD_TYPE_KEY: Record<string, 'cardTypeAttack' | 'cardTypeSkill' | 'cardTy
 export function getCardTypeName(type: string, t: TFunction): string {
   const key = CARD_TYPE_KEY[type];
   return key ? t(key) : type;
+}
+
+/** 카드 희귀도 번역 반환 */
+export function getCardRarityName(rarity: CardRarity, t: TFunction): string {
+  const keyMap = {
+    starter: 'rarityStarter',
+    common: 'rarityCommon',
+    uncommon: 'rarityUncommon',
+    rare: 'rarityRare',
+  } as const;
+  return t(keyMap[rarity]);
 }
 
 /** 카드 효과 배열에서 다국어 설명 자동 생성 */

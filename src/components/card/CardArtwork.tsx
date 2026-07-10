@@ -32,6 +32,7 @@ export function CardArtwork({ cardId, cardName }: CardArtworkProps) {
         src={getCardArtPath(cardId)}
         alt={t('cardArt', cardName)}
         loading="lazy"
+        decoding="async"
         onError={handleCardArtworkError}
       />
     </div>
