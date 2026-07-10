@@ -15,6 +15,7 @@ import { PileViewer } from './PileViewer';
 import styles from '../../styles/combat.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
+import { useReducedMotion } from '../../hooks/use-reduced-motion';
 
 interface CombatScreenProps {
   readonly combat: CombatState;
@@ -74,6 +75,7 @@ function groupDrawPile(drawPile: readonly CardInstance[], lang: import('../../i1
 export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn, onOverlayChange }: CombatScreenProps) {
   const t = useTranslation();
   const lang = useLanguage();
+  const reducedMotion = useReducedMotion();
   const [drag, setDrag] = useState<DragState | null>(null);
   const [attacking, setAttacking] = useState(false);
   const [lungingEnemyIds, setLungingEnemyIds] = useState<readonly string[]>([]);
@@ -116,7 +118,7 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn, on
       .filter((e) => e.intent.type === 'attack')
       .map((e) => e.id);
 
-    if (attackerIds.length > 0) {
+    if (attackerIds.length > 0 && !reducedMotion) {
       setLungingEnemyIds(attackerIds);
       endTurnTimerRef.current = window.setTimeout(() => {
         setLungingEnemyIds([]);
@@ -126,7 +128,7 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn, on
     } else {
       onEndTurn();
     }
-  }, [combat.enemies, onEndTurn]);
+  }, [combat.enemies, onEndTurn, reducedMotion]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -217,13 +219,15 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn, on
 
         if (def.type === 'attack') {
           // 공격 카드 → 즉시 카드 사용 후 돌진 애니메이션만 유지
-          setAttacking(true);
           onPlayCard(current.instanceId, singleTarget ? targetEnemyId : undefined);
-          if (attackTimerRef.current !== null) window.clearTimeout(attackTimerRef.current);
-          attackTimerRef.current = window.setTimeout(() => {
-            setAttacking(false);
-            attackTimerRef.current = null;
-          }, 200);
+          if (!reducedMotion) {
+            setAttacking(true);
+            if (attackTimerRef.current !== null) window.clearTimeout(attackTimerRef.current);
+            attackTimerRef.current = window.setTimeout(() => {
+              setAttacking(false);
+              attackTimerRef.current = null;
+            }, 200);
+          }
         } else {
           // 스킬/파워 → 즉시 사용
           onPlayCard(current.instanceId, singleTarget ? targetEnemyId : undefined);
@@ -246,7 +250,7 @@ export function CombatScreen({ combat, characterClass, onPlayCard, onEndTurn, on
       el.removeEventListener('pointerup', handlePointerUp as EventListener);
       el.removeEventListener('pointercancel', handlePointerCancel as EventListener);
     };
-  }, [isDragging, combat.enemies, combat.hand, onPlayCard, aliveSelectedEnemyId, aliveHoveredEnemyId]);
+  }, [isDragging, combat.enemies, combat.hand, onPlayCard, aliveSelectedEnemyId, aliveHoveredEnemyId, reducedMotion]);
   // #endregion
 
   // 드래그 중인 카드 정의

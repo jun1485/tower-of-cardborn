@@ -6,6 +6,7 @@ import type { RelicCombatBonuses } from '@tower-of-cardborn/game-core/types/reli
 import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
 import { endPlayerTurn, initCombat, playCard } from '@tower-of-cardborn/game-core/game/combat-engine';
 import { playSfx } from '../utils/sound';
+import { useReducedMotion } from './use-reduced-motion';
 
 interface UseCombatReturn {
   readonly combat: CombatState | null;
@@ -27,6 +28,7 @@ export function useCombat(
   initialState?: CombatState | null,
   onResult?: (finished: CombatState) => void,
 ): UseCombatReturn {
+  const reducedMotion = useReducedMotion();
   const [combat, setCombat] = useState<CombatState | null>(initialState ?? null);
   const combatRef = useRef(combat);
   const onResultRef = useRef(onResult);
@@ -104,14 +106,16 @@ export function useCombat(
     const next = endPlayerTurn(prev);
     // 적 공격 후 피격/방어 효과음 (약간 딜레이)
     if (sfxTimerRef.current !== null) window.clearTimeout(sfxTimerRef.current);
-    sfxTimerRef.current = window.setTimeout(() => {
+    const playImpactSfx = () => {
       if (next.player.hp < hpBefore) playSfx('player_hit');
       else if (hadEnemyAttack && blockBefore > 0) playSfx('block');
       sfxTimerRef.current = null;
-    }, 400);
+    };
+    if (reducedMotion) playImpactSfx();
+    else sfxTimerRef.current = window.setTimeout(playImpactSfx, 400);
 
     applyCombat(next);
-  }, [applyCombat]);
+  }, [applyCombat, reducedMotion]);
 
   const clearCombat = useCallback(() => {
     combatRef.current = null;
