@@ -6,13 +6,14 @@ const SETTINGS_KEY = 'tower-of-cardborn-settings';
 
 export interface GameSettings {
   readonly sfxVolume: number;
+  readonly musicVolume: number;
   readonly confirmOnExit: boolean;
   readonly language: Language;
 }
 
 // 기본 설정값 반환
 function getDefaultSettings(): GameSettings {
-  return { sfxVolume: 80, confirmOnExit: true, language: 'ko' };
+  return { sfxVolume: 80, musicVolume: 30, confirmOnExit: true, language: 'ko' };
 }
 
 /** 볼륨 범위 정규화 */
@@ -22,15 +23,22 @@ function normalizeVolume(value: unknown, fallback: number): number {
     : fallback;
 }
 
+/** JSON 객체 형태 확인 */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 // 설정 불러오기
 export function loadSettings(): GameSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) return getDefaultSettings();
-    const parsed = JSON.parse(raw) as Partial<GameSettings>;
+    const data: unknown = JSON.parse(raw);
+    const parsed: Record<string, unknown> = isRecord(data) ? data : {};
     const defaults = getDefaultSettings();
     return {
       sfxVolume: normalizeVolume(parsed.sfxVolume, defaults.sfxVolume),
+      musicVolume: normalizeVolume(parsed.musicVolume, defaults.musicVolume),
       confirmOnExit: typeof parsed.confirmOnExit === 'boolean' ? parsed.confirmOnExit : defaults.confirmOnExit,
       language: parsed.language === 'ko' || parsed.language === 'en' || parsed.language === 'zh'
         ? parsed.language

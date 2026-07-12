@@ -7,6 +7,12 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
   },
+  // 릴리스 로깅 최소화
+  loggingBehavior: 'production',
+  android: {
+    // 릴리스 웹뷰 디버깅 차단
+    webContentsDebuggingEnabled: false,
+  },
 };
 
 export default config;

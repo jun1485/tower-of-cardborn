@@ -1,9 +1,12 @@
 {
   "name": "Tower of Cardborn",
   "short_name": "Cardborn",
+  "id": "/",
   "description": "A class-based deck-building roguelike tower adventure.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#0f1015",
   "theme_color": "#0b1020",
   "icons": [

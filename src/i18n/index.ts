@@ -48,4 +48,4 @@ export function useLanguage(): Language {
 }
 
 export { createT };
-export type { Language, Translations };
+export type { Language };

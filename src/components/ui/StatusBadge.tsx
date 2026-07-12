@@ -31,6 +31,24 @@ function getStatusInfo(effect: StatusEffect, t: TFunction): { icon: string; labe
         label: `${t('strength')} ${effect.duration}`,
         description: `${t('strengthDesc')} +${effect.duration} (${t('permanent')})`,
       };
+    case 'poison':
+      return {
+        icon: '☠️',
+        label: `${t('poison')} ${effect.duration}`,
+        description: `${t('poisonDesc')} (${effect.duration})`,
+      };
+    case 'frail':
+      return {
+        icon: '🕸️',
+        label: `${t('frail')} ${effect.duration}`,
+        description: `${t('frailDesc')} (${effect.duration} ${t('turnsLeft')})`,
+      };
+    case 'dexterity':
+      return {
+        icon: '🍃',
+        label: `${t('dexterity')} ${effect.duration}`,
+        description: `${t('dexterityDesc')} +${effect.duration} (${t('permanent')})`,
+      };
   }
 }
 

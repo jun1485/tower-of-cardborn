@@ -1,13 +1,19 @@
 // 적 표시 + 데미지 피드백 컴포넌트
 
+import { memo, useEffect, useRef, useState } from 'react';
 import type { Enemy } from '@tower-of-cardborn/game-core/types/character';
+import { COMBAT_BALANCE } from '@tower-of-cardborn/game-core/data/balance';
 import { useTranslation, useLanguage } from '../../i18n';
 import { getEnemyName } from '../../i18n/card-text';
 import { HealthBar } from '../ui/HealthBar';
 import { FloatingNumber } from '../ui/FloatingNumber';
 import { StatusBadge } from '../ui/StatusBadge';
 import { usePrevious } from '../../hooks/use-previous';
+import { useReducedMotion } from '../../hooks/use-reduced-motion';
 import styles from '../../styles/combat.module.css';
+
+/** 사망 잔상 유지 시간 (ms) */
+const DEATH_GHOST_DURATION = 600;
 
 interface EnemyAreaProps {
   readonly enemies: readonly Enemy[];
@@ -20,15 +26,43 @@ interface EnemyAreaProps {
 }
 
 const ENEMY_IMAGE: Record<string, string> = {
-  jaw_worm: '/assets/monsters/jaw_worm_hd.webp?v=7',
-  cultist: '/assets/monsters/cultist_hd.webp?v=7',
-  louse_red: '/assets/monsters/louse_red_hd.webp?v=7',
-  fungi_beast: '/assets/monsters/fungi_beast_hd.webp?v=7',
-  gremlin_nob: '/assets/monsters/gremlin_nob_hd.webp?v=7',
-  lagavulin: '/assets/monsters/lagavulin_hd.webp?v=7',
-  slime_boss: '/assets/monsters/slime_boss_hd.webp?v=7',
-  stone_guardian: '/assets/monsters/lagavulin_hd.webp?v=7',
-  tower_heart: '/assets/monsters/slime_boss_hd.webp?v=7',
+  jaw_worm: '/assets/monsters/jaw_worm-v2.webp',
+  cultist: '/assets/monsters/cultist-v2.webp',
+  louse_red: '/assets/monsters/louse_red-v2.webp',
+  fungi_beast: '/assets/monsters/fungi_beast-v2.webp',
+  stone_sentinel: '/assets/monsters/stone_sentinel-v2.webp',
+  crystal_crawler: '/assets/monsters/crystal_crawler-v2.webp',
+  temple_acolyte: '/assets/monsters/temple_acolyte-v2.webp',
+  void_wisp: '/assets/monsters/void_wisp-v2.webp',
+  void_husk: '/assets/monsters/void_husk-v2.webp',
+  abyss_watcher: '/assets/monsters/abyss_watcher-v2.webp',
+  gremlin_nob: '/assets/monsters/gremlin_nob-v2.webp',
+  lagavulin: '/assets/monsters/lagavulin-v2.webp',
+  arcane_golem: '/assets/monsters/arcane_golem-v2.webp',
+  obsidian_knight: '/assets/monsters/obsidian_knight-v2.webp',
+  void_reaper: '/assets/monsters/void_reaper-v2.webp',
+  plague_herald: '/assets/monsters/plague_herald-v2.webp',
+  slime_boss: '/assets/monsters/slime_boss-v2.webp',
+  gremlin_king: '/assets/monsters/gremlin_king-v2.webp',
+  stone_guardian: '/assets/monsters/stone_guardian-v2.webp',
+  crystal_hydra: '/assets/monsters/crystal_hydra-v2.webp',
+  tower_heart: '/assets/monsters/tower_heart-v2.webp',
+};
+
+const BOSS_IDS = new Set([
+  'slime_boss',
+  'gremlin_king',
+  'stone_guardian',
+  'crystal_hydra',
+  'tower_heart',
+]);
+
+/** 인텐트 디버프 상태별 아이콘 */
+const DEBUFF_ICONS: Record<string, string> = {
+  vulnerable: '💥',
+  weak: '🔻',
+  poison: '☠️',
+  frail: '🕸️',
 };
 
 export function EnemyArea({
@@ -40,6 +74,36 @@ export function EnemyArea({
   targetingActive,
   onSelectEnemy,
 }: EnemyAreaProps) {
+  const reducedMotion = useReducedMotion();
+  const previousEnemiesRef = useRef(enemies);
+  const ghostTimersRef = useRef<number[]>([]);
+  const [dyingEnemies, setDyingEnemies] = useState<readonly Enemy[]>([]);
+
+  // 처치된 적 잔상 유지 (사망 연출 후 제거)
+  useEffect(() => {
+    const previous = previousEnemiesRef.current;
+    previousEnemiesRef.current = enemies;
+    if (reducedMotion) return;
+    const aliveIds = new Set(enemies.map((enemy) => enemy.id));
+    const killed = previous.filter((enemy) => !aliveIds.has(enemy.id));
+    if (killed.length === 0) return;
+    const killedIds = new Set(killed.map((enemy) => enemy.id));
+    window.requestAnimationFrame(() => {
+      setDyingEnemies((current) => [
+        ...current.filter((enemy) => !killedIds.has(enemy.id)),
+        ...killed.map((enemy) => ({ ...enemy, hp: 0 })),
+      ]);
+    });
+    ghostTimersRef.current.push(window.setTimeout(() => {
+      setDyingEnemies((current) => current.filter((enemy) => !killedIds.has(enemy.id)));
+    }, DEATH_GHOST_DURATION));
+  }, [enemies, reducedMotion]);
+
+  // 잔상 타이머 일괄 정리
+  useEffect(() => () => {
+    ghostTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+  }, []);
+
   return (
     <div className={styles.enemyArea}>
       {enemies.map((enemy) => (
@@ -54,6 +118,19 @@ export function EnemyArea({
           onSelectEnemy={onSelectEnemy}
         />
       ))}
+      {dyingEnemies.map((enemy) => (
+        <EnemyCard
+          key={`dying-${enemy.id}`}
+          enemy={enemy}
+          selected={false}
+          hovered={false}
+          isLunging={false}
+          targetSelectable={false}
+          targetingActive={false}
+          isDying
+          onSelectEnemy={onSelectEnemy}
+        />
+      ))}
     </div>
   );
 }
@@ -63,7 +140,7 @@ function getDisplayedAttack(enemy: Enemy): number {
   const strength = enemy.statusEffects.find((status) => status.type === 'strength')?.duration ?? 0;
   const isWeak = enemy.statusEffects.some((s) => s.type === 'weak' && s.duration > 0);
   const damage = enemy.intent.value + strength;
-  return isWeak ? Math.floor(damage * 0.75) : damage;
+  return isWeak ? Math.floor(damage * COMBAT_BALANCE.weakMultiplier) : damage;
 }
 
 interface EnemyCardProps {
@@ -73,38 +150,44 @@ interface EnemyCardProps {
   readonly isLunging: boolean;
   readonly targetSelectable: boolean;
   readonly targetingActive: boolean;
+  /** 사망 잔상 표시 여부 */
+  readonly isDying?: boolean;
   readonly onSelectEnemy: (enemyId: string) => void;
 }
 
-function EnemyCard({
+const EnemyCard = memo(function EnemyCard({
   enemy,
   selected,
   hovered,
   isLunging,
   targetSelectable,
   targetingActive,
+  isDying = false,
   onSelectEnemy,
 }: EnemyCardProps) {
   const t = useTranslation();
   const lang = useLanguage();
   const prevHp = usePrevious(enemy.hp);
   const isHit = prevHp > enemy.hp;
-  const enemyImage = ENEMY_IMAGE[enemy.definitionId] ?? '/assets/monsters/jaw_worm_hd.webp?v=7';
+  const enemyImage = ENEMY_IMAGE[enemy.definitionId] ?? '/assets/monsters/jaw_worm-v2.webp';
   const localizedName = getEnemyName(enemy.definitionId, lang);
+  const debuffStatusType = enemy.intent.statusType ?? 'weak';
   const intentLabel = enemy.intent.type === 'attack'
     ? `${t('intentAttack')} ${getDisplayedAttack(enemy)}`
     : enemy.intent.type === 'defend'
       ? `${t('intentDefend')} ${enemy.intent.value}`
       : enemy.intent.type === 'buff'
         ? `${t('intentBuff')} ${enemy.intent.value}`
-        : `${t('intentDebuff')} ${enemy.intent.statusType === 'vulnerable' ? t('vulnerable') : t('weak')} ${enemy.intent.value}`;
+        : `${t('intentDebuff')} ${t(debuffStatusType)} ${enemy.intent.value}`;
   const enemySpriteClassName = `${styles.characterSprite} ${styles.enemySprite}`;
-  const enemyVariantClass = enemy.definitionId === 'stone_guardian'
-    ? styles.stoneGuardianImage
-    : enemy.definitionId === 'tower_heart' ? styles.towerHeartImage : '';
-  const enemyImageClassName = `${styles.characterImage} ${styles.enemyImage} ${enemyVariantClass}`;
+  const enemyImageClassName = [
+    styles.characterImage,
+    styles.enemyImage,
+    BOSS_IDS.has(enemy.definitionId) ? styles.bossImage : '',
+  ].join(' ');
   const className = [
     styles.enemyCard,
+    isDying ? styles.enemyDying : '',
     isHit ? styles.shake : '',
     isLunging ? styles.enemyLunge : '',
     targetingActive ? styles.enemyDraggable : '',
@@ -116,7 +199,8 @@ function EnemyCard({
   return (
     <div
       className={className}
-      data-enemy-id={enemy.id}
+      data-enemy-id={isDying ? undefined : enemy.id}
+      aria-hidden={isDying || undefined}
       role={targetSelectable ? 'button' : undefined}
       tabIndex={targetSelectable ? 0 : undefined}
       aria-pressed={targetSelectable ? selected : undefined}
@@ -137,7 +221,7 @@ function EnemyCard({
         {enemy.intent.type === 'attack' && `⚔️ ${getDisplayedAttack(enemy)}`}
         {enemy.intent.type === 'defend' && `🛡 ${enemy.intent.value}`}
         {enemy.intent.type === 'buff' && `⬆️ ${enemy.intent.value}`}
-        {enemy.intent.type === 'debuff' && `${enemy.intent.statusType === 'vulnerable' ? '💥' : '🔻'} ${enemy.intent.value}`}
+        {enemy.intent.type === 'debuff' && `${DEBUFF_ICONS[debuffStatusType] ?? '🔻'} ${enemy.intent.value}`}
       </div>
       <div className={enemySpriteClassName}>
         <img className={enemyImageClassName} src={enemyImage} alt={localizedName} decoding="async" />
@@ -159,4 +243,4 @@ function EnemyCard({
       </div>
     </div>
   );
-}
+});

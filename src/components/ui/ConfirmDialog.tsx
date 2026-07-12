@@ -29,6 +29,7 @@ export function ConfirmDialog({
         ref={modalRef}
         role="alertdialog"
         aria-modal="true"
+        aria-labelledby="confirm-message"
         aria-describedby="confirm-message"
         onClick={(e) => e.stopPropagation()}
       >

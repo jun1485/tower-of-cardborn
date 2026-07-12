@@ -7,6 +7,7 @@ import { getCardName, generateCardDescription, getCardRarityName, getCardTypeNam
 import styles from '../../styles/combat.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
+import { getCardTypeClass } from '../card/card-type-class';
 import { useModalKeyboard } from '../../hooks/use-modal-keyboard';
 
 interface PileViewerProps {
@@ -39,8 +40,7 @@ export function PileViewer({ title, pile, onClose }: PileViewerProps) {
             const def = CARD_DEFINITIONS[card.definitionId];
             if (!def) return null;
             const name = getCardName(def.id, lang);
-            const typeClassMap = { attack: cardStyles.cardAttack, skill: cardStyles.cardSkill, power: cardStyles.cardPower };
-            const typeClass = typeClassMap[def.type];
+            const typeClass = getCardTypeClass(def.type);
             const rarity = getCardRarity(def.id);
             return (
               <div key={card.instanceId} className={`${cardStyles.card} card-item ${typeClass}`} data-rarity={rarity}>

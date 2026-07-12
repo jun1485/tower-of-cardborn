@@ -5,6 +5,7 @@ import { useLanguage, useTranslation } from '../../i18n';
 import { generateCardDescription, getCardName, getCardRarityName, getCardTypeName } from '../../i18n/card-text';
 import { useModalKeyboard } from '../../hooks/use-modal-keyboard';
 import { CardArtwork } from '../card/CardArtwork';
+import { getCardTypeClass } from '../card/card-type-class';
 import cardStyles from '../../styles/card.module.css';
 import combatStyles from '../../styles/combat.module.css';
 
@@ -13,15 +14,17 @@ interface DeckViewerProps {
   readonly onClose: () => void;
 }
 
+/** 동일 카드 수량 집계 */
+function groupDeck(deck: readonly string[]): readonly [string, number][] {
+  const counts = new Map<string, number>();
+  for (const cardId of deck) counts.set(cardId, (counts.get(cardId) ?? 0) + 1);
+  return [...counts.entries()];
+}
+
 export function DeckViewer({ deck, onClose }: DeckViewerProps) {
   const t = useTranslation();
   const lang = useLanguage();
   const modalRef = useModalKeyboard(onClose);
-  const typeClass = {
-    attack: cardStyles.cardAttack,
-    skill: cardStyles.cardSkill,
-    power: cardStyles.cardPower,
-  } as const;
 
   return (
     <div className={combatStyles.pileOverlay} onClick={onClose}>
@@ -38,17 +41,18 @@ export function DeckViewer({ deck, onClose }: DeckViewerProps) {
           <button className={combatStyles.pileCloseBtn} aria-label={t('close')} onClick={onClose}>✕</button>
         </div>
         <div className={`${combatStyles.pileGrid} card-list`}>
-          {deck.map((cardId, index) => {
+          {groupDeck(deck).map(([cardId, count]) => {
             const definition = CARD_DEFINITIONS[cardId];
             if (!definition) return null;
             const name = getCardName(cardId, lang);
             const rarity = getCardRarity(cardId);
             return (
               <article
-                key={`${cardId}-${index}`}
-                className={`${cardStyles.card} card-item ${typeClass[definition.type]}`}
+                key={cardId}
+                className={`${cardStyles.card} card-item ${getCardTypeClass(definition.type)}`}
                 data-rarity={rarity}
               >
+                {count > 1 && <span className={combatStyles.deckCountBadge}>×{count}</span>}
                 <div className={cardStyles.cardCost}>{definition.cost}</div>
                 <div className={cardStyles.cardName}>{name}</div>
                 <CardArtwork cardId={cardId} cardName={name} />

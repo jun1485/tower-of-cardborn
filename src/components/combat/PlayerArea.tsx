@@ -1,6 +1,8 @@
 // 플레이어 정보 표시 + 피격/방어 피드백 컴포넌트
 
+import { memo } from 'react';
 import type { Player } from '@tower-of-cardborn/game-core/types/character';
+import type { PlayerPower } from '@tower-of-cardborn/game-core/types/combat';
 import type { CharacterClass } from '@tower-of-cardborn/game-core/types/game';
 import { useTranslation } from '../../i18n';
 import { HealthBar } from '../ui/HealthBar';
@@ -10,10 +12,10 @@ import { usePrevious } from '../../hooks/use-previous';
 import styles from '../../styles/combat.module.css';
 
 const CLASS_IMAGE: Record<CharacterClass, string> = {
-  warrior: '/assets/classes/warrior.webp?v=8',
-  archer: '/assets/classes/archer.webp?v=8',
-  mage: '/assets/classes/mage.webp?v=8',
-  assassin: '/assets/classes/assassin.webp?v=8',
+  warrior: '/assets/classes/warrior-v2.webp',
+  archer: '/assets/classes/archer-v2.webp',
+  mage: '/assets/classes/mage-v2.webp',
+  assassin: '/assets/classes/assassin-v2.webp',
 };
 
 const CLASS_NAME_KEY: Record<CharacterClass, 'warrior' | 'archer' | 'mage' | 'assassin'> = {
@@ -23,13 +25,30 @@ const CLASS_NAME_KEY: Record<CharacterClass, 'warrior' | 'archer' | 'mage' | 'as
   assassin: 'assassin',
 };
 
+/** 지속 파워 아이콘 */
+const POWER_ICONS: Record<PlayerPower['type'], string> = {
+  turn_start_block: '🛡️',
+  turn_start_strength: '⚡',
+  turn_start_draw: '🃏',
+  turn_start_heal: '💗',
+};
+
+/** 지속 파워 설명 번역 키 */
+const POWER_TEXT_KEY = {
+  turn_start_block: 'cdPowerBlock',
+  turn_start_strength: 'cdPowerStrength',
+  turn_start_draw: 'cdPowerDraw',
+  turn_start_heal: 'cdPowerHeal',
+} as const;
+
 interface PlayerAreaProps {
   readonly player: Player;
+  readonly powers: readonly PlayerPower[];
   readonly isAttacking: boolean;
   readonly characterClass: CharacterClass;
 }
 
-export function PlayerArea({ player, isAttacking, characterClass }: PlayerAreaProps) {
+export const PlayerArea = memo(function PlayerArea({ player, powers, isAttacking, characterClass }: PlayerAreaProps) {
   const t = useTranslation();
   const prevHp = usePrevious(player.hp);
   const prevBlock = usePrevious(player.block);
@@ -53,14 +72,23 @@ export function PlayerArea({ player, isAttacking, characterClass }: PlayerAreaPr
           <strong className={styles.combatantName}>{t(CLASS_NAME_KEY[characterClass])}</strong>
         </div>
         <HealthBar hp={player.hp} maxHp={player.maxHp} block={player.block} />
-        {player.statusEffects.length > 0 && (
+        {(player.statusEffects.length > 0 || powers.length > 0) && (
           <div className={styles.statusEffects}>
             {player.statusEffects.map((effect, i) => (
               <StatusBadge key={i} effect={effect} />
+            ))}
+            {powers.map((power) => (
+              <span
+                key={power.type}
+                className={styles.statusBadge}
+                title={t(POWER_TEXT_KEY[power.type], String(power.value))}
+              >
+                {POWER_ICONS[power.type]} {power.value}
+              </span>
             ))}
           </div>
         )}
       </div>
     </div>
   );
-}
+});

@@ -58,7 +58,7 @@ export function FloatingNumber({ currentValue, previousValue, mode }: FloatingNu
   }, [currentValue, previousValue, mode]);
 
   return (
-    <div className={styles.floatingContainer} aria-live="polite" aria-atomic="false">
+    <div className={styles.floatingContainer} aria-hidden="true">
       {entries.map((entry) => (
         <span
           key={entry.id}

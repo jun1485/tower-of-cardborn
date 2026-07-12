@@ -22,6 +22,8 @@ export function HealthBar({ hp, maxHp, block }: HealthBarProps) {
       aria-valuenow={Math.min(maxHp, Math.max(0, hp))}
       aria-label={`${hp}/${maxHp}${block > 0 ? ` ${t('block')} ${block}` : ''}`}
     >
+      {/* 잔상 게이지가 본 게이지보다 늦게 줄며 피해량 시각화 */}
+      <div className={styles.healthBarGhost} style={{ width: `${percentage}%` }} />
       <div
         className={styles.healthBarFill}
         style={{ width: `${percentage}%` }}

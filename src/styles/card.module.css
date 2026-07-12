@@ -1,6 +1,7 @@
 /* 카드 스타일: rem 스케일 기반 + 최소 크기 플로어 */
 
 .card {
+  touch-action: none;
   width: max(96px, 12.75rem);
   min-height: max(156px, 23.25rem);
   border-radius: 1rem;
@@ -27,6 +28,7 @@
   -webkit-touch-callout: none;
   margin: 0 -1rem;
   animation: cardDealIn 0.35s cubic-bezier(0.2, 0, 0.2, 1);
+  animation-fill-mode: backwards;
 }
 
 @keyframes cardDealIn {
@@ -41,10 +43,36 @@
   }
 }
 
+/* 발동 가능 카드 글로우 */
+.cardPlayable::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 0.85rem rgba(130, 205, 255, 0.42), inset 0 0 0.4rem rgba(130, 205, 255, 0.16);
+  animation: playableGlow 2.4s ease-in-out infinite;
+}
+
+@keyframes playableGlow {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.85; }
+}
+
 .card:hover:not(.cardDisabled):not(.cardDragging) {
-  box-shadow: 0 1.125rem 2.25rem rgba(2, 6, 14, 0.72);
+  box-shadow: 0 1.5rem 2.75rem rgba(2, 6, 14, 0.76), 0 0 1.25rem rgba(129, 199, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.18);
   border-color: rgba(243, 247, 255, 0.48);
+  filter: brightness(1.08) saturate(1.08);
   z-index: 10;
+}
+
+.card:hover:not(.cardDisabled):not(.cardDragging) .cardArtworkImage {
+  transform: scale(1.22) translateY(-1.5%);
+  filter: brightness(1.08) contrast(1.04);
+}
+
+.card:hover:not(.cardDisabled):not(.cardDragging) .cardCost {
+  transform: translate(-0.125rem, -0.1875rem) rotate(-4deg) scale(1.08);
 }
 
 .cardDragging {
@@ -55,13 +83,37 @@
 
 .cardGhost {
   position: fixed;
-  transform: translate(-50%, -50%) rotate(-5deg) scale(1.08);
   pointer-events: none;
   z-index: 1000;
-  box-shadow: 0 0.75rem 2.5rem rgba(2, 6, 14, 0.7);
+  box-shadow: 0 1.5rem 3.25rem rgba(2, 6, 14, 0.78), 0 0 1.5rem rgba(130, 205, 255, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.22);
   border-color: rgba(242, 247, 255, 0.62);
-  opacity: 0.94;
-  animation: none;
+  opacity: 0.98;
+  transform: translate(-50%, -58%) scale(0.88);
+  transform-origin: center bottom;
+  filter: brightness(1.08) saturate(1.08);
+  animation: cardPickup 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cardPickup {
+  0% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.62);
+    filter: brightness(0.9) saturate(0.86);
+    box-shadow: 0 0.5rem 1rem rgba(2, 6, 14, 0.42);
+  }
+
+  68% {
+    opacity: 1;
+    transform: translate(-50%, -60%) scale(0.92);
+    filter: brightness(1.12) saturate(1.12);
+    box-shadow: 0 1.75rem 3.5rem rgba(2, 6, 14, 0.82), 0 0 1.75rem rgba(130, 205, 255, 0.38);
+  }
+
+  100% {
+    opacity: 0.98;
+    transform: translate(-50%, -58%) scale(0.88);
+    filter: brightness(1.08) saturate(1.08);
+  }
 }
 
 .cardAttack {
@@ -80,6 +132,13 @@
   background:
     linear-gradient(to bottom, rgba(255, 255, 255, 0.12) 0%, transparent 32%),
     linear-gradient(150deg, #1f5f26 0%, #2f8b3a 46%, #0e4b14 100%);
+}
+
+.cardCurse {
+  background:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 0%, transparent 32%),
+    linear-gradient(150deg, #2c1a3d 0%, #4a2a63 46%, #1a0f26 100%);
+  border-color: rgba(160, 100, 220, 0.45);
 }
 
 .cardDisabled {
@@ -140,6 +199,7 @@
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
   box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.4);
   z-index: 2;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), filter 0.2s ease;
 }
 
 .cardName {
@@ -171,6 +231,7 @@
   transform: scale(1.14);
   transform-origin: center;
   display: block;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease;
 }
 
 .cardDescription {
@@ -230,5 +291,24 @@
 
   .cardName {
     margin-top: 0.5rem;
+  }
+}
+
+
+/* 사용 불가 카드 조작 거부 흔들림 */
+.cardReject {
+  animation: cardReject 0.3s ease-in-out;
+}
+
+@keyframes cardReject {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-0.4rem) rotate(-1.5deg); }
+  55% { transform: translateX(0.35rem) rotate(1.2deg); }
+  80% { transform: translateX(-0.2rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cardGhost {
+    animation-duration: 0.42s !important;
   }
 }

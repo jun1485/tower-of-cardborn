@@ -1,6 +1,6 @@
 // 맵 시스템 타입 정의
 
-export type NodeType = 'combat' | 'elite' | 'rest' | 'shop' | 'event' | 'boss';
+export type NodeType = 'combat' | 'elite' | 'rest' | 'shop' | 'event' | 'boss' | 'treasure';
 
 export interface MapNode {
   readonly id: string;

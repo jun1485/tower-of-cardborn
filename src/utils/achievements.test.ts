@@ -12,7 +12,10 @@ const META: MetaState = {
   ascensionUnlocked: 2,
   lastAscension: 1,
   highestWonAscension: 1,
+  totalDailyWins: 0,
+  lastDaily: null,
   recentRuns: [],
+  bestRuns: [],
 };
 
 describe('메타 업적', () => {
@@ -29,5 +32,21 @@ describe('메타 업적', () => {
     const result = getAchievementProgress({ ...META, highestWonAscension: 5 });
 
     expect(result.find((achievement) => achievement.id === 'ascension_master')?.unlocked).toBe(true);
+  });
+
+  it('일일 승리·등반 횟수·최고 점수 업적을 해금한다', () => {
+    const result = getAchievementProgress({
+      ...META,
+      totalRuns: 20,
+      totalDailyWins: 1,
+      bestRuns: [{
+        finishedAt: 0, won: true, floor: 30, kills: 100, ascension: 5,
+        runSeed: null, characterClass: null, score: 1200, isDaily: false,
+      }],
+    });
+
+    expect(result.find((achievement) => achievement.id === 'daily_champion')?.unlocked).toBe(true);
+    expect(result.find((achievement) => achievement.id === 'veteran')?.unlocked).toBe(true);
+    expect(result.find((achievement) => achievement.id === 'high_scorer')?.unlocked).toBe(true);
   });
 });

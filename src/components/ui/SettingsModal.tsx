@@ -6,6 +6,7 @@ import { loadSettings, saveSettings, resetSettings } from '../../utils/settings'
 import { useTranslation, LANGUAGES, LANGUAGE_LABELS } from '../../i18n';
 import type { Language } from '../../i18n';
 import { useModalKeyboard } from '../../hooks/use-modal-keyboard';
+import { playSfx, refreshMusicVolume } from '../../utils/sound';
 import styles from '../../styles/app.module.css';
 
 interface SettingsModalProps {
@@ -15,9 +16,10 @@ interface SettingsModalProps {
   readonly onQuitRun?: () => void;
   readonly onOpenDeck?: () => void;
   readonly onOpenRelics?: () => void;
+  readonly onOpenPotions?: () => void;
 }
 
-export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, onOpenDeck, onOpenRelics }: SettingsModalProps) {
+export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, onOpenDeck, onOpenRelics, onOpenPotions }: SettingsModalProps) {
   const t = useTranslation();
   const [settings, setSettings] = useState<GameSettings>(loadSettings);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -37,6 +39,12 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
     updateSetting('language', lang);
     onLangChange(lang);
   }, [updateSetting, onLangChange]);
+
+  /** 배경음악 볼륨 즉시 반영 */
+  const handleMusicVolumeChange = useCallback((volume: number) => {
+    updateSetting('musicVolume', volume);
+    refreshMusicVolume(volume);
+  }, [updateSetting]);
 
   // 세이브 데이터 초기화
   const handleResetSave = useCallback(() => {
@@ -64,6 +72,12 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
     onOpenRelics?.();
   }, [onClose, onOpenRelics]);
 
+  /** 설정 종료 후 현재 포션 열기 */
+  const handleOpenPotions = useCallback(() => {
+    onClose();
+    onOpenPotions?.();
+  }, [onClose, onOpenPotions]);
+
   // 설정 초기화
   const handleResetSettings = useCallback(() => {
     if (!resetSettings()) {
@@ -74,6 +88,7 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
     setSettings(fresh);
     setSaveFailed(false);
     onLangChange(fresh.language);
+    refreshMusicVolume(fresh.musicVolume);
   }, [onLangChange]);
 
   return (
@@ -110,6 +125,23 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
             </div>
           </div>
 
+          {/* 배경음악 볼륨 */}
+          <div className={styles.settingsRow}>
+            <label className={styles.settingsLabel} htmlFor="music-volume">{t('musicVolume')}</label>
+            <div className={styles.sliderGroup}>
+              <input
+                type="range"
+                id="music-volume"
+                min={0}
+                max={100}
+                value={settings.musicVolume}
+                className={styles.slider}
+                onChange={(event) => handleMusicVolumeChange(Number(event.target.value))}
+              />
+              <span className={styles.sliderValue}>{settings.musicVolume}</span>
+            </div>
+          </div>
+
           {/* 효과음 볼륨 */}
           <div className={styles.settingsRow}>
             <label className={styles.settingsLabel} htmlFor="sfx-volume">{t('sfxVolume')}</label>
@@ -122,6 +154,10 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
                 value={settings.sfxVolume}
                 className={styles.slider}
                 onChange={(e) => updateSetting('sfxVolume', Number(e.target.value))}
+                onPointerUp={() => playSfx('reward_pick')}
+                onKeyUp={(event) => {
+                  if (event.key.startsWith('Arrow')) playSfx('reward_pick');
+                }}
               />
               <span className={styles.sliderValue}>{settings.sfxVolume}</span>
             </div>
@@ -150,6 +186,11 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
           {onOpenRelics && (
             <button className={styles.resetSettingsBtn} onClick={handleOpenRelics}>
               {t('relics')}
+            </button>
+          )}
+          {onOpenPotions && (
+            <button className={styles.resetSettingsBtn} onClick={handleOpenPotions}>
+              {t('potions')}
             </button>
           )}
 

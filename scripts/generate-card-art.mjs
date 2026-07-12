@@ -5,11 +5,11 @@ import path from 'node:path';
 import process from 'node:process';
 
 const projectRoot = process.cwd();
-const cardsSourcePath = path.join(projectRoot, 'src', 'data', 'cards.ts');
+const cardsSourcePath = path.join(projectRoot, 'packages', 'game-core', 'src', 'data', 'cards.ts');
 const outputDirectory = path.join(projectRoot, 'public', 'assets', 'cards');
 const defaultModel = 'gemini-3.1-flash-image-preview';
 const defaultDelayMs = 1200;
-const defaultStylePreset = 'cute-pixel';
+const defaultStylePreset = 'painterly-dark';
 const supportedClasses = ['warrior', 'archer', 'mage', 'assassin'];
 
 const stylePresets = {
@@ -29,8 +29,12 @@ const stylePresets = {
   'painterly-dark': {
     label: '다크 페인터리',
     lines: [
-      'Fantasy deckbuilding game illustration, detailed digital painting.',
-      'Single clear focal action, dynamic motion, dramatic lighting.',
+      'Premium dark fantasy deckbuilding game illustration, detailed painterly digital art.',
+      'Match the grounded cinematic realism, material detail, and moody atmosphere of the game hero and monster portraits.',
+      'Single clear focal action, strong readable silhouette, dramatic rim lighting, deep tower interior atmosphere.',
+      'Full-bleed composition required: fill the entire canvas edge-to-edge with environment and action.',
+      'Use restrained charcoal, steel, crimson, emerald, and arcane blue accents with class-specific color identity.',
+      'Avoid chibi proportions, pixel art, cartoon outlines, flat mobile-game rendering, and glossy plastic surfaces.',
       'No UI frame, no border, no text, no letters, no numbers, no watermark.',
       'Portrait composition suitable for card artwork.',
     ],

@@ -72,6 +72,17 @@
   font-size: inherit;
   text-decoration: underline;
   text-underline-offset: 0.2em;
+  transition: transform 0.16s ease, color 0.16s ease, filter 0.16s ease;
+}
+
+.headerButton:hover {
+  color: var(--color-energy);
+  transform: translateY(-0.125rem);
+}
+
+.headerButton:active {
+  transform: translateY(1px) scale(0.97);
+  transition-duration: 0.06s;
 }
 
 .headerButton:focus-visible {
@@ -208,11 +219,27 @@
   background: linear-gradient(135deg, rgba(60, 55, 40, 0.95) 0%, rgba(30, 26, 18, 0.98) 100%);
 }
 
+.nodeAvailable:active .nodeCircle {
+  transform: scale(0.92);
+  filter: brightness(1.2);
+  transition-duration: 0.06s;
+}
+
 /* 현재 위치 */
 .nodeCurrent .nodeCircle {
   border-color: var(--color-accent);
   background: linear-gradient(135deg, rgba(70, 30, 40, 0.95) 0%, rgba(35, 15, 20, 0.98) 100%);
   box-shadow: 0 0 0.875rem rgba(233, 69, 96, 0.45);
+}
+
+/* 현재 위치 노드 바운스 */
+.nodeCurrent .nodeCircle {
+  animation: currentNodeBob 2s ease-in-out infinite;
+}
+
+@keyframes currentNodeBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-0.25rem); }
 }
 
 /* 방문 완료 */

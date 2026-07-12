@@ -39,4 +39,15 @@ describe('적 AI 패턴', () => {
     expect(decideIntent(createEnemy('tower_heart', 0))).toEqual({ type: 'debuff', value: 2, statusType: 'vulnerable' });
     expect(decideIntent(createEnemy('tower_heart', 2))).toEqual({ type: 'buff', value: 2 });
   });
+
+  it('액트 전용 일반 적이 고유 패턴을 사용한다', () => {
+    expect(decideIntent(createEnemy('stone_sentinel', 0))).toEqual({ type: 'defend', value: 10 });
+    expect(decideIntent(createEnemy('void_wisp', 0))).toEqual({ type: 'debuff', value: 2, statusType: 'weak' });
+  });
+
+  it('액트 전용 엘리트가 고유 패턴을 사용한다', () => {
+    expect(decideIntent(createEnemy('arcane_golem', 1))).toEqual({ type: 'debuff', value: 2, statusType: 'vulnerable' });
+    expect(decideIntent(createEnemy('void_reaper', 0))).toEqual({ type: 'buff', value: 2 });
+    expect(decideIntent(createEnemy('void_reaper', 2))).toEqual({ type: 'debuff', value: 2, statusType: 'weak' });
+  });
 });

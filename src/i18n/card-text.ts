@@ -2,6 +2,7 @@
 
 import type { CardDefinition, CardEffect, CardRarity } from '@tower-of-cardborn/game-core/types/card';
 import type { Enemy, StatusEffect } from '@tower-of-cardborn/game-core/types/character';
+import { COMBAT_BALANCE } from '@tower-of-cardborn/game-core/data/balance';
 import type { TFunction } from './index';
 import type { Language } from './types';
 
@@ -93,6 +94,38 @@ const CARD_NAMES: Record<string, Record<Language, string>> = {
   herbal_remedy: { ko: '약초 치료', en: 'Herbal Remedy', zh: '草药疗法' },
   battle_recovery: { ko: '전투 회복', en: 'Battle Recovery', zh: '战斗恢复' },
   blink_step: { ko: '순간이동', en: 'Blink Step', zh: '闪现步' },
+
+  // 확장 카드 - 전사
+  whirlwind: { ko: '회오리 베기', en: 'Whirlwind', zh: '旋风斩' },
+  metal_skin: { ko: '강철 피부', en: 'Metal Skin', zh: '钢铁之肤' },
+  demon_form: { ko: '악마의 형상', en: 'Demon Form', zh: '恶魔形态' },
+
+  // 확장 카드 - 궁수
+  crippling_shot: { ko: '마비 사격', en: 'Crippling Shot', zh: '致残射击' },
+  hunters_mark: { ko: '사냥꾼의 표식', en: "Hunter's Mark", zh: '猎人印记' },
+  double_tap: { ko: '연발 사격', en: 'Double Tap', zh: '两连射' },
+  eagle_eye: { ko: '매의 눈', en: 'Eagle Eye', zh: '鹰眼' },
+  swift_quiver: { ko: '신속한 화살통', en: 'Swift Quiver', zh: '迅捷箭袋' },
+  barbed_arrow: { ko: '가시 화살', en: 'Barbed Arrow', zh: '倒刺箭' },
+  wind_step: { ko: '바람 걸음', en: 'Wind Step', zh: '风之步' },
+  volley: { ko: '일제 사격', en: 'Volley', zh: '齐射' },
+  longshot: { ko: '원거리 저격', en: 'Longshot', zh: '远射' },
+
+  // 저주 카드
+  curse_wound: { ko: '상처', en: 'Wound', zh: '伤口' },
+  curse_burden: { ko: '무거운 짐', en: 'Burden', zh: '重负' },
+
+  // 확장 카드 - 암살자
+  deadly_poison: { ko: '맹독', en: 'Deadly Poison', zh: '剧毒' },
+  venom_fang: { ko: '독니', en: 'Venom Fang', zh: '毒牙' },
+  toxic_cloud: { ko: '독무', en: 'Toxic Cloud', zh: '毒雾' },
+  blade_flurry: { ko: '칼날 난무', en: 'Blade Flurry', zh: '刀刃乱舞' },
+  backstab: { ko: '기습', en: 'Backstab', zh: '背刺' },
+  cloak_of_shadows: { ko: '그림자 망토', en: 'Cloak of Shadows', zh: '暗影斗篷' },
+  creeping_death: { ko: '잠식하는 죽음', en: 'Creeping Death', zh: '蔓延之死' },
+  silent_kill: { ko: '소리 없는 처형', en: 'Silent Kill', zh: '无声击杀' },
+  adrenaline: { ko: '아드레날린', en: 'Adrenaline', zh: '肾上腺素' },
+  nimble_step: { ko: '민첩한 몸놀림', en: 'Nimble Step', zh: '灵巧身法' },
 };
 
 // #region 적 이름 번역 맵
@@ -101,11 +134,23 @@ const ENEMY_NAMES: Record<string, Record<Language, string>> = {
   cultist: { ko: '광신도', en: 'Cultist', zh: '狂信徒' },
   louse_red: { ko: '붉은 이', en: 'Red Louse', zh: '红虱' },
   fungi_beast: { ko: '균류 야수', en: 'Fungi Beast', zh: '菌兽' },
+  stone_sentinel: { ko: '석상 파수꾼', en: 'Stone Sentinel', zh: '石像哨兵' },
+  void_wisp: { ko: '공허의 위습', en: 'Void Wisp', zh: '虚空幽火' },
   gremlin_nob: { ko: '그렘린 귀족', en: 'Gremlin Nob', zh: '地精贵族' },
   lagavulin: { ko: '라가불린', en: 'Lagavulin', zh: '拉格弗林' },
+  arcane_golem: { ko: '비전 골렘', en: 'Arcane Golem', zh: '奥术魔像' },
+  void_reaper: { ko: '공허의 수확자', en: 'Void Reaper', zh: '虚空收割者' },
   slime_boss: { ko: '슬라임 보스', en: 'Slime Boss', zh: '史莱姆Boss' },
   stone_guardian: { ko: '석상 수호자', en: 'Stone Guardian', zh: '石像守卫' },
   tower_heart: { ko: '탑의 심장', en: 'Tower Heart', zh: '高塔之心' },
+  crystal_crawler: { ko: '수정 크롤러', en: 'Crystal Crawler', zh: '水晶爬虫' },
+  temple_acolyte: { ko: '신전 수행자', en: 'Temple Acolyte', zh: '神殿侍僧' },
+  void_husk: { ko: '공허 허물', en: 'Void Husk', zh: '虚空躯壳' },
+  abyss_watcher: { ko: '심연의 감시자', en: 'Abyss Watcher', zh: '深渊注视者' },
+  obsidian_knight: { ko: '흑요석 기사', en: 'Obsidian Knight', zh: '黑曜石骑士' },
+  plague_herald: { ko: '역병 전령', en: 'Plague Herald', zh: '瘟疫使者' },
+  gremlin_king: { ko: '그렘린 왕', en: 'Gremlin King', zh: '地精之王' },
+  crystal_hydra: { ko: '수정 히드라', en: 'Crystal Hydra', zh: '水晶九头蛇' },
 };
 // #endregion
 
@@ -125,10 +170,11 @@ export function getEnemyName(enemyDefId: string, lang: Language): string {
 }
 
 /** 카드 타입 번역 키 매핑 */
-const CARD_TYPE_KEY: Record<string, 'cardTypeAttack' | 'cardTypeSkill' | 'cardTypePower'> = {
+const CARD_TYPE_KEY: Record<string, 'cardTypeAttack' | 'cardTypeSkill' | 'cardTypePower' | 'cardTypeCurse'> = {
   attack: 'cardTypeAttack',
   skill: 'cardTypeSkill',
   power: 'cardTypePower',
+  curse: 'cardTypeCurse',
 };
 
 /** 카드 타입 번역 반환 */
@@ -150,6 +196,7 @@ export function getCardRarityName(rarity: CardRarity, t: TFunction): string {
 
 /** 카드 효과 배열에서 다국어 설명 자동 생성 */
 export function generateCardDescription(def: CardDefinition, t: TFunction): string {
+  if (def.unplayable) return t('cdUnplayable');
   const parts: string[] = [];
   const effects = def.effects;
   let i = 0;
@@ -195,10 +242,23 @@ function describeEffect(
       return { text: t('cdDraw', String(effect.value)), consumed: 1 };
     case 'apply_status':
       if (effect.statusType === 'vulnerable') return { text: t('cdVulnerable', String(effect.value)), consumed: 1 };
-      if (effect.statusType === 'weak') return { text: t('cdWeak', String(effect.value)), consumed: 1 };
+      if (effect.statusType === 'weak') {
+        return { text: t(effect.target === 'all' ? 'cdWeakAll' : 'cdWeak', String(effect.value)), consumed: 1 };
+      }
+      if (effect.statusType === 'poison') {
+        return { text: t(effect.target === 'all' ? 'cdPoisonAll' : 'cdPoison', String(effect.value)), consumed: 1 };
+      }
+      if (effect.statusType === 'frail') return { text: t('cdFrail', String(effect.value)), consumed: 1 };
       return { text: '', consumed: 1 };
     case 'gain_strength':
       return { text: t('cdStrength', String(effect.value)), consumed: 1 };
+    case 'gain_dexterity':
+      return { text: t('cdDexterity', String(effect.value)), consumed: 1 };
+    case 'add_power':
+      if (effect.powerType === 'turn_start_block') return { text: t('cdPowerBlock', String(effect.value)), consumed: 1 };
+      if (effect.powerType === 'turn_start_strength') return { text: t('cdPowerStrength', String(effect.value)), consumed: 1 };
+      if (effect.powerType === 'turn_start_draw') return { text: t('cdPowerDraw', String(effect.value)), consumed: 1 };
+      return { text: '', consumed: 1 };
     case 'gain_energy':
       return { text: t('cdEnergy', String(effect.value)), consumed: 1 };
     case 'self_damage':
@@ -243,8 +303,8 @@ function calculatePreviewDamage(
   targetVulnerable: boolean,
 ): number {
   let total = baseDamage + strength;
-  if (attackerWeak) total = Math.floor(total * 0.75);
-  if (targetVulnerable) total = Math.floor(total * 1.5);
+  if (attackerWeak) total = Math.floor(total * COMBAT_BALANCE.weakMultiplier);
+  if (targetVulnerable) total = Math.floor(total * COMBAT_BALANCE.vulnerableMultiplier);
   return Math.max(0, total);
 }
 

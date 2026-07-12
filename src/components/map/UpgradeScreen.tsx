@@ -6,6 +6,7 @@ import { getCardName, generateCardDescription } from '../../i18n/card-text';
 import styles from '../../styles/app.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
+import { getCardTypeClass } from '../card/card-type-class';
 
 interface UpgradeScreenProps {
   readonly deck: readonly string[];
@@ -32,12 +33,7 @@ export function UpgradeScreen({ deck, canSkip, onUpgrade, onSkip }: UpgradeScree
           const upgradedDef = upgradable ? CARD_DEFINITIONS[getUpgradedId(cardId)] : null;
           const name = getCardName(def.id, lang);
           const desc = generateCardDescription(def, t);
-          const typeClassMap = {
-            attack: cardStyles.cardAttack,
-            skill: cardStyles.cardSkill,
-            power: cardStyles.cardPower,
-          };
-          const typeClass = typeClassMap[def.type];
+          const typeClass = getCardTypeClass(def.type);
 
           return (
             <button

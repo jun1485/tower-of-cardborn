@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import type { GameState } from '@tower-of-cardborn/game-core/types/game';
 import {
-  applyEventOutcome, buyCardState, enterMapNode, finishEventState,
+  applyEventOutcome, buyCardState, enterMapNode, enterShopUpgradeState, finishEventState,
   completeCombatRewardState, enterCombatRewardState, removeCardState,
   enterGameOverState, restState, upgradeCardState,
 } from './game-transitions';
@@ -45,6 +45,8 @@ const MAP_STATE: GameState = {
   randomState: 1234,
   relics: [],
   rewardRelic: null,
+  potions: [],
+  rewardPotion: null,
 };
 
 describe('맵 노드 전환', () => {
@@ -58,6 +60,40 @@ describe('맵 노드 전환', () => {
 
   it('연결되지 않은 노드 진입을 차단한다', () => {
     expect(enterMapNode(MAP_STATE, 'event-2', 'shrine', [])).toBe(MAP_STATE);
+  });
+
+  it('보물 노드는 전투 없이 보상 화면으로 진입한다', () => {
+    const map = MAP_STATE.map;
+    if (!map) throw new Error('맵 데이터가 없습니다.');
+    const state: GameState = {
+      ...MAP_STATE,
+      map: {
+        ...map,
+        nodes: map.nodes.map((node) => node.id === 'shop-1' ? { ...node, type: 'treasure' as const } : node),
+      },
+    };
+    const result = enterMapNode(state, 'shop-1', null, [], [], [], {
+      gold: 40, relic: 'iron_heart', potion: null,
+    });
+
+    expect(result.screen).toBe('combat_reward');
+    expect(result.rewardCards).toEqual([]);
+    expect(result.rewardGold).toBe(40);
+    expect(result.rewardRelic).toBe('iron_heart');
+  });
+
+  it('보상 정보가 없으면 보물 노드 진입을 차단한다', () => {
+    const map = MAP_STATE.map;
+    if (!map) throw new Error('맵 데이터가 없습니다.');
+    const state: GameState = {
+      ...MAP_STATE,
+      map: {
+        ...map,
+        nodes: map.nodes.map((node) => node.id === 'shop-1' ? { ...node, type: 'treasure' as const } : node),
+      },
+    };
+
+    expect(enterMapNode(state, 'shop-1', null, [])).toBe(state);
   });
 
   it('이벤트 정보가 없으면 이벤트 노드 진입을 차단한다', () => {
@@ -80,6 +116,7 @@ describe('이벤트 전환', () => {
       maxHp: 80,
       gold: 60,
       gainedCardId: null,
+      gainedRelicId: null,
       followUp: { type: 'remove', count: 2 },
       result: null,
     });
@@ -142,6 +179,24 @@ describe('덱 관리 전환', () => {
     expect(removeCardState(state, 0)).toBe(state);
   });
 
+  it('상점 카드 강화는 골드를 차감하고 상점으로 복귀한다', () => {
+    const shopState: GameState = { ...MAP_STATE, screen: 'shop', gold: 100, deck: ['strike', 'defend'] };
+    const entered = enterShopUpgradeState(shopState);
+    const result = upgradeCardState(entered, 0);
+
+    expect(entered.screen).toBe('upgrade');
+    expect(entered.upgradeSource).toBe('shop');
+    expect(result.screen).toBe('shop');
+    expect(result.deck[0]).toBe('strike+');
+    expect(result.gold).toBe(25);
+  });
+
+  it('골드가 부족하면 상점 강화 진입을 차단한다', () => {
+    const shopState: GameState = { ...MAP_STATE, screen: 'shop', gold: 10 };
+
+    expect(enterShopUpgradeState(shopState)).toBe(shopState);
+  });
+
   it('상점 카드를 중복 구매하지 못하게 판매 목록에서 제거한다', () => {
     const state: GameState = { ...MAP_STATE, screen: 'shop', shopCards: ['bash'], gold: 100 };
     const purchased = buyCardState(state, 'bash');
@@ -167,13 +222,14 @@ describe('전투 보상 전환', () => {
           : node),
       },
     };
-    const result = enterCombatRewardState(combatState, 55, ['bash'], 20, 'iron_heart');
+    const result = enterCombatRewardState(combatState, 55, ['bash'], 20, 'iron_heart', 'healing_potion');
 
     expect(result.screen).toBe('combat_reward');
     expect(result.playerHp).toBe(55);
     expect(result.rewardCards).toEqual(['bash']);
     expect(result.rewardGold).toBe(20);
     expect(result.rewardRelic).toBe('iron_heart');
+    expect(result.rewardPotion).toBe('healing_potion');
     expect(result.kills).toBe(1);
   });
 
@@ -207,5 +263,38 @@ describe('전투 보상 전환', () => {
     expect(result.playerHp).toBe(58);
     expect(result.playerMaxHp).toBe(88);
     expect(result.rewardRelic).toBeNull();
+  });
+
+  it('빈 포션 슬롯에 전투 보상 포션을 추가한다', () => {
+    const rewardState: GameState = {
+      ...MAP_STATE,
+      screen: 'combat_reward',
+      rewardPotion: 'block_potion',
+    };
+    const result = completeCombatRewardState(rewardState, null, null);
+
+    expect(result.potions).toEqual(['block_potion']);
+    expect(result.rewardPotion).toBeNull();
+  });
+
+  it('다음 액트 진입 시 HP를 완전히 회복한다', () => {
+    const map = MAP_STATE.map;
+    if (!map) throw new Error('맵 데이터가 없습니다.');
+    const rewardState: GameState = {
+      ...MAP_STATE,
+      screen: 'combat_reward',
+      playerHp: 25,
+      map: {
+        ...map,
+        currentNodeId: 'shop-1',
+        nodes: map.nodes.map((node) => node.id === 'shop-1' ? { ...node, type: 'boss' as const } : node),
+      },
+    };
+    const nextMap = { ...map, mapIndex: 2, currentNodeId: null, visitedNodeIds: [] };
+    const result = completeCombatRewardState(rewardState, nextMap, null);
+
+    expect(result.screen).toBe('map');
+    expect(result.playerHp).toBe(result.playerMaxHp);
+    expect(result.map?.mapIndex).toBe(2);
   });
 });

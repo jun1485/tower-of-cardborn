@@ -12,12 +12,24 @@ interface RunHistoryProps {
   readonly onClose: () => void;
 }
 
-const ACHIEVEMENT_KEY: Record<AchievementId, 'achievementFirstWin' | 'achievementSlayer' | 'achievementTowerClear' | 'achievementAscensionMaster'> = {
+const ACHIEVEMENT_KEY: Record<AchievementId,
+  'achievementFirstWin' | 'achievementSlayer' | 'achievementTowerClear' | 'achievementAscensionMaster'
+  | 'achievementDailyChampion' | 'achievementVeteran' | 'achievementHighScorer'> = {
   first_win: 'achievementFirstWin',
   slayer: 'achievementSlayer',
   tower_clear: 'achievementTowerClear',
   ascension_master: 'achievementAscensionMaster',
+  daily_champion: 'achievementDailyChampion',
+  veteran: 'achievementVeteran',
+  high_scorer: 'achievementHighScorer',
 };
+
+const CLASS_KEY = {
+  warrior: 'warrior',
+  archer: 'archer',
+  mage: 'mage',
+  assassin: 'assassin',
+} as const;
 
 /** 런 종료 일시 표시 */
 function formatFinishedAt(finishedAt: number, lang: Language): string {
@@ -71,6 +83,9 @@ export function RunHistory({ onClose }: RunHistoryProps) {
                     run.kills,
                     run.ascension,
                   )}
+                  {run.characterClass && ` · ${t(CLASS_KEY[run.characterClass])}`}
+                  {` · ${t('runScoreLabel', run.score.toLocaleString())}`}
+                  {run.isDaily && <span className={styles.dailyTag}>{t('rankDaily')}</span>}
                   {run.runSeed !== null && ` · ${t('runSeedLabel', run.runSeed)}`}
                 </li>
               ))}

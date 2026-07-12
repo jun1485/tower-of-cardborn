@@ -7,6 +7,9 @@ import { useLanguage, useTranslation } from '../../i18n';
 import { RELIC_DEFINITIONS } from '@tower-of-cardborn/game-core/data/relics';
 import type { RelicId } from '@tower-of-cardborn/game-core/types/relic';
 import { getRelicName } from '../../i18n/relic-text';
+import { POTION_DEFINITIONS } from '@tower-of-cardborn/game-core/data/potions';
+import type { PotionId } from '@tower-of-cardborn/game-core/types/potion';
+import { getPotionName } from '../../i18n/potion-text';
 import styles from '../../styles/map.module.css';
 
 interface MapScreenProps {
@@ -15,11 +18,14 @@ interface MapScreenProps {
   readonly playerMaxHp: number;
   readonly deck: readonly string[];
   readonly relics: readonly RelicId[];
+  readonly potions: readonly PotionId[];
   readonly gold: number;
   readonly ascension: number;
+  readonly runSeed: number | null;
   readonly onSelectNode: (nodeId: string) => void;
   readonly onOpenDeck: () => void;
   readonly onOpenRelics: () => void;
+  readonly onOpenPotions: () => void;
 }
 
 const NODE_ICON: Record<NodeType, string> = {
@@ -29,15 +35,17 @@ const NODE_ICON: Record<NodeType, string> = {
   shop: '🛒',
   event: '❓',
   boss: '💀',
+  treasure: '🎁',
 };
 
-const NODE_LABEL_KEY: Record<NodeType, 'nodecombat' | 'nodeElite' | 'nodeRest' | 'nodeShop' | 'nodeEvent' | 'nodeBoss'> = {
+const NODE_LABEL_KEY: Record<NodeType, 'nodecombat' | 'nodeElite' | 'nodeRest' | 'nodeShop' | 'nodeEvent' | 'nodeBoss' | 'nodeTreasure'> = {
   combat: 'nodecombat',
   elite: 'nodeElite',
   rest: 'nodeRest',
   shop: 'nodeShop',
   event: 'nodeEvent',
   boss: 'nodeBoss',
+  treasure: 'nodeTreasure',
 };
 
 /** 층 높이(rem)·그래프 좌표 상수 */
@@ -56,7 +64,7 @@ function getNodeCoords(node: MapNode, floors: number): { x: number; y: number } 
   };
 }
 
-export function MapScreen({ map, playerHp, playerMaxHp, deck, relics, gold, ascension, onSelectNode, onOpenDeck, onOpenRelics }: MapScreenProps) {
+export function MapScreen({ map, playerHp, playerMaxHp, deck, relics, potions, gold, ascension, runSeed, onSelectNode, onOpenDeck, onOpenRelics, onOpenPotions }: MapScreenProps) {
   const t = useTranslation();
   const lang = useLanguage();
   const availableIds = getAvailableNodeIds(map);
@@ -98,6 +106,7 @@ export function MapScreen({ map, playerHp, playerMaxHp, deck, relics, gold, asce
         <span className={styles.headerStat}>💰 {gold}</span>
         {ascension > 0 && <span className={styles.headerStat}>⛰️ {t('ascensionLabel', ascension)}</span>}
         <span className={styles.headerStat}>🗺️ {t('mapLabel')} {map.mapIndex}/{map.totalMaps}</span>
+        {runSeed !== null && <span className={styles.headerStat}>{t('runSeedLabel', runSeed)}</span>}
         <button className={`${styles.headerStat} ${styles.headerButton}`} onClick={onOpenDeck}>
           <img className={styles.headerIcon} src="/assets/ui/deck.png" alt="" />
           {t('deck')} {deck.length}{t('deckCount')}
@@ -111,6 +120,19 @@ export function MapScreen({ map, playerHp, playerMaxHp, deck, relics, gold, asce
             {relics.map((relicId) => (
               <span key={relicId} title={getRelicName(relicId, lang)} aria-hidden="true">
                 {RELIC_DEFINITIONS[relicId].emoji}
+              </span>
+            ))}
+          </button>
+        )}
+        {potions.length > 0 && (
+          <button
+            className={`${styles.headerStat} ${styles.headerButton}`}
+            aria-label={`${t('potions')} ${potions.map((potionId) => getPotionName(potionId, lang)).join(', ')}`}
+            onClick={onOpenPotions}
+          >
+            {potions.map((potionId, index) => (
+              <span key={`${potionId}-${index}`} title={getPotionName(potionId, lang)} aria-hidden="true">
+                {POTION_DEFINITIONS[potionId].emoji}
               </span>
             ))}
           </button>
@@ -192,6 +214,8 @@ function MapNodeButton({ node, floors, isAvailable, isVisited, isCurrent, onSele
       }}
       disabled={!isAvailable}
       data-focus-node={isAvailable ? '' : undefined}
+      aria-current={isCurrent ? 'location' : undefined}
+      aria-label={`${t(NODE_LABEL_KEY[node.type])} · ${t('floor', node.floor)}`}
       onClick={() => onSelect(node.id)}
     >
       <span className={styles.nodeCircle}>{NODE_ICON[node.type]}</span>

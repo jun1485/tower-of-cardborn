@@ -13,7 +13,8 @@ export function EnergyDisplay({ energy, maxEnergy }: EnergyDisplayProps) {
   return (
     <div className={styles.energyOrb} role="status" aria-label={`${t('energy')} ${energy}/${maxEnergy}`}>
       <span className={styles.energyLabel}>{t('energy')}</span>
-      <div className={styles.energyValueGroup}>
+      {/* 수치 변경 시 리마운트로 팝 재생 */}
+      <div key={energy} className={`${styles.energyValueGroup} ${styles.energyPop}`}>
         <span className={styles.energyText}>{energy}</span>
         <span className={styles.energyMax}>/{maxEnergy}</span>
       </div>

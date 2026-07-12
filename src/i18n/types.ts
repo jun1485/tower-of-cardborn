@@ -27,6 +27,8 @@ export interface Translations {
   privacyPolicy: string;
   relicReward: string;
   relics: string;
+  potionReward: string;
+  potions: string;
 
   // 전투
   turn: string;
@@ -51,6 +53,12 @@ export interface Translations {
   weakDesc: string;
   strength: string;
   strengthDesc: string;
+  poison: string;
+  poisonDesc: string;
+  frail: string;
+  frailDesc: string;
+  dexterity: string;
+  dexterityDesc: string;
   turnsLeft: string;
   permanent: string;
   block: string;
@@ -63,8 +71,12 @@ export interface Translations {
   kwVulnerable: string;
   kwWeak: string;
   kwStrength: string;
+  kwPoison: string;
+  kwFrail: string;
+  kwDexterity: string;
   kwExhaust: string;
   kwPower: string;
+  kwCurse: string;
 
   // 맵
   nodecombat: string;
@@ -73,6 +85,8 @@ export interface Translations {
   nodeShop: string;
   nodeEvent: string;
   nodeBoss: string;
+  nodeTreasure: string;
+  treasureTitle: string;
   mapLabel: string;
   deckCount: string;
   floor: string;
@@ -136,10 +150,14 @@ export interface Translations {
   achievementSlayer: string;
   achievementTowerClear: string;
   achievementAscensionMaster: string;
+  achievementDailyChampion: string;
+  achievementVeteran: string;
+  achievementHighScorer: string;
 
   // 설정
   settings: string;
   sfxVolume: string;
+  musicVolume: string;
   confirmOnExit: string;
   resetSave: string;
   resetSaveWarning: string;
@@ -155,6 +173,7 @@ export interface Translations {
   cardTypeAttack: string;
   cardTypeSkill: string;
   cardTypePower: string;
+  cardTypeCurse: string;
   rarityStarter: string;
   rarityCommon: string;
   rarityUncommon: string;
@@ -173,6 +192,62 @@ export interface Translations {
   cdSelfDamage: string;
   cdHeal: string;
   cdDamageWord: string;
+  cdPoison: string;
+  cdPoisonAll: string;
+  cdFrail: string;
+  cdWeakAll: string;
+  cdDexterity: string;
+  cdPowerBlock: string;
+  cdPowerStrength: string;
+  cdPowerDraw: string;
+  cdPowerHeal: string;
+  cdUnplayable: string;
+
+  // 상점 확장
+  shopRelicSoldOut: string;
+  shopBuy: string;
+  shopUpgradeService: string;
+
+  // 결과 공유
+  shareResult: string;
+  shareCopied: string;
+
+  // 엔들리스
+  continueEndless: string;
+
+  // 일일 도전/시드
+  dailyCompleted: string;
+  seedInputLabel: string;
+  seedInputPlaceholder: string;
+
+  // 순위표
+  ranking: string;
+  noRanking: string;
+  rankingScore: string;
+  rankDaily: string;
+  rankingAll: string;
+  runScoreLabel: string;
+  newRecord: string;
+
+  // 장비
+  equipment: string;
+  shards: string;
+  shardsEarnedLabel: string;
+  equipWeapon: string;
+  equipArmor: string;
+  equipAccessory: string;
+  equipBoots: string;
+  equipRing: string;
+  equipTalisman: string;
+  equipWeaponEffect: string;
+  equipArmorEffect: string;
+  equipAccessoryEffect: string;
+  equipBootsEffect: string;
+  equipRingEffect: string;
+  equipTalismanEffect: string;
+  equipUpgradeCost: string;
+  equipMaxLevel: string;
+  equipDailyNote: string;
 
   // 뒤로가기 확인
   exitConfirm: string;

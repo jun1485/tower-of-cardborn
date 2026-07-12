@@ -1,7 +1,8 @@
 // 런 통계 정규화와 해금 규칙 검증
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { loadMeta, recordRunEnd, recordRunStart } from './meta';
+import { calculateRunScore, loadMeta, recordRunEnd, recordRunStart, updateRecordedRun } from './meta';
+import { loadEquipment } from './equipment';
 
 const values = new Map<string, string>();
 const storage: Storage = {
@@ -33,6 +34,7 @@ describe('런 통계', () => {
     const result = recordRunEnd({ won: true, floor: 30, kills: 12, ascension: 0 });
 
     expect(result.newlyUnlocked).toBe(1);
+    expect(result.saved).toBe(true);
     expect(result.meta).toMatchObject({ totalRuns: 1, totalWins: 1, bestFloor: 30, totalKills: 12 });
   });
 
@@ -41,6 +43,66 @@ describe('런 통계', () => {
     const result = recordRunEnd({ won: false, floor: 8, kills: 3, ascension: 5 });
 
     expect(result.meta.highestWonAscension).toBe(4);
+  });
+
+  it('종료한 런의 직업을 최근 기록에 보존한다', () => {
+    const result = recordRunEnd({
+      won: false,
+      floor: 5,
+      kills: 4,
+      ascension: 0,
+      characterClass: 'mage',
+    });
+
+    expect(result.meta.recentRuns[0].characterClass).toBe('mage');
+  });
+
+  it('런 종합 점수를 층·처치·승리·승천으로 산정한다', () => {
+    expect(calculateRunScore({ floor: 10, kills: 20, won: false, ascension: 0 })).toBe(210);
+    expect(calculateRunScore({ floor: 30, kills: 40, won: true, ascension: 2 })).toBe(770);
+  });
+
+  it('점수 상위 런을 순위표에 정렬 보관한다', () => {
+    recordRunEnd({ won: false, floor: 5, kills: 2, ascension: 0 });
+    recordRunEnd({ won: true, floor: 30, kills: 40, ascension: 2 });
+    const result = recordRunEnd({ won: false, floor: 12, kills: 10, ascension: 0 });
+
+    expect(result.meta.bestRuns.map((run) => run.score)).toEqual([770, 210, 81]);
+  });
+
+  it('일일 도전 여부를 순위 기록에 보존한다', () => {
+    const result = recordRunEnd({ won: true, floor: 30, kills: 10, ascension: 0, isDaily: true });
+
+    expect(result.meta.bestRuns[0].isDaily).toBe(true);
+  });
+
+  it('런 종료 시 층수 기반 강화석을 지급한다', () => {
+    recordRunEnd({ won: true, floor: 20, kills: 10, ascension: 0 });
+
+    expect(loadEquipment().shards).toBe(35);
+  });
+
+  it('엔들리스 진행분이 기록된 승리 런의 층·점수를 상향한다', () => {
+    const result = recordRunEnd({ won: true, floor: 30, kills: 40, ascension: 0 });
+    const updated = updateRecordedRun(result.recordedAt, { floor: 45, kills: 70, ascension: 0 });
+    const meta = loadMeta();
+
+    expect(updated).toBe(true);
+    expect(meta.bestFloor).toBe(45);
+    expect(meta.bestRuns[0].floor).toBe(45);
+    expect(meta.bestRuns[0].score).toBe(45 * 15 + 70 * 3 + 100);
+    // 추가 15층만큼 강화석 증가 (기록 시 45 + 갱신 15)
+    expect(loadEquipment().shards).toBe(60);
+  });
+
+  it('엔들리스 갱신은 승리 수·처치 누계를 중복 가산하지 않는다', () => {
+    recordRunStart(0);
+    const result = recordRunEnd({ won: true, floor: 30, kills: 40, ascension: 0 });
+    updateRecordedRun(result.recordedAt, { floor: 40, kills: 60, ascension: 0 });
+    const meta = loadMeta();
+
+    expect(meta.totalWins).toBe(1);
+    expect(meta.totalKills).toBe(40);
   });
 
   it('로컬 저장소 접근이 차단되어도 기본 통계를 반환한다', () => {
@@ -55,5 +117,6 @@ describe('런 통계', () => {
     Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: blockedStorage });
 
     expect(loadMeta()).toMatchObject({ totalRuns: 0, totalWins: 0, totalKills: 0 });
+    expect(recordRunStart(0).saved).toBe(false);
   });
 });

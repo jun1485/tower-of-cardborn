@@ -22,7 +22,7 @@ export type IntentType = 'attack' | 'defend' | 'buff' | 'debuff';
 export interface Intent {
   readonly type: IntentType;
   readonly value: number;
-  readonly statusType?: Exclude<StatusEffectType, 'strength'>;
+  readonly statusType?: Exclude<StatusEffectType, 'strength' | 'dexterity'>;
 }
 
 export interface Enemy {

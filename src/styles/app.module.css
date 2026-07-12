@@ -8,18 +8,38 @@
   height: 100%;
   gap: 1.25rem;
   padding: calc(1.25rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right)) calc(1rem + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left));
-  background: radial-gradient(circle at 50% 40%, #201a30 0%, #0d0c14 70%, #050508 100%);
+  background:
+    radial-gradient(circle at 50% 18%, rgba(111, 76, 166, 0.26) 0%, transparent 34%),
+    radial-gradient(circle at 12% 78%, rgba(31, 99, 126, 0.18) 0%, transparent 32%),
+    linear-gradient(145deg, #111522 0%, #0b0c14 52%, #07080d 100%);
   position: relative;
   overflow: hidden;
 }
 
+.titleScreen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 49.8%, rgba(255, 224, 157, 0.05) 50%, transparent 50.2%),
+    repeating-linear-gradient(135deg, transparent 0 5rem, rgba(255, 255, 255, 0.012) 5rem 5.0625rem);
+  pointer-events: none;
+}
+
+.titleScreen > * {
+  position: relative;
+  z-index: 1;
+}
+
 .title {
-  font-size: max(22px, 2.5rem);
-  font-weight: bold;
-  background: linear-gradient(135deg, var(--color-accent), var(--color-energy));
+  font-size: max(24px, 2.875rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  background: linear-gradient(180deg, #fff0bc 0%, #e5ad50 58%, #a76522 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  filter: drop-shadow(0 0.25rem 0.25rem rgba(0, 0, 0, 0.72));
 }
 
 .subtitle {
@@ -51,51 +71,64 @@
 /* 직업 선택 */
 .classSelection {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   justify-items: center;
   gap: 1rem;
   width: 100%;
-  max-width: 40rem;
+  max-width: 72rem;
   padding: 0 1rem;
 }
 
 .classCard {
   width: 100%;
-  max-width: 17.5rem;
-  min-height: 11.25rem;
+  max-width: 17rem;
+  min-height: 17.5rem;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.625rem;
-  padding: 1.5rem 1.25rem;
-  background: linear-gradient(135deg, rgba(35, 38, 52, 0.8) 0%, rgba(20, 22, 30, 0.9) 100%);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.875rem;
+  gap: 0.5rem;
+  padding: 0.875rem 0.875rem 1rem;
+  background:
+    radial-gradient(circle at 50% 36%, rgba(111, 143, 184, 0.18) 0%, transparent 54%),
+    linear-gradient(160deg, rgba(31, 39, 55, 0.94) 0%, rgba(12, 16, 25, 0.97) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(231, 204, 147, 0.22);
+  border-radius: 1.125rem;
   color: var(--color-text);
-  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .classCard:hover {
-  transform: translateY(-0.375rem);
-  border-color: var(--color-accent);
-  box-shadow: 0 0.75rem 1.875rem rgba(194, 46, 71, 0.4);
-  background: linear-gradient(135deg, rgba(45, 48, 62, 0.9) 0%, rgba(25, 27, 35, 1) 100%);
+  transform: translateY(-0.5rem) scale(1.025);
+  border-color: rgba(255, 214, 125, 0.72);
+  box-shadow: 0 1.125rem 2.5rem rgba(0, 0, 0, 0.52), 0 0 1.75rem rgba(214, 156, 63, 0.2);
+  background:
+    radial-gradient(circle at 50% 36%, rgba(163, 192, 227, 0.24) 0%, transparent 56%),
+    linear-gradient(160deg, rgba(40, 49, 67, 0.98) 0%, rgba(14, 18, 27, 1) 100%);
 }
 
 .classIcon {
-  width: max(36px, 3.75rem);
-  height: max(36px, 3.75rem);
+  width: 100%;
+  height: 11rem;
   object-fit: contain;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+  object-position: center bottom;
+  filter: drop-shadow(0 0.75rem 0.75rem rgba(0, 0, 0, 0.5));
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.classCard:hover .classIcon {
+  transform: scale(1.06) translateY(-0.125rem);
+  filter: drop-shadow(0 1rem 1rem rgba(0, 0, 0, 0.58));
 }
 
 .className {
-  font-size: max(12px, 1.125rem);
-  font-weight: bold;
+  font-size: max(13px, 1.1875rem);
+  font-weight: 900;
+  color: #ffe9b0;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.72);
 }
 
 .classDeck {
@@ -109,6 +142,20 @@
   color: var(--color-text-dim);
 }
 
+@media (orientation: portrait), (max-width: 767.98px) {
+  .classSelection {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .classCard {
+    min-height: 13rem;
+  }
+
+  .classIcon {
+    height: 7rem;
+  }
+}
+
 /* 낮은 화면(가로 모바일): 직업 카드 4열 배치 */
 @media (orientation: landscape) and (max-height: 520px) {
   .classSelection {
@@ -119,7 +166,11 @@
 
   .classCard {
     min-height: auto;
-    padding: 1rem 0.75rem;
+    padding: 0.5rem 0.625rem 0.75rem;
+  }
+
+  .classIcon {
+    height: 7rem;
   }
 
   .classDeck {
@@ -162,12 +213,15 @@
   background: var(--color-primary);
   color: var(--color-text);
   border-radius: 0.5rem;
-  transition: background 0.15s;
+  box-shadow: 0 0.375rem 0.875rem rgba(0, 0, 0, 0.24);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
   flex-shrink: 0;
 }
 
 .resultBtn:hover {
   background: var(--color-accent);
+  transform: translateY(-0.1875rem) scale(1.025);
+  box-shadow: 0 0.75rem 1.375rem rgba(0, 0, 0, 0.34), 0 0 1rem rgba(233, 69, 96, 0.24);
 }
 
 /* 골드 표시 배지 */
@@ -200,6 +254,52 @@
   color: #ffd54f;
   font-size: max(10px, 0.8125rem);
   font-weight: 800;
+}
+
+/* 상점 유물/포션 판매 목록 */
+.shopExtras {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+/* 상점 유물/포션 구매 버튼 */
+.shopItemBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 44px;
+  max-width: 16rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.625rem;
+  background: rgba(10, 10, 14, 0.72);
+  color: var(--color-text);
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.shopItemBtn:hover:not(:disabled) {
+  transform: translateY(-0.1875rem) scale(1.025);
+  border-color: var(--color-accent);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0.625rem 1.125rem rgba(0, 0, 0, 0.3), 0 0 0.875rem rgba(233, 69, 96, 0.18);
+}
+
+.shopItemBtn:disabled {
+  opacity: 0.5;
+}
+
+.shopItemName {
+  font-size: max(11px, 0.9375rem);
+  font-weight: 800;
+}
+
+.shopItemDesc {
+  font-size: max(10px, 0.8125rem);
+  color: var(--color-text-dim);
 }
 
 /* 카드 제거 화면: 파괴 강조 호버 */
@@ -239,10 +339,11 @@
   background: rgba(255, 255, 255, 0.08);
   color: var(--color-text);
   font-size: max(13px, 1rem);
-  transition: background 0.15s, border-color 0.15s;
+  transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
 }
 
 .ascensionStepBtn:hover:not(:disabled) {
+  transform: translateY(-0.125rem) scale(1.08);
   background: rgba(255, 255, 255, 0.16);
   border-color: rgba(255, 255, 255, 0.3);
 }
@@ -303,9 +404,10 @@
 }
 
 .eventChoiceBtn:hover:not(:disabled) {
-  transform: translateY(-2px);
+  transform: translateY(-0.25rem) scale(1.018);
   border-color: var(--color-energy);
   background: linear-gradient(135deg, rgba(50, 52, 64, 0.95) 0%, rgba(30, 32, 40, 1) 100%);
+  box-shadow: 0 0.75rem 1.375rem rgba(0, 0, 0, 0.32), 0 0 1rem rgba(255, 214, 92, 0.16);
 }
 
 .eventResultText {
@@ -329,11 +431,11 @@
 
 .rewardCard {
   cursor: pointer;
-  transition: box-shadow 0.22s ease, border-color 0.22s ease;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, border-color 0.22s ease, filter 0.22s ease;
 }
 
 .rewardCard:hover {
-  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.56), 0 0 1.25rem rgba(255, 214, 92, 0.18);
 }
 
 /* 카드 강화 선택 화면 */
@@ -369,7 +471,7 @@
 }
 
 .upgradeCard:not(.upgradeCardDisabled):hover {
-  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.54), 0 0 1.125rem rgba(102, 220, 132, 0.2);
   border-color: var(--color-victory);
 }
 
@@ -657,8 +759,8 @@
   position: absolute;
   top: calc(12px + env(safe-area-inset-top));
   right: calc(12px + env(safe-area-inset-right));
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -690,6 +792,29 @@
   color: var(--color-text-dim);
   font-size: max(10px, 0.75rem);
   line-height: 1.45;
+}
+
+.potionReward {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: min(28rem, calc(100% - 2rem));
+  padding: 0.875rem 1rem;
+  border: 1px solid rgba(99, 205, 255, 0.55);
+  border-radius: 0.875rem;
+  background: rgba(9, 46, 68, 0.72);
+  color: #bdeaff;
+}
+
+.potionReward p {
+  margin-top: 0.25rem;
+  color: var(--color-text-dim);
+  font-size: max(10px, 0.75rem);
+  line-height: 1.45;
+}
+
+.potionIcon {
+  font-size: max(26px, 2.25rem);
 }
 
 .relicIcon {
@@ -760,6 +885,165 @@
   line-height: 1.5;
 }
 
+/* 순위표 필터 탭 */
+.rankTabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.rankTabBtn {
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-dim);
+  font-weight: 700;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.rankTabActive {
+  border-color: var(--color-energy);
+  color: var(--color-energy);
+}
+
+/* 신기록 배지 */
+.newRecordBadge {
+  margin-left: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 214, 92, 0.6);
+  background: rgba(255, 193, 46, 0.18);
+  color: #ffe58a;
+  font-weight: 800;
+}
+
+/* 점수 순위표 */
+.rankList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+}
+
+.rankItem {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.625rem;
+  background: rgba(255, 255, 255, 0.05);
+  line-height: 1.5;
+}
+
+.rankPosition {
+  min-width: 2.25rem;
+  font-weight: 800;
+  color: var(--color-energy);
+}
+
+.rankScore {
+  font-weight: 800;
+  color: #ffe58a;
+}
+
+.rankDetail {
+  color: var(--color-text-dim);
+}
+
+/* 일일 도전 기록 태그 */
+.dailyTag {
+  margin-left: 0.375rem;
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 200, 255, 0.5);
+  background: rgba(60, 130, 200, 0.2);
+  color: #9fd4ff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+/* 장비 모달 */
+.shardBadge {
+  margin-bottom: 0.75rem;
+  font-size: 15px;
+  font-weight: 800;
+  color: #9fd4ff;
+}
+
+.equipList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  list-style: none;
+}
+
+.equipSlot {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.625rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.equipIcon {
+  font-size: 1.5rem;
+}
+
+.equipInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.equipName {
+  color: var(--color-text);
+}
+
+.equipLevel {
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--color-energy);
+}
+
+.equipEffect {
+  font-size: 0.8125rem;
+  color: var(--color-text-dim);
+}
+
+.equipUpgradeBtn {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 0.875rem;
+  border: 1px solid rgba(255, 214, 92, 0.4);
+  border-radius: 0.5rem;
+  background: rgba(255, 214, 92, 0.12);
+  color: #ffe58a;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+
+.equipUpgradeBtn:hover:not(:disabled) {
+  background: rgba(255, 214, 92, 0.25);
+}
+
+.equipUpgradeBtn:disabled {
+  opacity: 0.45;
+}
+
+.equipNote {
+  margin-top: 0.875rem;
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+}
+
 .achievementList {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -828,6 +1112,42 @@
   box-shadow: 0 0 1rem rgba(255, 193, 46, 0.25);
 }
 
+/* 일일 도전 완료 배지 */
+.dailyDoneBadge {
+  margin-left: 0.375rem;
+  padding: 0.0625rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 220, 130, 0.5);
+  background: rgba(60, 160, 80, 0.2);
+  color: #9be8a4;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+/* 시드 입력 행 */
+.seedRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: max(11px, 0.875rem);
+  color: var(--color-text-dim);
+}
+
+.seedInput {
+  min-height: 44px;
+  padding: 0 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.5rem;
+  background: rgba(8, 14, 28, 0.72);
+  color: var(--color-text);
+  font-size: max(12px, 0.9375rem);
+}
+
+.seedInput:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
 /* 개인정보 처리방침 모달 */
 .policyOverlay {
   position: fixed;
@@ -866,6 +1186,11 @@
 }
 
 .policyCloseBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   background: none;
   color: var(--color-text-dim);
   font-size: 24px;
@@ -890,4 +1215,54 @@
 
 .policyContent p {
   margin: 0 0 12px;
+}
+
+
+/* 화면 진입 페이드 (타이틀/결과) */
+.titleScreen,
+.resultScreen {
+  animation: screenFadeInApp 0.32s ease-out;
+}
+
+@keyframes screenFadeInApp {
+  from { opacity: 0; }
+}
+
+/* 보상 요소 등장 팝 */
+.goldBadge {
+  animation: rewardPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+.relicReward,
+.potionReward {
+  animation: rewardPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s backwards;
+}
+
+@keyframes rewardPop {
+  from { opacity: 0; transform: scale(0.85); }
+}
+
+/* 보상/상점 카드 순차 등장 */
+.rewardCards :global(.card-item:nth-child(2)) { animation-delay: 60ms; }
+.rewardCards :global(.card-item:nth-child(3)) { animation-delay: 120ms; }
+.rewardCards :global(.card-item:nth-child(4)) { animation-delay: 180ms; }
+.rewardCards :global(.card-item:nth-child(5)) { animation-delay: 240ms; }
+.rewardCards :global(.card-item:nth-child(6)) { animation-delay: 300ms; }
+
+/* 결과 버튼 프레스 피드백 */
+.resultBtn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.startBtn:active:not(:disabled),
+.classCard:active:not(:disabled),
+.shopItemBtn:active:not(:disabled),
+.ascensionStepBtn:active:not(:disabled),
+.eventChoiceBtn:active:not(:disabled),
+.confirmBtn:active:not(:disabled),
+.cancelBtn:active:not(:disabled),
+.dangerBtn:active:not(:disabled),
+.equipUpgradeBtn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.97);
+  transition-duration: 0.06s;
 }

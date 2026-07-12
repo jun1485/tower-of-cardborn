@@ -1,13 +1,15 @@
 // 개별 카드 UI 컴포넌트 (포인터 드래그 지원 + 키워드 툴팁)
 
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import type { CardDefinition } from '@tower-of-cardborn/game-core/types/card';
 import { getCardRarity } from '@tower-of-cardborn/game-core/data/cards';
 import { useTranslation, useLanguage } from '../../i18n';
-import type { TFunction } from '../../i18n';
 import { getCardName, generateCardDescription, getCardRarityName, getCardTypeName } from '../../i18n/card-text';
+import { getCardKeywords } from '../../i18n/card-keywords';
 import styles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
+import { getCardTypeClass } from '../card/card-type-class';
 
 interface CardComponentProps {
   readonly definition: CardDefinition;
@@ -19,26 +21,7 @@ interface CardComponentProps {
   readonly onActivate: (instanceId: string) => void;
 }
 
-/** 카드 효과에서 키워드 설명 추출 */
-function getKeywords(def: CardDefinition, t: TFunction): string[] {
-  const keywords: string[] = [];
-  for (const effect of def.effects) {
-    const vulnText = t('kwVulnerable');
-    const weakText = t('kwWeak');
-    const strText = t('kwStrength');
-    if (effect.statusType === 'vulnerable' && !keywords.includes(vulnText))
-      keywords.push(vulnText);
-    if (effect.statusType === 'weak' && !keywords.includes(weakText))
-      keywords.push(weakText);
-    if (effect.type === 'gain_strength' && !keywords.includes(strText))
-      keywords.push(strText);
-  }
-  if (def.exhaust) keywords.push(t('kwExhaust'));
-  if (def.type === 'power') keywords.push(t('kwPower'));
-  return keywords;
-}
-
-export function CardComponent({
+export const CardComponent = memo(function CardComponent({
   definition,
   instanceId,
   canPlay,
@@ -49,15 +32,30 @@ export function CardComponent({
 }: CardComponentProps) {
   const t = useTranslation();
   const lang = useLanguage();
-  const typeClassMap = { attack: styles.cardAttack, skill: styles.cardSkill, power: styles.cardPower };
-  const typeClass = typeClassMap[definition.type];
-  const keywords = getKeywords(definition, t);
+  const typeClass = getCardTypeClass(definition.type);
+  const keywords = useMemo(() => getCardKeywords(definition, t), [definition, t]);
   const cardName = getCardName(definition.id, lang);
   const cardDesc = previewDescription ?? generateCardDescription(definition, t);
   const rarity = getCardRarity(definition.id);
+  const [rejected, setRejected] = useState(false);
+  const rejectTimerRef = useRef<number | null>(null);
+
+  // 거부 흔들림 타이머 정리
+  useEffect(() => () => {
+    if (rejectTimerRef.current !== null) window.clearTimeout(rejectTimerRef.current);
+  }, []);
 
   const handlePointerDown = (e: ReactPointerEvent) => {
-    if (!canPlay) return;
+    if (!canPlay) {
+      // 사용 불가 카드 조작 거부 피드백
+      setRejected(true);
+      if (rejectTimerRef.current !== null) window.clearTimeout(rejectTimerRef.current);
+      rejectTimerRef.current = window.setTimeout(() => {
+        setRejected(false);
+        rejectTimerRef.current = null;
+      }, 320);
+      return;
+    }
     e.preventDefault();
     onDragStart(instanceId, e.clientX, e.clientY, e.pointerId);
   };
@@ -71,11 +69,12 @@ export function CardComponent({
 
   return (
     <div
-      className={`${styles.card} card-item ${typeClass} ${canPlay ? '' : styles.cardDisabled} ${isDragging ? `${styles.cardDragging} card-dragging` : ''}`}
+      className={`${styles.card} card-item ${typeClass} ${canPlay ? styles.cardPlayable : styles.cardDisabled} ${rejected ? styles.cardReject : ''} ${isDragging ? `${styles.cardDragging} card-dragging` : ''}`}
       role="button"
       tabIndex={0}
       aria-disabled={!canPlay}
       aria-label={`${cardName}. ${definition.cost} ${t('energy')}. ${cardDesc}`}
+      data-card-instance-id={instanceId}
       data-rarity={rarity}
       onPointerDown={handlePointerDown}
       onKeyDown={handleKeyDown}
@@ -97,4 +96,4 @@ export function CardComponent({
       )}
     </div>
   );
-}
+});

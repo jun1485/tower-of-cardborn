@@ -1,7 +1,8 @@
 // 맵 생성: 층당 2~3갈래 분기 맵 구조 (전투 / 엘리트 / 휴식 / 상점 / 보스)
 
 import type { GameMap, MapNode, NodeType } from '../types/map';
-import { NORMAL_ENCOUNTERS, ELITE_ENCOUNTERS, BOSS_ENCOUNTERS } from '../data/enemies';
+import { getBossEncounters, getEliteEncounters, getNormalEncounters } from '../data/enemies';
+import { getAscensionModifier } from '../data/ascension';
 import { generateId, random } from '../utils/random';
 
 export const FLOORS_PER_MAP = 10;
@@ -10,10 +11,11 @@ export const DEFAULT_TOTAL_MAPS = 3;
 const ELITE_FLOOR = 5;
 const SHOP_FLOOR = 6;
 const MID_REST_FLOOR = 3;
+const TREASURE_FLOOR = 4;
 const PRE_BOSS_REST_FLOOR = FLOORS_PER_MAP - 1;
 
-/** 이벤트 배치 후보 층 (특수층 3/5/6/9/10 비겹침) */
-const EVENT_CANDIDATE_FLOORS: readonly number[] = [2, 4, 7, 8];
+/** 이벤트 배치 후보 층 (특수층 3/4/5/6/9/10 비겹침) */
+const EVENT_CANDIDATE_FLOORS: readonly number[] = [2, 7, 8];
 const EVENT_CHANCE = 0.4;
 const MAX_EVENTS_PER_MAP = 3;
 const FORCED_EVENT_FLOOR = 7;
@@ -26,7 +28,7 @@ function getFloorNodeCount(floor: number): number {
 }
 
 /** 층별 노드 타입 배열 결정 */
-function getFloorNodeTypes(floor: number, count: number): NodeType[] {
+function getFloorNodeTypes(floor: number, count: number, extraEliteChance: number): NodeType[] {
   if (floor === FLOORS_PER_MAP) return ['boss'];
   if (floor === PRE_BOSS_REST_FLOOR) return Array.from({ length: count }, () => 'rest');
 
@@ -37,12 +39,14 @@ function getFloorNodeTypes(floor: number, count: number): NodeType[] {
   if (floor === ELITE_FLOOR) {
     types[specialIndex] = 'elite';
     for (let i = 0; i < count; i++) {
-      if (i !== specialIndex && random() < 0.4) types[i] = 'elite';
+      if (i !== specialIndex && random() < extraEliteChance) types[i] = 'elite';
     }
   } else if (floor === SHOP_FLOOR) {
     types[specialIndex] = 'shop';
   } else if (floor === MID_REST_FLOOR) {
     types[specialIndex] = 'rest';
+  } else if (floor === TREASURE_FLOOR) {
+    types[specialIndex] = 'treasure';
   }
 
   return types;
@@ -53,7 +57,7 @@ function pickEnemies(type: NodeType, mapIndex: number, floor: number): string[] 
   const progressionFloor = (mapIndex - 1) * FLOORS_PER_MAP + floor;
   switch (type) {
     case 'combat': {
-      const pool = NORMAL_ENCOUNTERS;
+      const pool = getNormalEncounters(mapIndex);
       const maxGroupSize = progressionFloor >= 10 ? 3 : progressionFloor >= 4 ? 2 : 1;
       const minGroupSize = mapIndex >= 2 ? 2 : 1;
       const sizedPool = pool.filter((encounter) => encounter.length >= minGroupSize && encounter.length <= maxGroupSize);
@@ -61,20 +65,17 @@ function pickEnemies(type: NodeType, mapIndex: number, floor: number): string[] 
       return [...targetPool[Math.floor(random() * targetPool.length)]];
     }
     case 'elite': {
-      const pool = mapIndex >= 3
-        ? [...ELITE_ENCOUNTERS, ['gremlin_nob', 'fungi_beast'], ['lagavulin', 'louse_red']]
-        : mapIndex === 2 ? [...ELITE_ENCOUNTERS, ['gremlin_nob', 'louse_red']] : ELITE_ENCOUNTERS;
+      const pool = getEliteEncounters(mapIndex);
       return [...pool[Math.floor(random() * pool.length)]];
     }
     case 'boss': {
-      const pool = mapIndex >= 3
-        ? [['tower_heart']]
-        : mapIndex === 2 ? [['stone_guardian']] : BOSS_ENCOUNTERS;
+      const pool = getBossEncounters(mapIndex);
       return [...pool[Math.floor(random() * pool.length)]];
     }
     case 'rest':
     case 'shop':
     case 'event':
+    case 'treasure':
       return [];
   }
 }
@@ -120,14 +121,15 @@ function connectFloors(current: MapNode[], next: MapNode[]): MapNode[] {
   }));
 }
 
-/** 10층 분기 맵 생성 */
-export function generateMap(mapIndex = 1, totalMaps = DEFAULT_TOTAL_MAPS): GameMap {
+/** 10층 분기 맵 생성 (승천 레벨별 엘리트 확률 반영) */
+export function generateMap(mapIndex = 1, totalMaps = DEFAULT_TOTAL_MAPS, ascension = 0): GameMap {
+  const extraEliteChance = getAscensionModifier(ascension).extraEliteChance;
   // 층별 노드 생성 (후보 층 확률 이벤트 배치, 맵당 상한 적용)
   const floorNodes: MapNode[][] = [];
   let eventCount = 0;
   for (let floor = 1; floor <= FLOORS_PER_MAP; floor++) {
     const count = getFloorNodeCount(floor);
-    const types = getFloorNodeTypes(floor, count);
+    const types = getFloorNodeTypes(floor, count, extraEliteChance);
     if (EVENT_CANDIDATE_FLOORS.includes(floor) && eventCount < MAX_EVENTS_PER_MAP && random() < EVENT_CHANCE) {
       types[Math.floor(random() * count)] = 'event';
       eventCount++;

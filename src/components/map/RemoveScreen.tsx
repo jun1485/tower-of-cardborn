@@ -7,6 +7,7 @@ import { MIN_DECK_SIZE } from '../../utils/game-transitions';
 import styles from '../../styles/app.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
+import { getCardTypeClass } from '../card/card-type-class';
 
 interface RemoveScreenProps {
   readonly deck: readonly string[];
@@ -30,16 +31,10 @@ export function RemoveScreen({ deck, canSkip, onRemove, onSkip }: RemoveScreenPr
           if (!def) return null;
 
           const name = getCardName(def.id, lang);
-          const typeClassMap = {
-            attack: cardStyles.cardAttack,
-            skill: cardStyles.cardSkill,
-            power: cardStyles.cardPower,
-          };
-
           return (
             <button
               key={index}
-              className={`${styles.upgradeCard} ${styles.removeCardBtn} card-item ${typeClassMap[def.type]}`}
+              className={`${styles.upgradeCard} ${styles.removeCardBtn} card-item ${getCardTypeClass(def.type)}`}
               disabled={deck.length <= MIN_DECK_SIZE}
               data-rarity={getCardRarity(cardId)}
               onClick={() => onRemove(index)}

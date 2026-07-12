@@ -9,9 +9,9 @@
   --gold-text-dim: rgba(245, 226, 176, 0.72);
   --hud-text: rgba(231, 239, 255, 0.9);
   --hud-text-dim: rgba(203, 217, 244, 0.74);
-  --hand-card-scale: 0.72;
-  --hand-card-hover-scale: 0.76;
-  --hand-card-offset: -1.5rem;
+  --hand-card-scale: 0.66;
+  --hand-card-hover-scale: 0.72;
+  --hand-card-offset: -3rem;
   position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -27,11 +27,11 @@
   content: '';
   position: absolute;
   inset: -4% -2%;
-  background-image: url('/assets/ui/bg_combat_hd.webp?v=5');
+  background-image: url('/assets/ui/bg_combat_tower-v2.webp');
   background-size: cover;
   background-position: center 56%;
-  opacity: 0.98;
-  filter: saturate(1.08) contrast(1.08) brightness(1.03);
+  opacity: 1;
+  filter: saturate(1.06) contrast(1.04) brightness(0.96);
   transform: scale(1.015);
   z-index: -3;
   pointer-events: none;
@@ -42,8 +42,9 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 50% 18%, rgba(255, 243, 210, 0.14) 0%, rgba(255, 243, 210, 0) 28%),
-    linear-gradient(to bottom, rgba(8, 13, 21, 0.08) 0%, rgba(7, 11, 18, 0.22) 58%, rgba(6, 8, 14, 0.46) 100%);
+    radial-gradient(circle at 50% 12%, rgba(255, 244, 204, 0.22) 0%, rgba(255, 243, 210, 0) 30%),
+    linear-gradient(90deg, rgba(7, 12, 19, 0.24) 0%, transparent 30%, transparent 68%, rgba(7, 12, 19, 0.26) 100%),
+    linear-gradient(to bottom, rgba(8, 13, 21, 0.04) 0%, rgba(7, 11, 18, 0.18) 52%, rgba(6, 8, 14, 0.58) 100%);
   z-index: -2;
   pointer-events: none;
 }
@@ -51,8 +52,46 @@
 /* 상단: 턴 정보만 표시 */
 .topSection {
   display: flex;
+  align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.625rem;
   z-index: 4;
+}
+
+.potionBelt {
+  display: flex;
+  gap: 0.375rem;
+  padding: 0.375rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.75rem;
+  background: rgba(9, 12, 19, 0.86);
+}
+
+.potionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max(44px, 2.75rem);
+  height: max(44px, 2.75rem);
+  border: 1px solid rgba(255, 214, 92, 0.4);
+  border-radius: 0.625rem;
+  background: rgba(255, 214, 92, 0.1);
+  font-size: max(18px, 1.5rem);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0.375rem 0.75rem rgba(0, 0, 0, 0.2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .potionButton:hover:not(:disabled) {
+    transform: translateY(-0.1875rem) rotate(-3deg) scale(1.06);
+    border-color: rgba(255, 226, 120, 0.78);
+    box-shadow: 0 0.625rem 1.125rem rgba(0, 0, 0, 0.32), 0 0 1rem rgba(255, 214, 92, 0.24);
+  }
+}
+
+.potionButton:focus-visible {
+  outline: 2px solid var(--color-energy);
+  outline-offset: 2px;
 }
 
 .topInfo {
@@ -140,7 +179,10 @@
   right: 5%;
   bottom: 0.625rem;
   height: 7rem;
-  background: radial-gradient(ellipse at center, rgba(6, 10, 18, 0.42) 0%, rgba(6, 10, 18, 0) 74%);
+  background:
+    radial-gradient(ellipse at 23% 64%, rgba(6, 9, 14, 0.68) 0%, rgba(6, 10, 18, 0) 36%),
+    radial-gradient(ellipse at 76% 64%, rgba(6, 9, 14, 0.64) 0%, rgba(6, 10, 18, 0) 38%),
+    radial-gradient(ellipse at center, rgba(6, 10, 18, 0.34) 0%, rgba(6, 10, 18, 0) 74%);
   border-radius: 50%;
   pointer-events: none;
   z-index: -1;
@@ -222,16 +264,16 @@
 }
 
 .playerArea .characterSprite {
-  width: 13.75rem;
-  height: 13.75rem;
+  width: 15.25rem;
+  height: 15.25rem;
 }
 
 .playerArea .characterImage {
-  width: 120%;
-  height: 120%;
+  width: 148%;
+  height: 148%;
   object-position: center bottom;
   transform: translateY(0.625rem);
-  filter: saturate(1.08) contrast(1.02) drop-shadow(0 14px 12px rgba(0, 0, 0, 0.62));
+  filter: saturate(1.04) contrast(1.04) drop-shadow(0 1.125rem 0.875rem rgba(0, 0, 0, 0.68));
 }
 
 .characterSprite {
@@ -297,6 +339,15 @@
 }
 
 /* 피격 흔들림 + 히트 플래시 */
+.shake .characterImage {
+  animation: hitFlash 0.38s ease-in-out;
+}
+
+@keyframes hitFlash {
+  0%, 100% { filter: brightness(1); }
+  25% { filter: brightness(1.85) saturate(1.6) drop-shadow(0 0 0.6rem rgba(255, 90, 70, 0.8)); }
+}
+
 @keyframes shake {
   0% { transform: translateX(0); filter: brightness(1.9) saturate(1.5); }
   15% { transform: translateX(-0.5rem); filter: brightness(1.55) saturate(1.35); }
@@ -384,6 +435,12 @@
   padding: 1.5rem 0.5rem 0;
   color: var(--color-text);
   transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+}
+
+.enemyCard:focus-visible {
+  outline: 2px solid var(--color-energy);
+  outline-offset: 4px;
+  border-radius: 0.75rem;
 }
 
 .enemyCard::after {
@@ -544,12 +601,10 @@
   filter: saturate(1.04) contrast(1.02) drop-shadow(0 14px 12px rgba(0, 0, 0, 0.62));
 }
 
-.stoneGuardianImage {
-  filter: grayscale(0.72) sepia(0.3) contrast(1.2) brightness(0.86) drop-shadow(0 14px 12px rgba(0, 0, 0, 0.62));
-}
-
-.towerHeartImage {
-  filter: hue-rotate(235deg) saturate(1.65) contrast(1.12) drop-shadow(0 14px 12px rgba(0, 0, 0, 0.62));
+.bossImage {
+  width: 132%;
+  height: 132%;
+  filter: saturate(1.08) contrast(1.05) drop-shadow(0 1.125rem 1rem rgba(0, 0, 0, 0.7));
 }
 
 /* 체력바 */
@@ -673,7 +728,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  min-height: max(30px, 2.5rem);
+  min-height: max(44px, 2.5rem);
   padding: 0 0.75rem;
   border-radius: 0.75rem;
   border: 1px solid rgba(204, 185, 139, 0.22);
@@ -830,8 +885,18 @@
 .bottomSection .handTrack > :global(.card-item),
 .bottomSection .handTrack :global(.card-item) {
   margin: 0 var(--hand-card-offset);
+  translate: 0 0;
   transform: scale(var(--hand-card-scale));
   transform-origin: center bottom;
+  transition: margin 0.26s cubic-bezier(0.22, 1, 0.36, 1), translate 0.38s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.32s ease, border-color 0.24s ease, filter 0.32s ease;
+}
+
+.handExpanded {
+  --hand-card-offset: -1.5rem;
+}
+
+.handExpanded .handTrack :global(.card-item) {
+  transform: scale(var(--hand-card-hover-scale));
 }
 
 .bottomSection .handTrack :global(.card-item.card-dragging) {
@@ -839,26 +904,23 @@
   pointer-events: none;
 }
 
-/* 호버 지원 환경: 핸드 카드 리프트/밀림 효과 */
+/* 핸드 드로우 순차 등장 */
+.bottomSection .handTrack :global(.card-item:nth-child(1)) { animation-delay: 0ms; }
+.bottomSection .handTrack :global(.card-item:nth-child(2)) { animation-delay: 55ms; }
+.bottomSection .handTrack :global(.card-item:nth-child(3)) { animation-delay: 110ms; }
+.bottomSection .handTrack :global(.card-item:nth-child(4)) { animation-delay: 165ms; }
+.bottomSection .handTrack :global(.card-item:nth-child(5)) { animation-delay: 220ms; }
+.bottomSection .handTrack :global(.card-item:nth-child(6)) { animation-delay: 275ms; }
+.bottomSection .handTrack :global(.card-item:nth-child(7)) { animation-delay: 330ms; }
+.bottomSection .handTrack :global(.card-item:nth-child(8)) { animation-delay: 385ms; }
+
+/* 호버 지원 환경: 핸드 카드 리프트 */
 @media (hover: hover) and (pointer: fine) {
   .bottomSection .handTrack :global(.card-item:hover) {
-    transform: translateY(-1.125rem) scale(var(--hand-card-hover-scale));
-  }
-
-  .bottomSection .handTrack :global(.card-item:hover + .card-item) {
-    transform: translateX(var(--card-push-near)) scale(var(--hand-card-scale));
-  }
-
-  .bottomSection .handTrack :global(.card-item:has(+ .card-item:hover)) {
-    transform: translateX(calc(var(--card-push-near) * -1)) scale(var(--hand-card-scale));
-  }
-
-  .bottomSection .handTrack :global(.card-item:hover + .card-item + .card-item) {
-    transform: translateX(var(--card-push-far)) scale(var(--hand-card-scale));
-  }
-
-  .bottomSection .handTrack :global(.card-item:has(+ .card-item + .card-item:hover)) {
-    transform: translateX(calc(var(--card-push-far) * -1)) scale(var(--hand-card-scale));
+    translate: 0 -1.375rem;
+    transform: scale(var(--hand-card-hover-scale));
+    box-shadow: 0 1.75rem 2.75rem rgba(2, 6, 14, 0.72), 0 0 1.25rem rgba(129, 199, 255, 0.18);
+    filter: brightness(1.06) saturate(1.05);
   }
 }
 
@@ -889,9 +951,9 @@
 }
 
 .endTurnBtn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 0.875rem 1.625rem rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  filter: brightness(1.04);
+  transform: translateY(-0.25rem) scale(1.035);
+  box-shadow: 0 1rem 1.875rem rgba(0, 0, 0, 0.38), 0 0 1.25rem rgba(95, 180, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  filter: brightness(1.12) saturate(1.08);
 }
 
 /* 파일 뷰어 모달 */
@@ -932,6 +994,11 @@
 }
 
 .pileCloseBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   border: none;
   background: none;
   color: var(--color-text-dim);
@@ -948,6 +1015,22 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.625rem;
+}
+
+.deckCountBadge {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  z-index: 3;
+  min-width: 1.75rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: #101622;
+  color: #fff2cf;
+  font-size: max(10px, 0.75rem);
+  font-weight: 900;
+  text-align: center;
 }
 
 .pileEmpty {
@@ -997,5 +1080,187 @@
 
   .handArea {
     min-height: 100px;
+  }
+}
+
+/* 세로 모바일 전투 배치 */
+@media (orientation: portrait) and (max-width: 767.98px) {
+  .combatScreen {
+    padding: calc(0.5rem + env(safe-area-inset-top)) calc(0.5rem + env(safe-area-inset-right)) 0 calc(0.5rem + env(safe-area-inset-left));
+    gap: 0.25rem;
+  }
+
+  .battlefield {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.25rem;
+    overflow: hidden;
+  }
+
+  .playerArea {
+    flex: 0 1 48%;
+    min-width: 0;
+    align-items: center;
+  }
+
+  .playerArea .characterSprite {
+    width: min(11.5rem, 36vw);
+    height: min(11.5rem, 36vw);
+  }
+
+  .playerArea .characterImage {
+    width: 138%;
+    height: 138%;
+  }
+
+  .enemyArea {
+    flex: 1 1 52%;
+    min-width: 0;
+    width: auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 0.25rem;
+    padding: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .enemyArea::-webkit-scrollbar {
+    display: none;
+  }
+
+  .enemyCard {
+    flex: 0 0 min(9rem, 44vw);
+    min-width: 0;
+    gap: 0.25rem;
+    padding: 0.75rem 0.125rem 0;
+  }
+
+  .enemySprite {
+    width: min(10rem, 38vw);
+    height: min(10rem, 38vw);
+  }
+
+  .combatantPanel {
+    width: 100%;
+    min-width: 0;
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.875rem;
+  }
+
+  .playerPanel,
+  .enemyPanel {
+    margin-left: 0;
+  }
+
+  .healthBar {
+    width: 100%;
+  }
+
+  .bottomSection {
+    gap: 0.25rem;
+    overflow: hidden;
+  }
+
+  .handArea {
+    flex: 1 1 0;
+    width: 0;
+  }
+
+  .handTrack {
+    min-width: max-content;
+    justify-content: flex-start;
+  }
+}
+
+
+/* 적 사망 잔상 연출 */
+.enemyDying {
+  pointer-events: none;
+  animation: enemyDeath 0.55s cubic-bezier(0.3, 0, 0.8, 0.4) forwards;
+}
+
+@keyframes enemyDeath {
+  0% { opacity: 1; transform: translateY(0) scale(1); filter: none; }
+  100% { opacity: 0; transform: translateY(1.25rem) scale(0.9); filter: grayscale(1) brightness(0.6); }
+}
+
+/* 에너지 수치 변화 팝 */
+.energyPop {
+  animation: energyPop 0.28s cubic-bezier(0.2, 0, 0.2, 1.4);
+}
+
+@keyframes energyPop {
+  0% { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+
+/* 상태 배지 등장 팝 */
+.statusBadge {
+  animation: badgePop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+@keyframes badgePop {
+  from { opacity: 0; transform: scale(0.5); }
+}
+
+/* 전투 화면 진입 페이드 */
+.combatScreen {
+  animation: screenFadeIn 0.32s ease-out;
+}
+
+@keyframes screenFadeIn {
+  from { opacity: 0; }
+}
+
+/* 버튼 프레스 피드백 */
+.endTurnBtn:active:not(:disabled),
+.potionButton:active:not(:disabled),
+.pileBtn:active {
+  transform: translateY(2px) scale(0.94);
+}
+
+
+/* 타겟팅 드래그 중 손패·유틸 영역 디밍 */
+.targeting .bottomSection {
+  opacity: 0.5;
+  filter: saturate(0.75);
+  transition: opacity 0.18s ease, filter 0.18s ease;
+}
+
+.bottomSection {
+  transition: opacity 0.18s ease, filter 0.18s ease;
+}
+
+/* HP바 피해 잔상 게이지 (본 게이지보다 늦게 감소) */
+.healthBarGhost {
+  position: absolute;
+  top: 0.1875rem;
+  left: 0.1875rem;
+  height: calc(100% - 0.375rem);
+  max-width: calc(100% - 0.375rem);
+  background: rgba(255, 220, 130, 0.55);
+  border-radius: 999px;
+  transition: width 0.55s ease 0.25s;
+  pointer-events: none;
+}
+
+.healthBarFill {
+  position: relative;
+  z-index: 1;
+}
+
+/* 턴 수 변경 팝 */
+.turnPop {
+  display: inline-block;
+  animation: energyPop 0.28s cubic-bezier(0.2, 0, 0.2, 1.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottomSection .handTrack :global(.card-item) {
+    transition-duration: 0.26s, 0.38s, 0.32s, 0.32s, 0.24s, 0.32s !important;
   }
 }

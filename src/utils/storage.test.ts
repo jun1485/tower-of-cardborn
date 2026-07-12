@@ -41,6 +41,8 @@ const GAME_STATE: GameState = {
   randomState: null,
   relics: [],
   rewardRelic: null,
+  potions: [],
+  rewardPotion: null,
 };
 
 beforeEach(() => {
@@ -85,6 +87,18 @@ describe('게임 저장', () => {
     expect(loadGame()).toBeNull();
   });
 
+  it('포션 슬롯 한도를 초과한 저장 상태를 제거한다', () => {
+    localStorage.setItem('tower-of-cardborn-save', JSON.stringify({
+      version: 8,
+      state: {
+        ...GAME_STATE,
+        potions: ['healing_potion', 'block_potion', 'fire_potion'],
+      },
+    }));
+
+    expect(loadGame()).toBeNull();
+  });
+
   it('존재하지 않는 맵 연결이 포함된 저장 상태를 제거한다', () => {
     localStorage.setItem('tower-of-cardborn-save', JSON.stringify({
       version: 8,
@@ -110,5 +124,21 @@ describe('게임 저장', () => {
     clearSave();
 
     expect(loadGame()).toBeNull();
+  });
+
+  it('구버전 저장본을 마이그레이션하여 복원하고 현행 버전으로 재저장한다', () => {
+    localStorage.setItem('tower-of-cardborn-save', JSON.stringify({ version: 1, state: GAME_STATE }));
+
+    expect(loadGame()).toEqual(GAME_STATE);
+
+    const raw = localStorage.getItem('tower-of-cardborn-save') ?? '';
+    expect((JSON.parse(raw) as { version: number }).version).toBe(8);
+  });
+
+  it('현행보다 높은 버전의 저장본을 제거한다', () => {
+    localStorage.setItem('tower-of-cardborn-save', JSON.stringify({ version: 99, state: GAME_STATE }));
+
+    expect(loadGame()).toBeNull();
+    expect(localStorage.getItem('tower-of-cardborn-save')).toBeNull();
   });
 });

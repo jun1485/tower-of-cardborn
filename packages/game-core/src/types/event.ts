@@ -2,7 +2,11 @@
 
 export type EventId =
   | 'blood_altar' | 'blacksmith' | 'locked_chest' | 'gambler'
-  | 'mist' | 'wounded_mercenary' | 'shrine';
+  | 'mist' | 'wounded_mercenary' | 'shrine' | 'ancient_library'
+  | 'healing_fountain' | 'merchant_caravan'
+  | 'collapsed_mine' | 'wandering_sage' | 'cursed_idol' | 'forgotten_grave'
+  | 'traveling_alchemist' | 'ancient_armory' | 'starlit_spring' | 'goblin_toll'
+  | 'bookworm_scholar' | 'hermits_hut' | 'witch_hut';
 
 export type EventEffect =
   | { readonly type: 'gold'; readonly value: number; readonly variance?: number }
@@ -10,6 +14,8 @@ export type EventEffect =
   | { readonly type: 'max_hp'; readonly value: number }
   | { readonly type: 'heal_full' }
   | { readonly type: 'random_card' }
+  | { readonly type: 'gain_relic' }
+  | { readonly type: 'curse_card'; readonly cardId: string }
   | { readonly type: 'remove_card'; readonly count: number }
   | { readonly type: 'upgrade_card'; readonly count: number }
   | {
@@ -29,6 +35,9 @@ export interface EventCondition {
   readonly minHp?: number;
   readonly minDeckSize?: number;
   readonly minUpgradable?: number;
+  readonly requiresMissingHp?: boolean;
+  /** 미보유 유물 후보 존재 요구 */
+  readonly requiresRelicCandidate?: boolean;
 }
 
 export interface EventChoice {
@@ -43,6 +52,8 @@ export interface EventChoice {
 export interface GameEvent {
   readonly id: EventId;
   readonly emoji: string;
+  /** 등장 가능 액트 (미지정 시 전체) */
+  readonly acts?: readonly number[];
   /** 마지막 선택지는 항상 떠나기 (effects 빈 배열) */
   readonly choices: readonly EventChoice[];
 }

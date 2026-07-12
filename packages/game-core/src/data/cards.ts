@@ -2,6 +2,7 @@
 
 import type { CardDefinition, CardRarity } from '../types/card';
 import type { CharacterClass } from '../types/game';
+import { SHOP_BALANCE } from './balance';
 import { random } from '../utils/random';
 
 export const CARD_DEFINITIONS: Record<string, CardDefinition> = {
@@ -493,12 +494,9 @@ export const CARD_DEFINITIONS: Record<string, CardDefinition> = {
   // 궁수 보상 카드
   rain_of_arrows: {
     id: 'rain_of_arrows', name: 'Rain of Arrows',
-    description: '4 데미지를 2회.',
-    type: 'attack', cost: 1,
-    effects: [
-      { type: 'damage', value: 4, target: 'single' },
-      { type: 'damage', value: 4, target: 'single' },
-    ],
+    description: '모든 적에게 6 데미지.',
+    type: 'attack', cost: 2,
+    effects: [{ type: 'damage', value: 6, target: 'all' }],
     upgradeId: 'rain_of_arrows+',
   },
   piercing_arrow: {
@@ -607,12 +605,9 @@ export const CARD_DEFINITIONS: Record<string, CardDefinition> = {
   },
   'rain_of_arrows+': {
     id: 'rain_of_arrows+', name: 'Rain of Arrows+',
-    description: '5 데미지를 2회.',
-    type: 'attack', cost: 1,
-    effects: [
-      { type: 'damage', value: 5, target: 'single' },
-      { type: 'damage', value: 5, target: 'single' },
-    ],
+    description: '모든 적에게 9 데미지.',
+    type: 'attack', cost: 2,
+    effects: [{ type: 'damage', value: 9, target: 'all' }],
     upgraded: true,
   },
   'piercing_arrow+': {
@@ -1417,6 +1412,397 @@ export const CARD_DEFINITIONS: Record<string, CardDefinition> = {
     upgraded: true,
   },
   // #endregion
+
+  // #region 확장 카드 - 전사
+  whirlwind: {
+    id: 'whirlwind', name: 'Whirlwind',
+    description: '모든 적에게 5 데미지.',
+    type: 'attack', cost: 1,
+    effects: [{ type: 'damage', value: 5, target: 'all' }],
+    upgradeId: 'whirlwind+',
+  },
+  'whirlwind+': {
+    id: 'whirlwind+', name: 'Whirlwind+',
+    description: '모든 적에게 8 데미지.',
+    type: 'attack', cost: 1,
+    effects: [{ type: 'damage', value: 8, target: 'all' }],
+    upgraded: true,
+  },
+  metal_skin: {
+    id: 'metal_skin', name: 'Metal Skin',
+    description: '매 턴 시작 시 방어도 3 획득.',
+    type: 'power', cost: 1,
+    effects: [{ type: 'add_power', value: 3, powerType: 'turn_start_block' }],
+    upgradeId: 'metal_skin+',
+  },
+  'metal_skin+': {
+    id: 'metal_skin+', name: 'Metal Skin+',
+    description: '매 턴 시작 시 방어도 5 획득.',
+    type: 'power', cost: 1,
+    effects: [{ type: 'add_power', value: 5, powerType: 'turn_start_block' }],
+    upgraded: true,
+  },
+  demon_form: {
+    id: 'demon_form', name: 'Demon Form',
+    description: '매 턴 시작 시 힘 1 획득.',
+    type: 'power', cost: 2,
+    effects: [{ type: 'add_power', value: 1, powerType: 'turn_start_strength' }],
+    upgradeId: 'demon_form+',
+  },
+  'demon_form+': {
+    id: 'demon_form+', name: 'Demon Form+',
+    description: '매 턴 시작 시 힘 2 획득.',
+    type: 'power', cost: 2,
+    effects: [{ type: 'add_power', value: 2, powerType: 'turn_start_strength' }],
+    upgraded: true,
+  },
+  // #endregion
+
+  // #region 확장 카드 - 궁수
+  crippling_shot: {
+    id: 'crippling_shot', name: 'Crippling Shot',
+    description: '7 데미지. 손상 2턴 부여.',
+    type: 'attack', cost: 1,
+    effects: [
+      { type: 'damage', value: 7, target: 'single' },
+      { type: 'apply_status', value: 2, target: 'single', statusType: 'frail' },
+    ],
+    upgradeId: 'crippling_shot+',
+  },
+  'crippling_shot+': {
+    id: 'crippling_shot+', name: 'Crippling Shot+',
+    description: '10 데미지. 손상 2턴 부여.',
+    type: 'attack', cost: 1,
+    effects: [
+      { type: 'damage', value: 10, target: 'single' },
+      { type: 'apply_status', value: 2, target: 'single', statusType: 'frail' },
+    ],
+    upgraded: true,
+  },
+  hunters_mark: {
+    id: 'hunters_mark', name: "Hunter's Mark",
+    description: '취약 2턴 부여. 카드 1장 드로우.',
+    type: 'skill', cost: 0,
+    effects: [
+      { type: 'apply_status', value: 2, target: 'single', statusType: 'vulnerable' },
+      { type: 'draw', value: 1 },
+    ],
+    upgradeId: 'hunters_mark+',
+  },
+  'hunters_mark+': {
+    id: 'hunters_mark+', name: "Hunter's Mark+",
+    description: '취약 3턴 부여. 카드 1장 드로우.',
+    type: 'skill', cost: 0,
+    effects: [
+      { type: 'apply_status', value: 3, target: 'single', statusType: 'vulnerable' },
+      { type: 'draw', value: 1 },
+    ],
+    upgraded: true,
+  },
+  double_tap: {
+    id: 'double_tap', name: 'Double Tap',
+    description: '4 데미지를 2회.',
+    type: 'attack', cost: 1,
+    effects: [
+      { type: 'damage', value: 4, target: 'single' },
+      { type: 'damage', value: 4, target: 'single' },
+    ],
+    upgradeId: 'double_tap+',
+  },
+  'double_tap+': {
+    id: 'double_tap+', name: 'Double Tap+',
+    description: '6 데미지를 2회.',
+    type: 'attack', cost: 1,
+    effects: [
+      { type: 'damage', value: 6, target: 'single' },
+      { type: 'damage', value: 6, target: 'single' },
+    ],
+    upgraded: true,
+  },
+  eagle_eye: {
+    id: 'eagle_eye', name: 'Eagle Eye',
+    description: '매 턴 시작 시 카드 1장 추가 드로우.',
+    type: 'power', cost: 1,
+    effects: [{ type: 'add_power', value: 1, powerType: 'turn_start_draw' }],
+    upgradeId: 'eagle_eye+',
+  },
+  'eagle_eye+': {
+    id: 'eagle_eye+', name: 'Eagle Eye+',
+    description: '매 턴 시작 시 카드 1장 추가 드로우. 카드 1장 드로우.',
+    type: 'power', cost: 1,
+    effects: [
+      { type: 'add_power', value: 1, powerType: 'turn_start_draw' },
+      { type: 'draw', value: 1 },
+    ],
+    upgraded: true,
+  },
+  swift_quiver: {
+    id: 'swift_quiver', name: 'Swift Quiver',
+    description: '카드 2장 드로우.',
+    type: 'skill', cost: 1,
+    effects: [{ type: 'draw', value: 2 }],
+    upgradeId: 'swift_quiver+',
+  },
+  'swift_quiver+': {
+    id: 'swift_quiver+', name: 'Swift Quiver+',
+    description: '카드 3장 드로우.',
+    type: 'skill', cost: 1,
+    effects: [{ type: 'draw', value: 3 }],
+    upgraded: true,
+  },
+  barbed_arrow: {
+    id: 'barbed_arrow', name: 'Barbed Arrow',
+    description: '5 데미지. 독 2 부여.',
+    type: 'attack', cost: 1,
+    effects: [
+      { type: 'damage', value: 5, target: 'single' },
+      { type: 'apply_status', value: 2, target: 'single', statusType: 'poison' },
+    ],
+    upgradeId: 'barbed_arrow+',
+  },
+  'barbed_arrow+': {
+    id: 'barbed_arrow+', name: 'Barbed Arrow+',
+    description: '7 데미지. 독 3 부여.',
+    type: 'attack', cost: 1,
+    effects: [
+      { type: 'damage', value: 7, target: 'single' },
+      { type: 'apply_status', value: 3, target: 'single', statusType: 'poison' },
+    ],
+    upgraded: true,
+  },
+  wind_step: {
+    id: 'wind_step', name: 'Wind Step',
+    description: '6 방어. 카드 1장 드로우.',
+    type: 'skill', cost: 1,
+    effects: [{ type: 'block', value: 6 }, { type: 'draw', value: 1 }],
+    upgradeId: 'wind_step+',
+  },
+  'wind_step+': {
+    id: 'wind_step+', name: 'Wind Step+',
+    description: '9 방어. 카드 1장 드로우.',
+    type: 'skill', cost: 1,
+    effects: [{ type: 'block', value: 9 }, { type: 'draw', value: 1 }],
+    upgraded: true,
+  },
+  volley: {
+    id: 'volley', name: 'Volley',
+    description: '모든 적에게 4 데미지. 모든 적에게 약화 1턴 부여.',
+    type: 'attack', cost: 2,
+    effects: [
+      { type: 'damage', value: 4, target: 'all' },
+      { type: 'apply_status', value: 1, target: 'all', statusType: 'weak' },
+    ],
+    upgradeId: 'volley+',
+  },
+  'volley+': {
+    id: 'volley+', name: 'Volley+',
+    description: '모든 적에게 6 데미지. 모든 적에게 약화 1턴 부여.',
+    type: 'attack', cost: 2,
+    effects: [
+      { type: 'damage', value: 6, target: 'all' },
+      { type: 'apply_status', value: 1, target: 'all', statusType: 'weak' },
+    ],
+    upgraded: true,
+  },
+  longshot: {
+    id: 'longshot', name: 'Longshot',
+    description: '14 데미지.',
+    type: 'attack', cost: 2,
+    effects: [{ type: 'damage', value: 14, target: 'single' }],
+    upgradeId: 'longshot+',
+  },
+  'longshot+': {
+    id: 'longshot+', name: 'Longshot+',
+    description: '18 데미지.',
+    type: 'attack', cost: 2,
+    effects: [{ type: 'damage', value: 18, target: 'single' }],
+    upgraded: true,
+  },
+  // #endregion
+
+  // #region 확장 카드 - 암살자
+  deadly_poison: {
+    id: 'deadly_poison', name: 'Deadly Poison',
+    description: '독 4 부여.',
+    type: 'skill', cost: 1,
+    effects: [{ type: 'apply_status', value: 4, target: 'single', statusType: 'poison' }],
+    upgradeId: 'deadly_poison+',
+  },
+  'deadly_poison+': {
+    id: 'deadly_poison+', name: 'Deadly Poison+',
+    description: '독 6 부여.',
+    type: 'skill', cost: 1,
+    effects: [{ type: 'apply_status', value: 6, target: 'single', statusType: 'poison' }],
+    upgraded: true,
+  },
+  venom_fang: {
+    id: 'venom_fang', name: 'Venom Fang',
+    description: '4 데미지. 독 2 부여.',
+    type: 'attack', cost: 1,
+    effects: [
+      { type: 'damage', value: 4, target: 'single' },
+      { type: 'apply_status', value: 2, target: 'single', statusType: 'poison' },
+    ],
+    upgradeId: 'venom_fang+',
+  },
+  'venom_fang+': {
+    id: 'venom_fang+', name: 'Venom Fang+',
+    description: '6 데미지. 독 3 부여.',
+    type: 'attack', cost: 1,
+    effects: [
+      { type: 'damage', value: 6, target: 'single' },
+      { type: 'apply_status', value: 3, target: 'single', statusType: 'poison' },
+    ],
+    upgraded: true,
+  },
+  toxic_cloud: {
+    id: 'toxic_cloud', name: 'Toxic Cloud',
+    description: '모든 적에게 독 3 부여.',
+    type: 'skill', cost: 2,
+    effects: [{ type: 'apply_status', value: 3, target: 'all', statusType: 'poison' }],
+    upgradeId: 'toxic_cloud+',
+  },
+  'toxic_cloud+': {
+    id: 'toxic_cloud+', name: 'Toxic Cloud+',
+    description: '모든 적에게 독 4 부여.',
+    type: 'skill', cost: 2,
+    effects: [{ type: 'apply_status', value: 4, target: 'all', statusType: 'poison' }],
+    upgraded: true,
+  },
+  blade_flurry: {
+    id: 'blade_flurry', name: 'Blade Flurry',
+    description: '3 데미지를 3회.',
+    type: 'attack', cost: 1,
+    effects: [
+      { type: 'damage', value: 3, target: 'single' },
+      { type: 'damage', value: 3, target: 'single' },
+      { type: 'damage', value: 3, target: 'single' },
+    ],
+    upgradeId: 'blade_flurry+',
+  },
+  'blade_flurry+': {
+    id: 'blade_flurry+', name: 'Blade Flurry+',
+    description: '4 데미지를 3회.',
+    type: 'attack', cost: 1,
+    effects: [
+      { type: 'damage', value: 4, target: 'single' },
+      { type: 'damage', value: 4, target: 'single' },
+      { type: 'damage', value: 4, target: 'single' },
+    ],
+    upgraded: true,
+  },
+  backstab: {
+    id: 'backstab', name: 'Backstab',
+    description: '8 데미지.',
+    type: 'attack', cost: 0, exhaust: true,
+    effects: [{ type: 'damage', value: 8, target: 'single' }],
+    upgradeId: 'backstab+',
+  },
+  'backstab+': {
+    id: 'backstab+', name: 'Backstab+',
+    description: '12 데미지.',
+    type: 'attack', cost: 0, exhaust: true,
+    effects: [{ type: 'damage', value: 12, target: 'single' }],
+    upgraded: true,
+  },
+  cloak_of_shadows: {
+    id: 'cloak_of_shadows', name: 'Cloak of Shadows',
+    description: '6 방어. 약화 1턴 부여.',
+    type: 'skill', cost: 1,
+    effects: [
+      { type: 'block', value: 6 },
+      { type: 'apply_status', value: 1, target: 'single', statusType: 'weak' },
+    ],
+    upgradeId: 'cloak_of_shadows+',
+  },
+  'cloak_of_shadows+': {
+    id: 'cloak_of_shadows+', name: 'Cloak of Shadows+',
+    description: '8 방어. 약화 2턴 부여.',
+    type: 'skill', cost: 1,
+    effects: [
+      { type: 'block', value: 8 },
+      { type: 'apply_status', value: 2, target: 'single', statusType: 'weak' },
+    ],
+    upgraded: true,
+  },
+  creeping_death: {
+    id: 'creeping_death', name: 'Creeping Death',
+    description: '모든 적에게 독 2 부여. 카드 1장 드로우.',
+    type: 'skill', cost: 1,
+    effects: [
+      { type: 'apply_status', value: 2, target: 'all', statusType: 'poison' },
+      { type: 'draw', value: 1 },
+    ],
+    upgradeId: 'creeping_death+',
+  },
+  'creeping_death+': {
+    id: 'creeping_death+', name: 'Creeping Death+',
+    description: '모든 적에게 독 3 부여. 카드 1장 드로우.',
+    type: 'skill', cost: 1,
+    effects: [
+      { type: 'apply_status', value: 3, target: 'all', statusType: 'poison' },
+      { type: 'draw', value: 1 },
+    ],
+    upgraded: true,
+  },
+  silent_kill: {
+    id: 'silent_kill', name: 'Silent Kill',
+    description: '16 데미지.',
+    type: 'attack', cost: 2,
+    effects: [{ type: 'damage', value: 16, target: 'single' }],
+    upgradeId: 'silent_kill+',
+  },
+  'silent_kill+': {
+    id: 'silent_kill+', name: 'Silent Kill+',
+    description: '22 데미지.',
+    type: 'attack', cost: 2,
+    effects: [{ type: 'damage', value: 22, target: 'single' }],
+    upgraded: true,
+  },
+  adrenaline: {
+    id: 'adrenaline', name: 'Adrenaline',
+    description: '에너지 1 획득. 카드 1장 드로우.',
+    type: 'skill', cost: 0, exhaust: true,
+    effects: [{ type: 'gain_energy', value: 1 }, { type: 'draw', value: 1 }],
+    upgradeId: 'adrenaline+',
+  },
+  'adrenaline+': {
+    id: 'adrenaline+', name: 'Adrenaline+',
+    description: '에너지 1 획득. 카드 2장 드로우.',
+    type: 'skill', cost: 0, exhaust: true,
+    effects: [{ type: 'gain_energy', value: 1 }, { type: 'draw', value: 2 }],
+    upgraded: true,
+  },
+  nimble_step: {
+    id: 'nimble_step', name: 'Nimble Step',
+    description: '민첩 2 획득.',
+    type: 'power', cost: 1,
+    effects: [{ type: 'gain_dexterity', value: 2 }],
+    upgradeId: 'nimble_step+',
+  },
+  'nimble_step+': {
+    id: 'nimble_step+', name: 'Nimble Step+',
+    description: '민첩 3 획득.',
+    type: 'power', cost: 1,
+    effects: [{ type: 'gain_dexterity', value: 3 }],
+    upgraded: true,
+  },
+  // #endregion
+
+  // #region 저주 카드
+  curse_wound: {
+    id: 'curse_wound', name: 'Wound',
+    description: '사용할 수 없습니다.',
+    type: 'curse', cost: 0, unplayable: true,
+    effects: [],
+  },
+  curse_burden: {
+    id: 'curse_burden', name: 'Burden',
+    description: '사용할 수 없습니다.',
+    type: 'curse', cost: 0, unplayable: true,
+    effects: [],
+  },
+  // #endregion
 };
 
 // #region 클래스별 시작 덱
@@ -1461,12 +1847,16 @@ const WARRIOR_REWARD_POOL: readonly string[] = [
   'carnage', 'heavy_blade', 'bloodletting',
   'inflame', 'bludgeon', 'uppercut', 'anger',
   'impervious', 'offering', 'sword_boomerang', 'battle_recovery',
+  'whirlwind', 'metal_skin', 'demon_form',
 ];
 
 const ARCHER_REWARD_POOL: readonly string[] = [
   'piercing_arrow', 'evasion', 'multishot',
   'deadly_aim', 'poison_arrow', 'arrow_barrage',
   'preparation', 'smoke_bomb', 'headshot', 'herbal_remedy',
+  'rain_of_arrows', 'crippling_shot', 'hunters_mark', 'double_tap',
+  'eagle_eye', 'swift_quiver', 'barbed_arrow', 'wind_step',
+  'volley', 'longshot',
 ];
 
 const MAGE_REWARD_POOL: readonly string[] = [
@@ -1485,6 +1875,9 @@ const ASSASSIN_REWARD_POOL: readonly string[] = [
   'poison_sting', 'smoke_veil', 'rupture_slash',
   'night_hunt', 'shadow_dance', 'fatal_chain',
   'execution_blade', 'siphon_strike', 'crimson_ritual',
+  'deadly_poison', 'venom_fang', 'toxic_cloud', 'blade_flurry',
+  'backstab', 'cloak_of_shadows', 'creeping_death', 'silent_kill',
+  'adrenaline', 'nimble_step',
 ];
 
 const STARTER_CARD_IDS = new Set([
@@ -1495,7 +1888,10 @@ const STARTER_CARD_IDS = new Set([
 const RARE_CARD_IDS = new Set([
   'bludgeon', 'impervious', 'offering', 'arrow_barrage', 'smoke_bomb', 'headshot',
   'meteor', 'starfall', 'elemental_orb', 'overcharge', 'execution_blade', 'crimson_ritual', 'shadow_dance',
+  'demon_form', 'rain_of_arrows', 'eagle_eye', 'toxic_cloud', 'silent_kill', 'adrenaline',
 ]);
+
+export type CardRewardTier = 'normal' | 'elite' | 'boss';
 
 /** 카드 희귀도 조회 */
 export function getCardRarity(cardId: string): CardRarity {
@@ -1509,15 +1905,21 @@ export function getCardRarity(cardId: string): CardRarity {
 }
 
 /** 카드 희귀도별 보상 가중치 조회 */
-function getRewardWeight(cardId: string): number {
+function getRewardWeight(cardId: string, tier: CardRewardTier): number {
   const rarity = getCardRarity(cardId);
+  if (tier === 'boss') return rarity === 'rare' ? 60 : rarity === 'uncommon' ? 30 : 10;
+  if (tier === 'elite') return rarity === 'rare' ? 30 : rarity === 'uncommon' ? 40 : 30;
   if (rarity === 'rare') return 10;
   if (rarity === 'uncommon') return 30;
   return 60;
 }
 
 /** 직업별 보상 카드 랜덤 선택 (중복 없이) */
-export function getRewardCards(count = 3, characterClass: CharacterClass = 'warrior'): string[] {
+export function getRewardCards(
+  count = 3,
+  characterClass: CharacterClass = 'warrior',
+  tier: CardRewardTier = 'normal',
+): string[] {
   const poolMap: Record<CharacterClass, readonly string[]> = {
     warrior: WARRIOR_REWARD_POOL,
     archer: ARCHER_REWARD_POOL,
@@ -1527,10 +1929,10 @@ export function getRewardCards(count = 3, characterClass: CharacterClass = 'warr
   const pool = [...poolMap[characterClass]];
   const result: string[] = [];
   for (let i = 0; i < count && pool.length > 0; i++) {
-    const totalWeight = pool.reduce((sum, cardId) => sum + getRewardWeight(cardId), 0);
+    const totalWeight = pool.reduce((sum, cardId) => sum + getRewardWeight(cardId, tier), 0);
     let roll = random() * totalWeight;
     const idx = Math.max(0, pool.findIndex((cardId) => {
-      roll -= getRewardWeight(cardId);
+      roll -= getRewardWeight(cardId, tier);
       return roll < 0;
     }));
     result.push(pool.splice(idx, 1)[0]);
@@ -1544,8 +1946,10 @@ export function getCardPrice(cardId: string): number {
   const def = CARD_DEFINITIONS[cardId];
   if (!def) return 50;
   const rarity = getCardRarity(cardId);
-  const rarityPrice = rarity === 'rare' ? 45 : rarity === 'uncommon' ? 20 : 0;
-  return 45 + rarityPrice + def.cost * 10;
+  const rarityPrice = rarity === 'rare'
+    ? SHOP_BALANCE.rareSurcharge
+    : rarity === 'uncommon' ? SHOP_BALANCE.uncommonSurcharge : 0;
+  return SHOP_BALANCE.cardBasePrice + rarityPrice + def.cost * SHOP_BALANCE.costSurchargePerEnergy;
 }
 
 /** 업그레이드 가능한 카드인지 확인 */

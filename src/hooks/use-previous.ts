@@ -7,5 +7,7 @@ export function usePrevious<T>(value: T): T {
   useEffect(() => {
     ref.current = value;
   });
+  // 이전 렌더 값 노출이 목적인 의도된 렌더 중 ref 조회
+  // eslint-disable-next-line react-hooks/refs
   return ref.current;
 }

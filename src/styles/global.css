@@ -110,6 +110,11 @@ button:disabled {
   opacity: 0.5;
 }
 
+button:focus-visible {
+  outline: 2px solid #ffe39d;
+  outline-offset: 3px;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -172,28 +177,8 @@ button:disabled {
   z-index: 20;
 }
 
-.card-list .card-item:hover + .card-item {
-  transform: translateX(var(--card-push-near));
-}
-
-.card-list .card-item:has(+ .card-item:hover) {
-  transform: translateX(calc(var(--card-push-near) * -1));
-}
-
-.card-list .card-item:hover + .card-item + .card-item {
-  transform: translateX(var(--card-push-far));
-}
-
-.card-list .card-item:has(+ .card-item + .card-item:hover) {
-  transform: translateX(calc(var(--card-push-far) * -1));
-}
-
 @media (hover: none) {
-  .card-list .card-item:hover,
-  .card-list .card-item:hover + .card-item,
-  .card-list .card-item:has(+ .card-item:hover),
-  .card-list .card-item:hover + .card-item + .card-item,
-  .card-list .card-item:has(+ .card-item + .card-item:hover) {
+  .card-list .card-item:hover {
     transform: none;
   }
 
@@ -202,10 +187,96 @@ button:disabled {
   }
 }
 
-/* 모션 최소화 환경: 애니메이션/전환 비활성 */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+/* 화면 공통 진입 */
+[class*='Screen_'] {
+  animation: uiScreenEnter 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* 오버레이 공통 진입 */
+[class*='Overlay_'] {
+  animation: uiOverlayEnter 0.22s ease-out backwards;
+}
+
+/* 모달 공통 진입 */
+[class*='Modal_'],
+[role='dialog'] {
+  animation: uiModalEnter 0.34s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* 패널 공통 진입 */
+[class*='Panel_'],
+[class*='Reward_'],
+[class*='Badge_'],
+li {
+  animation: uiElementEnter 0.32s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+li:nth-child(2) { animation-delay: 45ms; }
+li:nth-child(3) { animation-delay: 90ms; }
+li:nth-child(4) { animation-delay: 135ms; }
+li:nth-child(5) { animation-delay: 180ms; }
+li:nth-child(n + 6) { animation-delay: 225ms; }
+
+/* 버튼 공통 상호작용 */
+button:not(.card-item),
+[role='button']:not(.card-item) {
+  translate: 0 0;
+  transition: translate 0.22s cubic-bezier(0.16, 1, 0.3, 1), scale 0.16s ease, filter 0.2s ease, box-shadow 0.22s ease, border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled, .card-item):hover,
+  [role='button']:not([aria-disabled='true'], .card-item):hover {
+    translate: 0 -0.15rem;
+    filter: brightness(1.08) saturate(1.06);
+  }
+}
+
+button:not(:disabled, .card-item):active,
+[role='button']:not([aria-disabled='true'], .card-item):active {
+  translate: 0 1px;
+  scale: 0.96;
+  filter: brightness(0.94);
+  transition-duration: 0.06s;
+}
+
+/* 입력 공통 상호작용 */
+input,
+select,
+textarea {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, filter 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  filter: brightness(1.08);
+  box-shadow: 0 0 0 3px rgba(255, 214, 92, 0.14);
+}
+
+@keyframes uiScreenEnter {
+  from {
+    opacity: 0;
+    filter: brightness(0.82) saturate(0.86);
+  }
+}
+
+@keyframes uiOverlayEnter {
+  from { opacity: 0; }
+}
+
+@keyframes uiModalEnter {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem) scale(0.94);
+    filter: brightness(0.82);
+  }
+}
+
+@keyframes uiElementEnter {
+  from {
+    opacity: 0;
+    translate: 0 0.625rem;
+    scale: 0.97;
   }
 }

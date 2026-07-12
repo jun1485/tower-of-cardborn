@@ -10,17 +10,47 @@ import { EVENTS } from '@tower-of-cardborn/game-core/data/events';
 import { MAX_ASCENSION } from '@tower-of-cardborn/game-core/data/ascension';
 import { RELIC_DEFINITIONS } from '@tower-of-cardborn/game-core/data/relics';
 import type { RelicId } from '@tower-of-cardborn/game-core/types/relic';
+import { MAX_POTION_SLOTS, POTION_DEFINITIONS } from '@tower-of-cardborn/game-core/data/potions';
+import type { PotionId } from '@tower-of-cardborn/game-core/types/potion';
 import type { EventId } from '@tower-of-cardborn/game-core/types/event';
 
 const SAVE_KEY = 'tower-of-cardborn-save';
 const SAVE_VERSION = 8;
 
+/** 저장 구조 버전 승격 함수 (fromVersion → fromVersion+1) */
+type SaveMigration = (state: unknown) => unknown;
+
+// 버전별 순차 마이그레이션 체인 — 저장 버전 상향 시 직전 버전 항목 등록 필수
+const SAVE_MIGRATIONS: Readonly<Record<number, SaveMigration>> = {
+  // v1~v7: 추가 필드가 전부 옵셔널이라 구조 변환 없이 현행 검증으로 승격
+  1: (state) => state,
+  2: (state) => state,
+  3: (state) => state,
+  4: (state) => state,
+  5: (state) => state,
+  6: (state) => state,
+  7: (state) => state,
+};
+
+/** 구버전 저장 데이터 현행 버전 승격 */
+function migrateSave(version: number, state: unknown): unknown {
+  let migrated = state;
+  for (let from = version; from < SAVE_VERSION; from += 1) {
+    const migrate = SAVE_MIGRATIONS[from];
+    if (!migrate) return null;
+    migrated = migrate(migrated);
+  }
+  return migrated;
+}
+
 const GAME_SCREENS: readonly GameScreen[] = [
   'title', 'map', 'combat', 'combat_reward', 'rest', 'upgrade',
   'remove_card', 'shop', 'event', 'game_over', 'victory',
 ];
-const NODE_TYPES: readonly NodeType[] = ['combat', 'elite', 'rest', 'shop', 'event', 'boss'];
-const STATUS_TYPES: readonly StatusEffect['type'][] = ['vulnerable', 'weak', 'strength'];
+const NODE_TYPES: readonly NodeType[] = ['combat', 'elite', 'rest', 'shop', 'event', 'boss', 'treasure'];
+const STATUS_TYPES: readonly StatusEffect['type'][] = ['vulnerable', 'weak', 'strength', 'poison', 'frail', 'dexterity'];
+const INTENT_STATUS_TYPES: readonly string[] = ['vulnerable', 'weak', 'poison', 'frail'];
+const POWER_TYPES: readonly string[] = ['turn_start_block', 'turn_start_strength', 'turn_start_draw', 'turn_start_heal'];
 
 interface SaveData {
   readonly version: number;
@@ -74,6 +104,16 @@ function isRelicIdArray(value: unknown): value is RelicId[] {
     && new Set(value).size === value.length;
 }
 
+/** 포션 ID 확인 */
+function isPotionId(value: unknown): value is PotionId {
+  return typeof value === 'string' && Object.hasOwn(POTION_DEFINITIONS, value);
+}
+
+/** 포션 인벤토리 확인 */
+function isPotionIdArray(value: unknown): value is PotionId[] {
+  return Array.isArray(value) && value.length <= MAX_POTION_SLOTS && value.every(isPotionId);
+}
+
 /** 이벤트 ID 확인 */
 function isEventId(value: unknown): value is EventId {
   return typeof value === 'string' && EVENTS.some((event) => event.id === value);
@@ -112,8 +152,17 @@ function isIntent(value: unknown): value is Intent {
     && (value.type === 'attack' || value.type === 'defend' || value.type === 'buff' || value.type === 'debuff')
     && isNonNegativeInteger(value.value)
     && (value.type !== 'debuff'
-      || value.statusType === 'vulnerable'
-      || value.statusType === 'weak');
+      || (typeof value.statusType === 'string' && INTENT_STATUS_TYPES.includes(value.statusType)));
+}
+
+/** 지속 파워 배열 구조 확인 */
+function isPowerArray(value: unknown): boolean {
+  return Array.isArray(value) && value.every((power) => (
+    isRecord(power)
+    && typeof power.type === 'string'
+    && POWER_TYPES.includes(power.type)
+    && isNonNegativeInteger(power.value)
+  ));
 }
 
 /** 적 상태 구조 확인 */
@@ -154,6 +203,7 @@ function isCombatState(value: unknown): value is CombatState {
     && isCardPile(value.hand)
     && isCardPile(value.discardPile)
     && (value.exhaustPile === undefined || isCardPile(value.exhaustPile))
+    && (value.powers === undefined || isPowerArray(value.powers))
     && isNonNegativeInteger(value.turn)
     && value.turn >= 1
     && (value.phase === 'player_turn' || value.phase === 'enemy_turn')
@@ -183,20 +233,21 @@ function isMapNode(value: unknown): value is MapNode {
 /** 맵 상태 구조 확인 */
 function isGameMap(value: unknown): value is GameMap {
   if (!isRecord(value) || !Array.isArray(value.nodes) || !value.nodes.every(isMapNode)) return false;
+  const { totalFloorsPerMap } = value;
   if ((value.currentNodeId !== null && typeof value.currentNodeId !== 'string')
     || !isStringArray(value.visitedNodeIds)
     || !isNonNegativeInteger(value.mapIndex)
     || !isNonNegativeInteger(value.totalMaps)
-    || !isNonNegativeInteger(value.totalFloorsPerMap)) return false;
+    || !isNonNegativeInteger(totalFloorsPerMap)) return false;
   const nodeIds = new Set(value.nodes.map((node) => node.id));
   const nodesById = new Map(value.nodes.map((node) => [node.id, node]));
   return nodeIds.size === value.nodes.length
     && value.mapIndex >= 1
     && value.totalMaps >= value.mapIndex
-    && value.totalFloorsPerMap >= 1
+    && totalFloorsPerMap >= 1
     && (value.currentNodeId === null || nodeIds.has(value.currentNodeId))
     && value.visitedNodeIds.every((nodeId) => nodeIds.has(nodeId))
-    && value.nodes.every((node) => node.floor <= value.totalFloorsPerMap)
+    && value.nodes.every((node) => node.floor <= totalFloorsPerMap)
     && value.nodes.every((node) => node.nextNodeIds.every((nodeId) => nodesById.get(nodeId)?.floor === node.floor + 1));
 }
 
@@ -235,14 +286,21 @@ function isGameState(value: unknown): value is GameState {
     && isEventIdArray(value.seenEventIds)
     && isNonNegativeInteger(value.pendingRemoveCount)
     && isNonNegativeInteger(value.pendingUpgradeCount)
-    && (value.upgradeSource === null || value.upgradeSource === 'rest' || value.upgradeSource === 'event')
+    && (value.upgradeSource === null || value.upgradeSource === 'rest'
+      || value.upgradeSource === 'event' || value.upgradeSource === 'shop')
     && typeof value.runRecorded === 'boolean'
     && (value.unlockedAscension === null
       || (isNonNegativeInteger(value.unlockedAscension) && value.unlockedAscension <= MAX_ASCENSION))
     && (value.runSeed === undefined || value.runSeed === null || isRandomSeed(value.runSeed))
     && (value.randomState === undefined || value.randomState === null || isRandomSeed(value.randomState))
     && (value.relics === undefined || isRelicIdArray(value.relics))
-    && (value.rewardRelic === undefined || value.rewardRelic === null || isRelicId(value.rewardRelic));
+    && (value.rewardRelic === undefined || value.rewardRelic === null || isRelicId(value.rewardRelic))
+    && (value.potions === undefined || isPotionIdArray(value.potions))
+    && (value.rewardPotion === undefined || value.rewardPotion === null || isPotionId(value.rewardPotion))
+    && (value.shopRelics === undefined || isRelicIdArray(value.shopRelics))
+    && (value.shopPotions === undefined || isPotionIdArray(value.shopPotions))
+    && (value.isDaily === undefined || typeof value.isDaily === 'boolean')
+    && (value.recordedRunAt === undefined || value.recordedRunAt === null || isNonNegativeInteger(value.recordedRunAt));
 }
 
 /** 손상 저장 데이터 정리 */
@@ -266,17 +324,29 @@ export function saveGame(state: GameState): boolean {
   }
 }
 
-/** 게임 상태 복원 */
+/** 게임 상태 복원 (구버전 저장본 마이그레이션 포함) */
 export function loadGame(): GameState | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed) || parsed.version !== SAVE_VERSION || !isGameState(parsed.state)) {
+    if (!isRecord(parsed)
+      || !isNonNegativeInteger(parsed.version)
+      || parsed.version < 1
+      || parsed.version > SAVE_VERSION) {
       removeInvalidSave();
       return null;
     }
-    return parsed.state;
+    const migrated = parsed.version === SAVE_VERSION
+      ? parsed.state
+      : migrateSave(parsed.version, parsed.state);
+    if (!isGameState(migrated)) {
+      removeInvalidSave();
+      return null;
+    }
+    // 승격된 저장본 현행 버전 재저장
+    if (parsed.version !== SAVE_VERSION) saveGame(migrated);
+    return migrated;
   } catch {
     removeInvalidSave();
     return null;

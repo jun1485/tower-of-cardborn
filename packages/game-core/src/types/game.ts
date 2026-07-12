@@ -4,6 +4,7 @@ import type { CombatState } from './combat';
 import type { GameMap } from './map';
 import type { EventId, EventResult } from './event';
 import type { RelicId } from './relic';
+import type { PotionId } from './potion';
 
 export type GameScreen = 'title' | 'map' | 'combat' | 'combat_reward' | 'rest' | 'upgrade' | 'remove_card' | 'shop' | 'event' | 'game_over' | 'victory';
 
@@ -13,7 +14,7 @@ export type CharacterClass = 'warrior' | 'archer' | 'mage' | 'assassin';
 export type RemoveSource = 'rest' | 'shop' | 'event';
 
 /** 카드 강화 화면 진입 출처 */
-export type UpgradeSource = 'rest' | 'event';
+export type UpgradeSource = 'rest' | 'event' | 'shop';
 
 export interface GameState {
   readonly screen: GameScreen;
@@ -64,4 +65,16 @@ export interface GameState {
   readonly relics: readonly RelicId[];
   /** 전투 보상 유물 */
   readonly rewardRelic: RelicId | null;
+  /** 현재 런 보유 포션 */
+  readonly potions: readonly PotionId[];
+  /** 전투 보상 포션 */
+  readonly rewardPotion: PotionId | null;
+  /** 상점 판매 유물 목록 (구버전 저장 호환 옵셔널) */
+  readonly shopRelics?: readonly RelicId[];
+  /** 상점 판매 포션 목록 (구버전 저장 호환 옵셔널) */
+  readonly shopPotions?: readonly PotionId[];
+  /** 일일 도전 런 여부 (구버전 저장 호환 옵셔널) */
+  readonly isDaily?: boolean;
+  /** 승리 기록 시각 (엔들리스 진행분 갱신 키, 구버전 저장 호환 옵셔널) */
+  readonly recordedRunAt?: number | null;
 }

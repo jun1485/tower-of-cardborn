@@ -2,15 +2,20 @@
 
 import type { EventChoice, EventEffect, EventResult, GameEvent } from '../types/event';
 import type { CharacterClass } from '../types/game';
+import type { RelicId } from '../types/relic';
 import { EVENTS } from '../data/events';
 import { getRewardCards } from '../data/cards';
+import { getRelicReward } from '../data/relics';
 import { random } from '../utils/random';
 
 export interface EventChoiceContext {
   readonly hp: number;
+  readonly maxHp: number;
   readonly gold: number;
   readonly deckSize: number;
   readonly upgradableCount: number;
+  /** 미보유 유물 후보 존재 여부 */
+  readonly relicCandidateAvailable?: boolean;
 }
 
 export interface EventResolveContext {
@@ -18,6 +23,7 @@ export interface EventResolveContext {
   readonly maxHp: number;
   readonly gold: number;
   readonly characterClass: CharacterClass;
+  readonly relics?: readonly RelicId[];
 }
 
 export interface EventOutcome {
@@ -26,6 +32,8 @@ export interface EventOutcome {
   readonly gold: number;
   /** random_card 효과로 획득한 카드 ID */
   readonly gainedCardId: string | null;
+  /** gain_relic 효과로 획득한 유물 ID */
+  readonly gainedRelicId: RelicId | null;
   /** 카드 제거/강화 후속 화면 지시 */
   readonly followUp: { readonly type: 'remove' | 'upgrade'; readonly count: number } | null;
   readonly result: EventResult | null;
@@ -39,6 +47,8 @@ export function isChoiceAvailable(choice: EventChoice, ctx: EventChoiceContext):
   if (cond.minHp !== undefined && ctx.hp < cond.minHp) return false;
   if (cond.minDeckSize !== undefined && ctx.deckSize < cond.minDeckSize) return false;
   if (cond.minUpgradable !== undefined && ctx.upgradableCount < cond.minUpgradable) return false;
+  if (cond.requiresMissingHp && ctx.hp >= ctx.maxHp) return false;
+  if (cond.requiresRelicCandidate && !(ctx.relicCandidateAvailable ?? false)) return false;
   return true;
 }
 
@@ -48,6 +58,8 @@ interface ApplyState {
   maxHp: number;
   gold: number;
   gainedCardId: string | null;
+  gainedRelicId: RelicId | null;
+  ownedRelics: readonly RelicId[];
   followUp: EventOutcome['followUp'];
 }
 
@@ -96,6 +108,20 @@ function applyEffects(
         }
         break;
       }
+      case 'gain_relic': {
+        const relicId = getRelicReward(state.ownedRelics);
+        if (relicId) {
+          state.gainedRelicId = relicId;
+          state.ownedRelics = [...state.ownedRelics, relicId];
+          args.push(`relic:${relicId}`);
+        }
+        break;
+      }
+      case 'curse_card': {
+        state.gainedCardId = effect.cardId;
+        args.push(`card:${effect.cardId}`);
+        break;
+      }
       case 'remove_card': {
         state.followUp = { type: 'remove', count: effect.count };
         break;
@@ -123,6 +149,8 @@ export function resolveEventChoice(
     maxHp: ctx.maxHp,
     gold: ctx.gold,
     gainedCardId: null,
+    gainedRelicId: null,
+    ownedRelics: ctx.relics ?? [],
     followUp: null,
   };
 
@@ -140,6 +168,7 @@ export function resolveEventChoice(
       maxHp: state.maxHp,
       gold: state.gold,
       gainedCardId: state.gainedCardId,
+      gainedRelicId: state.gainedRelicId,
       followUp: state.followUp,
       result: { key: `${event.id}.${won ? gamble.winKey : gamble.loseKey}`, args: branchArgs },
     };
@@ -150,6 +179,7 @@ export function resolveEventChoice(
     maxHp: state.maxHp,
     gold: state.gold,
     gainedCardId: state.gainedCardId,
+    gainedRelicId: state.gainedRelicId,
     followUp: state.followUp,
     result: choice.resultKey
       ? { key: `${event.id}.${choice.resultKey}`, args: mainArgs }
@@ -157,9 +187,10 @@ export function resolveEventChoice(
   };
 }
 
-/** 미열람 우선 이벤트 추첨 (풀 소진 시 전체 리셋) */
-export function pickRandomEvent(seenEventIds: readonly string[]): GameEvent {
-  const unseen = EVENTS.filter((event) => !seenEventIds.includes(event.id));
-  const pool = unseen.length > 0 ? unseen : EVENTS;
+/** 미열람 우선 이벤트 추첨 (액트 전용 풀 + 풀 소진 시 리셋) */
+export function pickRandomEvent(seenEventIds: readonly string[], mapIndex = 1): GameEvent {
+  const actPool = EVENTS.filter((event) => !event.acts || event.acts.includes(mapIndex));
+  const unseen = actPool.filter((event) => !seenEventIds.includes(event.id));
+  const pool = unseen.length > 0 ? unseen : actPool;
   return pool[Math.floor(random() * pool.length)];
 }

@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CombatState } from '@tower-of-cardborn/game-core/types/combat';
 import type { RelicCombatBonuses } from '@tower-of-cardborn/game-core/types/relic';
+import type { PotionId } from '@tower-of-cardborn/game-core/types/potion';
 import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
-import { endPlayerTurn, initCombat, playCard } from '@tower-of-cardborn/game-core/game/combat-engine';
+import { endPlayerTurn, initCombat, playCard, usePotion as applyPotionEffect } from '@tower-of-cardborn/game-core/game/combat-engine';
 import { playSfx } from '../utils/sound';
 import { useReducedMotion } from './use-reduced-motion';
 
@@ -21,6 +22,7 @@ interface UseCombatReturn {
   ) => void;
   readonly handlePlayCard: (cardInstanceId: string, targetEnemyId?: string) => void;
   readonly handleEndTurn: () => void;
+  readonly handleUsePotion: (potionId: PotionId, targetEnemyId?: string) => boolean;
   readonly clearCombat: () => void;
 }
 
@@ -33,6 +35,7 @@ export function useCombat(
   const combatRef = useRef(combat);
   const onResultRef = useRef(onResult);
   const sfxTimerRef = useRef<number | null>(null);
+  const resultTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     combatRef.current = combat;
@@ -42,19 +45,27 @@ export function useCombat(
     onResultRef.current = onResult;
   }, [onResult]);
 
-  // 적 행동 효과음 타이머 정리
+  // 적 행동 효과음·결과 통지 타이머 정리
   useEffect(() => () => {
     if (sfxTimerRef.current !== null) window.clearTimeout(sfxTimerRef.current);
+    if (resultTimerRef.current !== null) window.clearTimeout(resultTimerRef.current);
   }, []);
 
-  /** 전투 상태 갱신 + 종료 결과 통지 */
+  /** 전투 상태 갱신 + 종료 결과 통지 (승리는 처치 연출 노출 후 지연 통지) */
   const applyCombat = useCallback((next: CombatState) => {
     combatRef.current = next;
     setCombat(next);
-    if (next.result !== 'ongoing') {
-      onResultRef.current?.(next);
+    if (next.result === 'ongoing') return;
+    if (next.result === 'victory' && !reducedMotion) {
+      if (resultTimerRef.current !== null) window.clearTimeout(resultTimerRef.current);
+      resultTimerRef.current = window.setTimeout(() => {
+        resultTimerRef.current = null;
+        onResultRef.current?.(next);
+      }, 550);
+      return;
     }
-  }, []);
+    onResultRef.current?.(next);
+  }, [reducedMotion]);
 
   const startCombat = useCallback((
     deckIds: readonly string[],
@@ -117,10 +128,32 @@ export function useCombat(
     applyCombat(next);
   }, [applyCombat, reducedMotion]);
 
+  /** 전투 포션 사용과 효과음 처리 */
+  const handleUsePotion = useCallback((potionId: PotionId, targetEnemyId?: string) => {
+    const prev = combatRef.current;
+    if (!prev) return false;
+    const next = applyPotionEffect(prev, potionId, targetEnemyId);
+    if (next === prev) return false;
+
+    if (potionId === 'healing_potion') playSfx('heal');
+    else if (potionId === 'block_potion') playSfx('block');
+    else if (potionId === 'energy_potion' || potionId === 'strength_potion') playSfx('card_power');
+    else {
+      playSfx('card_attack');
+      playSfx('enemy_hit');
+    }
+    applyCombat(next);
+    return true;
+  }, [applyCombat]);
+
   const clearCombat = useCallback(() => {
+    if (resultTimerRef.current !== null) {
+      window.clearTimeout(resultTimerRef.current);
+      resultTimerRef.current = null;
+    }
     combatRef.current = null;
     setCombat(null);
   }, []);
 
-  return { combat, startCombat, handlePlayCard, handleEndTurn, clearCombat };
+  return { combat, startCombat, handlePlayCard, handleEndTurn, handleUsePotion, clearCombat };
 }
