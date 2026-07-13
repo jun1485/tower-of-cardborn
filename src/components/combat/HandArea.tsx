@@ -34,8 +34,7 @@ export const HandArea = memo(function HandArea({
   onPlayCard,
 }: HandAreaProps) {
   const t = useTranslation();
-  const [expandedHandSize, setExpandedHandSize] = useState<number | null>(null);
-  const touchExpanded = expandedHandSize === hand.length;
+  const [touchExpanded, setTouchExpanded] = useState(false);
 
   // 카드별 미리보기 설명 캐시
   const previewDescriptions = useMemo(() => {
@@ -62,8 +61,8 @@ export const HandArea = memo(function HandArea({
     if (event.pointerType === 'mouse' || touchExpanded) return;
     event.preventDefault();
     event.stopPropagation();
-    setExpandedHandSize(hand.length);
-  }, [hand.length, touchExpanded]);
+    setTouchExpanded(true);
+  }, [touchExpanded]);
 
   return (
     <div

@@ -21,6 +21,10 @@ export interface Translations {
   archer: string;
   mage: string;
   assassin: string;
+  warriorDesc: string;
+  archerDesc: string;
+  mageDesc: string;
+  assassinDesc: string;
   dailyChallenge: string;
   dailyChallengeDesc: string;
   howToPlay: string;

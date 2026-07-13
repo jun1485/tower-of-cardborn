@@ -20,6 +20,7 @@ import { useReducedMotion } from '../../hooks/use-reduced-motion';
 import { POTION_DEFINITIONS, TARGETED_POTION_IDS } from '@tower-of-cardborn/game-core/data/potions';
 import type { PotionId } from '@tower-of-cardborn/game-core/types/potion';
 import { getPotionDescription, getPotionName } from '../../i18n/potion-text';
+import { playSfx } from '../../utils/sound';
 
 interface CombatScreenProps {
   readonly combat: CombatState;
@@ -109,6 +110,8 @@ export function CombatScreen({
   // 턴 종료 진행 표시 (턴 번호 파생 → 다음 턴 진입 시 자동 해제)
   const [endTurnPendingTurn, setEndTurnPendingTurn] = useState<number | null>(null);
   const turnEnding = endTurnPendingTurn === combat.turn;
+  const combatResolved = combat.result !== 'ongoing';
+  const inputLocked = turnEnding || combatResolved;
   const endTurnLockRef = useRef(false);
   const endTurnTimerRef = useRef<number | null>(null);
   const attackTimerRef = useRef<number | null>(null);
@@ -132,7 +135,7 @@ export function CombatScreen({
 
   /** 적 공격 돌진 애니메이션 후 실제 턴 종료 처리 */
   const handleEndTurnWithAnimation = useCallback(() => {
-    if (endTurnLockRef.current) return;
+    if (endTurnLockRef.current || combat.result !== 'ongoing') return;
     endTurnLockRef.current = true;
     setEndTurnPendingTurn(combat.turn);
     const attackerIds = combat.enemies
@@ -149,11 +152,11 @@ export function CombatScreen({
     } else {
       onEndTurn();
     }
-  }, [combat.enemies, combat.turn, onEndTurn, reducedMotion]);
+  }, [combat.enemies, combat.result, combat.turn, onEndTurn, reducedMotion]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.repeat || isInteractiveTarget(e.target) || document.querySelector('[aria-modal="true"]')) return;
+      if (combatResolved || e.repeat || isInteractiveTarget(e.target) || document.querySelector('[aria-modal="true"]')) return;
       if (e.code === 'Space') {
         e.preventDefault();
         handleEndTurnWithAnimation();
@@ -176,7 +179,7 @@ export function CombatScreen({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [combat.enemies, combat.player.hp, combat.player.maxHp, handleEndTurnWithAnimation, onUsePotion, potions, selectedEnemyId, turnEnding]);
+  }, [combat.enemies, combat.player.hp, combat.player.maxHp, combatResolved, handleEndTurnWithAnimation, onUsePotion, potions, selectedEnemyId, turnEnding]);
 
   // #region 적 타겟 선택 보정
   // 선택/호버 대상 사망 시 생존 적 기준 파생 보정
@@ -190,7 +193,7 @@ export function CombatScreen({
 
   // #region 드래그 시작/이동/종료
   const handleDragStart = useCallback((instanceId: string, x: number, y: number, pointerId: number) => {
-    if (endTurnLockRef.current) return;
+    if (endTurnLockRef.current || combat.result !== 'ongoing') return;
     const card = combat.hand.find((handCard) => handCard.instanceId === instanceId);
     const definition = card ? CARD_DEFINITIONS[card.definitionId] : null;
     if (!definition) return;
@@ -201,7 +204,7 @@ export function CombatScreen({
     dragPointerIdRef.current = pointerId;
     // 전체 화면에 포인터 캡처 설정 (터치 드래그 중 pointercancel 방지)
     screenRef.current?.setPointerCapture(pointerId);
-  }, [combat.hand]);
+  }, [combat.hand, combat.result]);
 
   const isDragging = drag !== null;
 
@@ -243,16 +246,9 @@ export function CombatScreen({
         },
         {
           left: targetLeft,
-          top: `${targetTop - 12}px`,
-          transform: 'translate(-50%, -50%) rotate(1.5deg) scale(0.63)',
-          opacity: 1,
-          offset: 0.76,
-        },
-        {
-          left: targetLeft,
           top: `${targetTop}px`,
-          transform: 'translate(-50%, -50%) rotate(0deg) scale(0.66)',
-          opacity: 0,
+          transform: 'translate(-50%, -50%) scale(0.66)',
+          opacity: 1,
         },
       ] : [
         {
@@ -278,8 +274,8 @@ export function CombatScreen({
         },
       ];
       const animation = ghost.animate(keyframes, {
-        duration: returnToHand ? 320 : 260,
-        easing: returnToHand ? 'cubic-bezier(0.22, 0.8, 0.3, 1)' : 'cubic-bezier(0.4, 0, 1, 1)',
+        duration: reducedMotion ? 1 : returnToHand ? 280 : 260,
+        easing: returnToHand ? 'cubic-bezier(0.22, 1, 0.36, 1)' : 'cubic-bezier(0.4, 0, 1, 1)',
         fill: 'forwards',
       });
       return animation.finished.then(() => undefined, () => undefined);
@@ -315,10 +311,13 @@ export function CombatScreen({
       }
 
       const droppedInsideHand = isInsideBottomArea(e.clientY, bottomAreaRef.current);
+      const tapDistance = Math.hypot(e.clientX - current.startX, e.clientY - current.startY);
+      const tappedCard = e.pointerType === 'touch' && droppedInsideHand && tapDistance <= 14;
+      const card = combat.hand.find((handCard) => handCard.instanceId === current.instanceId);
+      const def = card ? CARD_DEFINITIONS[card.definitionId] : null;
 
-      if (!droppedInsideHand && combat.enemies.length > 0) {
-        const card = combat.hand.find((c) => c.instanceId === current.instanceId);
-        const def = card ? CARD_DEFINITIONS[card.definitionId] : null;
+      // 터치 탭 카드 즉시 사용
+      if ((!droppedInsideHand || tappedCard) && combat.enemies.length > 0) {
         if (!def) {
           await animateGhostRelease(true);
           clearDragState();
@@ -396,8 +395,14 @@ export function CombatScreen({
   };
   const pileData = getPileData();
 
-  const targetSelectable = combat.enemies.length > 1;
+  const targetSelectable = !inputLocked && combat.enemies.length > 1;
   const targetingActive = drag?.singleTarget ?? false;
+
+  /** 전투 대상 선택 */
+  const handleSelectEnemy = useCallback((enemyId: string) => {
+    playSfx('button_click');
+    setSelectedEnemyId(enemyId);
+  }, []);
 
   return (
     <div
@@ -418,7 +423,7 @@ export function CombatScreen({
             {potions.map((potionId, index) => {
               const name = getPotionName(potionId, lang);
               const description = getPotionDescription(potionId, lang);
-              const disabled = turnEnding || (potionId === 'healing_potion' && combat.player.hp >= combat.player.maxHp);
+              const disabled = inputLocked || (potionId === 'healing_potion' && combat.player.hp >= combat.player.maxHp);
               return (
                 <button
                   key={`${potionId}-${index}`}
@@ -449,12 +454,13 @@ export function CombatScreen({
         />
         <EnemyArea
           enemies={combat.enemies}
+          playerVulnerable={combat.player.statusEffects.some((effect) => effect.type === 'vulnerable' && effect.duration > 0)}
           selectedEnemyId={aliveSelectedEnemyId}
           hoveredEnemyId={aliveHoveredEnemyId}
           lungingEnemyIds={lungingEnemyIds}
           targetSelectable={targetSelectable}
           targetingActive={targetingActive}
-          onSelectEnemy={setSelectedEnemyId}
+          onSelectEnemy={handleSelectEnemy}
         />
       </div>
 
@@ -481,12 +487,12 @@ export function CombatScreen({
           enemies={combat.enemies}
           targetEnemyId={aliveSelectedEnemyId ?? undefined}
           draggingInstanceId={drag?.instanceId ?? null}
-          disabled={turnEnding}
+          disabled={inputLocked}
           onDragStart={handleDragStart}
           onPlayCard={onPlayCard}
         />
 
-        <button className={styles.endTurnBtn} disabled={turnEnding} aria-keyshortcuts="Space" onClick={handleEndTurnWithAnimation}>
+        <button className={styles.endTurnBtn} disabled={inputLocked} aria-keyshortcuts="Space" onClick={handleEndTurnWithAnimation}>
           {t('endTurn')}
         </button>
 
@@ -501,6 +507,12 @@ export function CombatScreen({
           </button>
         </div>
       </div>
+
+      {combat.result === 'victory' && (
+        <div className={styles.combatResultCue} role="status" aria-live="assertive">
+          {t('victory')}
+        </div>
+      )}
 
       {/* 드래그 고스트 카드 (위치는 포인터 이동 시 DOM 직접 갱신) */}
       {drag && draggedDef && (

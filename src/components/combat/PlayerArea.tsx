@@ -78,13 +78,11 @@ export const PlayerArea = memo(function PlayerArea({ player, powers, isAttacking
               <StatusBadge key={i} effect={effect} />
             ))}
             {powers.map((power) => (
-              <span
+              <StatusBadge
                 key={power.type}
-                className={styles.statusBadge}
-                title={t(POWER_TEXT_KEY[power.type], String(power.value))}
-              >
-                {POWER_ICONS[power.type]} {power.value}
-              </span>
+                label={`${POWER_ICONS[power.type]} ${power.value}`}
+                description={t(POWER_TEXT_KEY[power.type], String(power.value))}
+              />
             ))}
           </div>
         )}

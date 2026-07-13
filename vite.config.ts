@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readdir } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
@@ -21,6 +21,7 @@ const RELEASE_FILES = [
 
 // 릴리스 산출물 포함 확장자 (미포함 시 경고 대상)
 const RELEASE_EXTENSIONS = ['.webp', '.ogg', '.mp3', '.wav', '.woff2', '.webmanifest'] as const;
+const BUILD_ASSET_MARKER = '/* __BUILD_ASSETS__ */';
 
 // 레거시 캐릭터·몬스터 자산 판별
 function isLegacyRuntimeAsset(file: string): boolean {
@@ -67,6 +68,14 @@ async function copyReleaseDirectory(
   return files;
 }
 
+// 앱 셸 번들 사전 캐시 목록 갱신
+async function injectBuildAssets(outputDirectory: string, buildAssets: readonly string[]): Promise<void> {
+  const serviceWorkerPath = path.join(outputDirectory, 'sw.js');
+  const source = await readFile(serviceWorkerPath, 'utf8');
+  const entries = buildAssets.map((file) => `  '/${file}',`).join('\n');
+  await writeFile(serviceWorkerPath, source.replace(BUILD_ASSET_MARKER, entries));
+}
+
 // 릴리스 필수 자산 선별 복사
 function createReleaseAssetsPlugin(): Plugin {
   let config: ResolvedConfig;
@@ -77,7 +86,7 @@ function createReleaseAssetsPlugin(): Plugin {
     configResolved(resolvedConfig) {
       config = resolvedConfig;
     },
-    async writeBundle() {
+    async writeBundle(_options, bundle) {
       const publicDirectory = path.resolve(config.root, 'public');
       const outputDirectory = path.resolve(config.root, config.build.outDir);
       await Promise.all(RELEASE_FILES.map((file) => copyReleaseFile(publicDirectory, outputDirectory, file)));
@@ -89,6 +98,7 @@ function createReleaseAssetsPlugin(): Plugin {
         copyReleaseDirectory(publicDirectory, outputDirectory, 'assets/fonts'),
       ]);
       const copied = new Set<string>([...RELEASE_FILES, ...copiedDirectories.flat()]);
+      await injectBuildAssets(outputDirectory, Object.values(bundle).map((output) => output.fileName));
       await warnUncopiedAssets(publicDirectory, copied);
     },
   };

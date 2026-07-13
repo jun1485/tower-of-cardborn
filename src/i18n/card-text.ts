@@ -11,7 +11,7 @@ const CARD_NAMES: Record<string, Record<Language, string>> = {
   // 전사
   strike: { ko: '강타', en: 'Strike', zh: '打击' },
   defend: { ko: '수비', en: 'Defend', zh: '防御' },
-  bash: { ko: '강타', en: 'Bash', zh: '猛击' },
+  bash: { ko: '방패 강타', en: 'Bash', zh: '猛击' },
   cleave: { ko: '쪼개기', en: 'Cleave', zh: '劈砍' },
   shrug_it_off: { ko: '털어내기', en: 'Shrug It Off', zh: '耸肩' },
   pommel_strike: { ko: '칼자루 강타', en: 'Pommel Strike', zh: '剑柄打击' },

@@ -13,7 +13,7 @@ const GUIDE_CONTENT: Record<Language, readonly { readonly title: string; readonl
   ko: [
     { title: '1. 직업 선택', body: '시작 덱과 전투 성향이 다른 직업을 선택합니다. 암살자는 독, 궁수는 다단히트, 전사는 광역과 지속 파워가 특기입니다.' },
     { title: '2. 탑 등반', body: '연결된 맵 노드 중 하나를 골라 전투·휴식·상점·이벤트로 이동합니다.' },
-    { title: '3. 카드와 포션 사용', body: '카드는 드래그하거나 Enter·Space로 사용합니다. 보유 포션은 화면 버튼 또는 숫자 1·2로 사용합니다.' },
+    { title: '3. 카드와 포션 사용', body: '터치 화면에서는 손패를 한 번 펼친 뒤 카드를 탭하거나 드래그하고, 키보드에서는 Enter·Space로 사용합니다. 보유 포션은 화면 버튼 또는 숫자 1·2로 사용합니다.' },
     { title: '4. 적 인텐트', body: '적 위의 아이콘은 다음 공격·방어·강화·상태이상을 예고합니다. 행동에 맞춰 카드를 선택하세요.' },
     { title: '5. 상태이상과 파워', body: '취약·약화·독·손상은 턴마다 감소하고, 힘·민첩은 영구 유지됩니다. 독은 턴 시작 시 중첩만큼 피해를 주고, 파워 카드는 매 턴 자동 발동 효과를 남깁니다. 저주 카드는 사용할 수 없으니 제거로 정리하세요.' },
     { title: '6. 덱·유물·포션', body: '카드로 덱을 구성하고 영구 보너스 유물을 모으세요. 상점에서는 카드·유물·포션 구매와 카드 강화·제거가 가능합니다.' },
@@ -24,7 +24,7 @@ const GUIDE_CONTENT: Record<Language, readonly { readonly title: string; readonl
   en: [
     { title: '1. Choose a class', body: 'Each class begins with a different deck and combat style. Assassins excel at Poison, Archers at multi-hits, Warriors at AoE and lasting Powers.' },
     { title: '2. Climb the tower', body: 'Choose a connected map node to enter combat, rest sites, shops, or events.' },
-    { title: '3. Use cards and potions', body: 'Drag cards or press Enter or Space while focused. Use potion buttons or the 1 and 2 number keys.' },
+    { title: '3. Use cards and potions', body: 'On touch screens, open your hand once, then tap or drag cards. With a keyboard, press Enter or Space while focused. Use potion buttons or the 1 and 2 number keys.' },
     { title: '4. Read intents', body: 'Icons above enemies preview attacks, defense, buffs, or debuffs. Choose cards that answer the next action.' },
     { title: '5. Statuses and Powers', body: 'Vulnerable, Weak, Poison, and Frail tick down each turn; Strength and Dexterity are permanent. Poison deals damage equal to its stacks at turn start, and Power cards leave effects that trigger every turn. Curse cards are unplayable — remove them when you can.' },
     { title: '6. Cards, relics, and potions', body: 'Build a deck and collect lasting relic bonuses. Shops sell cards, relics, and potions, and offer card upgrades and removal.' },
@@ -35,7 +35,7 @@ const GUIDE_CONTENT: Record<Language, readonly { readonly title: string; readonl
   zh: [
     { title: '1. 选择职业', body: '每个职业都有不同的初始牌组和战斗风格。刺客擅长中毒，弓手擅长多段攻击，战士擅长群攻与持续能力。' },
     { title: '2. 攀登高塔', body: '选择相连的地图节点，进入战斗、休息处、商店或事件。' },
-    { title: '3. 使用卡牌与药水', body: '拖动卡牌或聚焦后按 Enter、空格键。药水可点击按钮或按数字键1、2使用。' },
+    { title: '3. 使用卡牌与药水', body: '触摸屏先展开一次手牌，再点击或拖动卡牌；键盘可聚焦后按 Enter、空格键。药水可点击按钮或按数字键1、2使用。' },
     { title: '4. 观察意图', body: '敌人上方的图标会预告攻击、防御、强化或减益。根据下一步行动选择卡牌。' },
     { title: '5. 状态与能力', body: '易伤、虚弱、中毒、脆弱每回合递减；力量与敏捷永久保留。中毒在回合开始时造成等同层数的伤害，能力卡会留下每回合自动触发的效果。诅咒卡无法使用，请尽快移除。' },
     { title: '6. 卡牌、遗物与药水', body: '构筑牌组并收集持续生效的遗物。商店出售卡牌、遗物与药水，并提供强化与删卡服务。' },

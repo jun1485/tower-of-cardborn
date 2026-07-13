@@ -49,6 +49,32 @@
   pointer-events: none;
 }
 
+/* 전투 승리 확정 표시 */
+.combatResultCue {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  z-index: 50;
+  padding: 0.65em 1.25em;
+  border: 1px solid rgba(255, 228, 128, 0.78);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(34, 65, 48, 0.96) 0%, rgba(12, 35, 25, 0.96) 100%);
+  color: #fff0ad;
+  font-size: max(24px, 2.75rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 2rem rgba(117, 255, 163, 0.42), 0 1rem 2.5rem rgba(0, 0, 0, 0.58);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: combatResultReveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes combatResultReveal {
+  from { opacity: 0; transform: translate(-50%, -30%) scale(0.72); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
 /* 상단: 턴 정보만 표시 */
 .topSection {
   display: flex;
@@ -674,16 +700,33 @@
   position: relative;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(235, 241, 255, 0.95);
+}
+
+@media (pointer: coarse) {
+  .statusBadge {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+.statusBadgeVisual {
+  display: inline-flex;
+  align-items: center;
   gap: 0.25rem;
   min-height: max(15px, 1.5rem);
   padding: 0 0.5625rem;
   border-radius: 999px;
   border: 1px solid rgba(188, 207, 244, 0.2);
   background: rgba(41, 51, 69, 0.78);
-  color: rgba(235, 241, 255, 0.95);
   font-size: max(8px, 0.6875rem);
   font-weight: 700;
-  cursor: default;
 }
 
 .statusTooltip {
@@ -692,16 +735,31 @@
   bottom: calc(100% + 0.5rem);
   left: 50%;
   transform: translateX(-50%);
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 2rem));
   padding: 0.4375rem 0.625rem;
   border-radius: 0.5rem;
   border: 1px solid rgba(184, 206, 246, 0.26);
   background: rgba(9, 12, 19, 0.98);
   color: var(--color-text);
   font-size: max(10px, 0.75rem);
-  white-space: nowrap;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
   box-shadow: 0 0.625rem 1.5rem rgba(0, 0, 0, 0.52);
   z-index: 100;
   pointer-events: none;
+}
+
+.playerPanel .statusTooltip {
+  left: 0;
+  transform: none;
+}
+
+.enemyPanel .statusTooltip {
+  right: 0;
+  left: auto;
+  transform: none;
 }
 
 .statusBadge:hover .statusTooltip,
@@ -728,6 +786,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 44px;
   min-height: max(44px, 2.5rem);
   padding: 0 0.75rem;
   border-radius: 0.75rem;
@@ -928,7 +987,7 @@
 .endTurnBtn {
   width: auto;
   min-width: max(52px, 4.5rem);
-  min-height: max(40px, 3.625rem);
+  min-height: max(44px, 3.625rem);
   padding: 0.625rem 0.875rem;
   display: inline-flex;
   align-items: center;
@@ -972,6 +1031,7 @@
   max-height: 80vh;
   max-height: 80dvh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
   padding: 1.25rem;
   border-radius: 1.125rem;
@@ -981,10 +1041,16 @@
 }
 
 .pileHeader {
+  position: sticky;
+  top: 0;
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding-bottom: 0.75rem;
   margin-bottom: 1rem;
+  background: rgba(15, 20, 29, 0.96);
+  backdrop-filter: blur(10px);
 }
 
 .pileHeader h2 {
@@ -1257,10 +1323,4 @@
 .turnPop {
   display: inline-block;
   animation: energyPop 0.28s cubic-bezier(0.2, 0, 0.2, 1.4);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bottomSection .handTrack :global(.card-item) {
-    transition-duration: 0.26s, 0.38s, 0.32s, 0.32s, 0.24s, 0.32s !important;
-  }
 }

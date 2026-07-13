@@ -4,11 +4,12 @@ import { useState } from 'react';
 import type { StatusEffect } from '@tower-of-cardborn/game-core/types/character';
 import { useTranslation } from '../../i18n';
 import type { TFunction } from '../../i18n';
+import { playSfx } from '../../utils/sound';
 import styles from '../../styles/combat.module.css';
 
-interface StatusBadgeProps {
-  readonly effect: StatusEffect;
-}
+type StatusBadgeProps =
+  | { readonly effect: StatusEffect; readonly label?: never; readonly description?: never }
+  | { readonly effect?: never; readonly label: string; readonly description: string };
 
 /** 상태 효과별 아이콘/라벨/설명 조합 */
 function getStatusInfo(effect: StatusEffect, t: TFunction): { icon: string; label: string; description: string } {
@@ -52,10 +53,12 @@ function getStatusInfo(effect: StatusEffect, t: TFunction): { icon: string; labe
   }
 }
 
-export function StatusBadge({ effect }: StatusBadgeProps) {
+export function StatusBadge(props: StatusBadgeProps) {
   const t = useTranslation();
   const [open, setOpen] = useState(false);
-  const info = getStatusInfo(effect, t);
+  const info = props.effect
+    ? getStatusInfo(props.effect, t)
+    : { icon: '', label: props.label, description: props.description };
 
   return (
     <button
@@ -63,10 +66,15 @@ export function StatusBadge({ effect }: StatusBadgeProps) {
       className={`${styles.statusBadge} ${open ? styles.statusBadgeOpen : ''}`}
       aria-expanded={open}
       aria-label={info.description}
-      onClick={() => setOpen((prev) => !prev)}
+      onClick={() => {
+        playSfx('button_click');
+        setOpen((prev) => !prev);
+      }}
       onBlur={() => setOpen(false)}
     >
-      {info.icon} {info.label}
+      <span className={styles.statusBadgeVisual} aria-hidden="true">
+        {info.icon && `${info.icon} `}{info.label}
+      </span>
       <span className={styles.statusTooltip}>{info.description}</span>
     </button>
   );

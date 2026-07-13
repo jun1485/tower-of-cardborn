@@ -7,6 +7,7 @@ import { getCardRarity } from '@tower-of-cardborn/game-core/data/cards';
 import { useTranslation, useLanguage } from '../../i18n';
 import { getCardName, generateCardDescription, getCardRarityName, getCardTypeName } from '../../i18n/card-text';
 import { getCardKeywords } from '../../i18n/card-keywords';
+import { playSfx } from '../../utils/sound';
 import styles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
 import { getCardTypeClass } from '../card/card-type-class';
@@ -48,6 +49,7 @@ export const CardComponent = memo(function CardComponent({
   const handlePointerDown = (e: ReactPointerEvent) => {
     if (!canPlay) {
       // 사용 불가 카드 조작 거부 피드백
+      playSfx('card_reject');
       setRejected(true);
       if (rejectTimerRef.current !== null) window.clearTimeout(rejectTimerRef.current);
       rejectTimerRef.current = window.setTimeout(() => {

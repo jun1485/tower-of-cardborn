@@ -156,12 +156,12 @@ console.log(`\n효과음 생성 시작 (${entries.length}개)...\n`);
 let success = 0;
 let fail = 0;
 
-for (const [name, config] of entries) {
+for (const [index, [name, config]] of entries.entries()) {
   const ok = await generateSfx(name, config);
   if (ok) success++; else fail++;
 
   // 마지막이 아니면 딜레이
-  if (entries.indexOf([name, config]) < entries.length - 1) {
+  if (index < entries.length - 1) {
     await new Promise((r) => setTimeout(r, DELAY_MS));
   }
 }

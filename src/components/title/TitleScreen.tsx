@@ -8,6 +8,7 @@ import { getStarterDeck } from '@tower-of-cardborn/game-core/data/cards';
 import { getDailySeed } from '@tower-of-cardborn/game-core/utils/random';
 import type { CharacterClass } from '@tower-of-cardborn/game-core/types/game';
 import type { Language, Translations } from '../../i18n/types';
+import { playSfx } from '../../utils/sound';
 import styles from '../../styles/app.module.css';
 
 // 승천 레벨별 설명 키
@@ -26,6 +27,14 @@ const CLASS_NAME_KEY = {
   archer: 'archer',
   mage: 'mage',
   assassin: 'assassin',
+} as const;
+
+// 직업별 전투 성향 번역 키
+const CLASS_DESC_KEY = {
+  warrior: 'warriorDesc',
+  archer: 'archerDesc',
+  mage: 'mageDesc',
+  assassin: 'assassinDesc',
 } as const;
 
 const CLASS_LIST = ['warrior', 'archer', 'mage', 'assassin'] as const;
@@ -116,7 +125,10 @@ export function TitleScreen({
               className={styles.ascensionStepBtn}
               disabled={selectedAscension <= 0}
               aria-label={t('ascensionDecrease')}
-              onClick={() => onAscensionChange(Math.max(0, selectedAscension - 1))}
+              onClick={() => {
+                playSfx('button_click');
+                onAscensionChange(Math.max(0, selectedAscension - 1));
+              }}
             >
               ◀
             </button>
@@ -127,7 +139,10 @@ export function TitleScreen({
               className={styles.ascensionStepBtn}
               disabled={selectedAscension >= meta.ascensionUnlocked}
               aria-label={t('ascensionIncrease')}
-              onClick={() => onAscensionChange(Math.min(meta.ascensionUnlocked, selectedAscension + 1))}
+              onClick={() => {
+                playSfx('button_click');
+                onAscensionChange(Math.min(meta.ascensionUnlocked, selectedAscension + 1));
+              }}
             >
               ▶
             </button>
@@ -138,7 +153,10 @@ export function TitleScreen({
       <button
         className={`${styles.dailyChallengeBtn} ${dailyChallenge ? styles.dailyChallengeBtnActive : ''}`}
         aria-pressed={dailyChallenge}
-        onClick={() => setDailyChallenge((enabled) => !enabled)}
+        onClick={() => {
+          playSfx('button_click');
+          setDailyChallenge((enabled) => !enabled);
+        }}
       >
         <strong>
           {t('dailyChallenge')}
@@ -168,25 +186,30 @@ export function TitleScreen({
           >
             <img className={styles.classIcon} src={CLASS_IMAGE[cls]} alt="" decoding="async" />
             <span className={styles.className}>{t(CLASS_NAME_KEY[cls])}</span>
-            <span className={styles.classDeck}>{deckLabels.get(cls)}</span>
+            <span className={styles.classDeck}>
+              <strong className={styles.classTrait}>{t(CLASS_DESC_KEY[cls])}</strong>
+              <span>{deckLabels.get(cls)}</span>
+            </span>
           </button>
         ))}
       </div>
-      <button className={styles.privacyLink} onClick={onOpenEquipment}>
-        {t('equipment')}
-      </button>
-      <button className={styles.privacyLink} onClick={onOpenRanking}>
-        {t('ranking')}
-      </button>
-      <button className={styles.privacyLink} onClick={onOpenPrivacy}>
-        {t('privacyPolicy')}
-      </button>
-      <button className={styles.privacyLink} onClick={onOpenHistory}>
-        {t('runHistory')}
-      </button>
-      <button className={styles.privacyLink} onClick={onOpenHelp}>
-        {t('howToPlay')}
-      </button>
+      <div className={styles.titleLinks}>
+        <button className={styles.privacyLink} onClick={onOpenEquipment}>
+          {t('equipment')}
+        </button>
+        <button className={styles.privacyLink} onClick={onOpenRanking}>
+          {t('ranking')}
+        </button>
+        <button className={styles.privacyLink} onClick={onOpenPrivacy}>
+          {t('privacyPolicy')}
+        </button>
+        <button className={styles.privacyLink} onClick={onOpenHistory}>
+          {t('runHistory')}
+        </button>
+        <button className={styles.privacyLink} onClick={onOpenHelp}>
+          {t('howToPlay')}
+        </button>
+      </div>
     </div>
   );
 }

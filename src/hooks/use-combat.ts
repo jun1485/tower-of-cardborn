@@ -79,6 +79,7 @@ export function useCombat(
     const next = initCombat(deckIds, enemyIds, hp, maxHp, ascension, mapIndex, relicBonuses);
     combatRef.current = next;
     setCombat(next);
+    if (next.hand.length > 0) playSfx('card_draw');
   }, []);
 
   // 카드 사용 시 타입별 효과음 재생
@@ -99,7 +100,9 @@ export function useCombat(
     }
     const enemyHpBefore = prev.enemies.reduce((sum, enemy) => sum + enemy.hp, 0);
     const enemyHpAfter = next.enemies.reduce((sum, enemy) => sum + enemy.hp, 0);
-    if (enemyHpAfter < enemyHpBefore) playSfx('enemy_hit');
+    if (next.enemies.length < prev.enemies.length) playSfx('enemy_defeat');
+    else if (enemyHpAfter < enemyHpBefore) playSfx('enemy_hit');
+    if (next.hand.length > prev.hand.length - 1) playSfx('card_draw');
 
     applyCombat(next);
   }, [applyCombat]);
@@ -115,6 +118,7 @@ export function useCombat(
     const blockBefore = prev.player.block;
     const hadEnemyAttack = prev.enemies.some((enemy) => enemy.intent.type === 'attack');
     const next = endPlayerTurn(prev);
+    if (next.enemies.length < prev.enemies.length) playSfx('enemy_defeat');
     // 적 공격 후 피격/방어 효과음 (약간 딜레이)
     if (sfxTimerRef.current !== null) window.clearTimeout(sfxTimerRef.current);
     const playImpactSfx = () => {
@@ -126,6 +130,7 @@ export function useCombat(
     else sfxTimerRef.current = window.setTimeout(playImpactSfx, 400);
 
     applyCombat(next);
+    if (next.result === 'ongoing' && next.hand.length > 0) playSfx('card_draw');
   }, [applyCombat, reducedMotion]);
 
   /** 전투 포션 사용과 효과음 처리 */
@@ -140,7 +145,7 @@ export function useCombat(
     else if (potionId === 'energy_potion' || potionId === 'strength_potion') playSfx('card_power');
     else {
       playSfx('card_attack');
-      playSfx('enemy_hit');
+      playSfx(next.enemies.length < prev.enemies.length ? 'enemy_defeat' : 'enemy_hit');
     }
     applyCombat(next);
     return true;

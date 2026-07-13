@@ -17,6 +17,7 @@ const DEATH_GHOST_DURATION = 600;
 
 interface EnemyAreaProps {
   readonly enemies: readonly Enemy[];
+  readonly playerVulnerable: boolean;
   readonly selectedEnemyId: string | null;
   readonly hoveredEnemyId: string | null;
   readonly lungingEnemyIds: readonly string[];
@@ -67,6 +68,7 @@ const DEBUFF_ICONS: Record<string, string> = {
 
 export function EnemyArea({
   enemies,
+  playerVulnerable,
   selectedEnemyId,
   hoveredEnemyId,
   lungingEnemyIds,
@@ -110,6 +112,7 @@ export function EnemyArea({
         <EnemyCard
           key={enemy.id}
           enemy={enemy}
+          playerVulnerable={playerVulnerable}
           selected={selectedEnemyId === enemy.id}
           hovered={hoveredEnemyId === enemy.id}
           isLunging={lungingEnemyIds.includes(enemy.id)}
@@ -122,6 +125,7 @@ export function EnemyArea({
         <EnemyCard
           key={`dying-${enemy.id}`}
           enemy={enemy}
+          playerVulnerable={playerVulnerable}
           selected={false}
           hovered={false}
           isLunging={false}
@@ -135,16 +139,21 @@ export function EnemyArea({
   );
 }
 
-/** 약화 반영된 실제 공격 데미지 계산 */
-function getDisplayedAttack(enemy: Enemy): number {
+/** 공격 예고 데미지 계산 */
+function getDisplayedAttack(enemy: Enemy, playerVulnerable: boolean): number {
   const strength = enemy.statusEffects.find((status) => status.type === 'strength')?.duration ?? 0;
   const isWeak = enemy.statusEffects.some((s) => s.type === 'weak' && s.duration > 0);
-  const damage = enemy.intent.value + strength;
-  return isWeak ? Math.floor(damage * COMBAT_BALANCE.weakMultiplier) : damage;
+  const weakenedDamage = isWeak
+    ? Math.floor((enemy.intent.value + strength) * COMBAT_BALANCE.weakMultiplier)
+    : enemy.intent.value + strength;
+  return playerVulnerable
+    ? Math.floor(weakenedDamage * COMBAT_BALANCE.vulnerableMultiplier)
+    : weakenedDamage;
 }
 
 interface EnemyCardProps {
   readonly enemy: Enemy;
+  readonly playerVulnerable: boolean;
   readonly selected: boolean;
   readonly hovered: boolean;
   readonly isLunging: boolean;
@@ -157,6 +166,7 @@ interface EnemyCardProps {
 
 const EnemyCard = memo(function EnemyCard({
   enemy,
+  playerVulnerable,
   selected,
   hovered,
   isLunging,
@@ -173,7 +183,7 @@ const EnemyCard = memo(function EnemyCard({
   const localizedName = getEnemyName(enemy.definitionId, lang);
   const debuffStatusType = enemy.intent.statusType ?? 'weak';
   const intentLabel = enemy.intent.type === 'attack'
-    ? `${t('intentAttack')} ${getDisplayedAttack(enemy)}`
+    ? `${t('intentAttack')} ${getDisplayedAttack(enemy, playerVulnerable)}`
     : enemy.intent.type === 'defend'
       ? `${t('intentDefend')} ${enemy.intent.value}`
       : enemy.intent.type === 'buff'
@@ -218,7 +228,7 @@ const EnemyCard = memo(function EnemyCard({
         <div className={styles.enemyTargetBadge}>🎯</div>
       )}
       <div className={styles.enemyIntent} aria-label={intentLabel}>
-        {enemy.intent.type === 'attack' && `⚔️ ${getDisplayedAttack(enemy)}`}
+        {enemy.intent.type === 'attack' && `⚔️ ${getDisplayedAttack(enemy, playerVulnerable)}`}
         {enemy.intent.type === 'defend' && `🛡 ${enemy.intent.value}`}
         {enemy.intent.type === 'buff' && `⬆️ ${enemy.intent.value}`}
         {enemy.intent.type === 'debuff' && `${DEBUFF_ICONS[debuffStatusType] ?? '🔻'} ${enemy.intent.value}`}

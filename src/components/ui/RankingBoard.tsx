@@ -5,6 +5,7 @@ import { useLanguage, useTranslation } from '../../i18n';
 import type { Language } from '../../i18n';
 import { useModalKeyboard } from '../../hooks/use-modal-keyboard';
 import { loadMeta } from '../../utils/meta';
+import { playSfx } from '../../utils/sound';
 import styles from '../../styles/app.module.css';
 
 /** 순위표 필터 종류 */
@@ -56,7 +57,10 @@ export function RankingBoard({ onClose }: RankingBoardProps) {
               className={`${styles.rankTabBtn} ${filter === 'all' ? styles.rankTabActive : ''}`}
               role="tab"
               aria-selected={filter === 'all'}
-              onClick={() => setFilter('all')}
+              onClick={() => {
+                playSfx('button_click');
+                setFilter('all');
+              }}
             >
               {t('rankingAll')}
             </button>
@@ -64,7 +68,10 @@ export function RankingBoard({ onClose }: RankingBoardProps) {
               className={`${styles.rankTabBtn} ${filter === 'daily' ? styles.rankTabActive : ''}`}
               role="tab"
               aria-selected={filter === 'daily'}
-              onClick={() => setFilter('daily')}
+              onClick={() => {
+                playSfx('button_click');
+                setFilter('daily');
+              }}
             >
               {t('rankDaily')}
             </button>
@@ -78,7 +85,7 @@ export function RankingBoard({ onClose }: RankingBoardProps) {
                   <span className={styles.rankDetail}>
                     {run.won ? t('runWon') : t('runLost')}
                     {run.characterClass && ` · ${t(CLASS_KEY[run.characterClass])}`}
-                    {` · ${t('floor', run.floor)}`}
+                    {` · ${run.floor}${t('floor')}`}
                     {run.ascension > 0 && ` · ${t('ascensionLabel', run.ascension)}`}
                     {run.isDaily && <span className={styles.dailyTag}>{t('rankDaily')}</span>}
                     {` · ${formatFinishedAt(run.finishedAt, lang)}`}

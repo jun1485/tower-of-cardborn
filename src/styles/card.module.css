@@ -306,9 +306,3 @@
   55% { transform: translateX(0.35rem) rotate(1.2deg); }
   80% { transform: translateX(-0.2rem); }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .cardGhost {
-    animation-duration: 0.42s !important;
-  }
-}

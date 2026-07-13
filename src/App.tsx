@@ -7,7 +7,8 @@ import { useAudioLifecycle } from './hooks/use-audio-lifecycle';
 import { I18nProvider, LangProvider, createT, useTranslation } from './i18n';
 import { loadSettings } from './utils/settings';
 import { loadMeta } from './utils/meta';
-import { resumeAudioContext, setMusicScene } from './utils/sound';
+import { playSfx, resumeAudioContext, setMusicScene } from './utils/sound';
+import { preloadCardArt } from './utils/card-art';
 import { getFloorsClimbed } from '@tower-of-cardborn/game-core/game/map-generator';
 import { canUpgrade } from '@tower-of-cardborn/game-core/data/cards';
 import { CombatScreen } from './components/combat/CombatScreen';
@@ -86,7 +87,16 @@ function AppInner({ onLangChange }: AppInnerProps) {
     return Math.min(meta.lastAscension, meta.ascensionUnlocked);
   });
 
-  const closeModal = useCallback(() => setActiveModal(null), []);
+  const closeModal = useCallback(() => {
+    playSfx('button_click');
+    setActiveModal(null);
+  }, []);
+
+  /** 전역 모달 열기 */
+  const openModal = useCallback((modalId: ModalId) => {
+    playSfx('button_click');
+    setActiveModal(modalId);
+  }, []);
 
   /** 활성 모달 닫기 */
   const closeOverlay = useCallback(() => {
@@ -109,6 +119,11 @@ function AppInner({ onLangChange }: AppInnerProps) {
             : 'map',
     );
   }, [screen]);
+
+  // 현재 런 카드 이미지 선로딩
+  useEffect(() => {
+    preloadCardArt([...deck, ...rewardCards, ...shopCards]);
+  }, [deck, rewardCards, shopCards]);
 
   /** 진행도와 승천 선택값 초기화 */
   const handleResetProgress = () => {
@@ -136,11 +151,11 @@ function AppInner({ onLangChange }: AppInnerProps) {
             selectedAscension={selectedAscension}
             onAscensionChange={setSelectedAscension}
             onStart={startNewGame}
-            onOpenPrivacy={() => setActiveModal('privacy')}
-            onOpenHistory={() => setActiveModal('history')}
-            onOpenHelp={() => setActiveModal('help')}
-            onOpenRanking={() => setActiveModal('ranking')}
-            onOpenEquipment={() => setActiveModal('equipment')}
+            onOpenPrivacy={() => openModal('privacy')}
+            onOpenHistory={() => openModal('history')}
+            onOpenHelp={() => openModal('help')}
+            onOpenRanking={() => openModal('ranking')}
+            onOpenEquipment={() => openModal('equipment')}
           />
         );
 
@@ -158,9 +173,9 @@ function AppInner({ onLangChange }: AppInnerProps) {
             ascension={ascension}
             runSeed={runSeed}
             onSelectNode={selectMapNode}
-            onOpenDeck={() => setActiveModal('deck')}
-            onOpenRelics={() => setActiveModal('relics')}
-            onOpenPotions={() => setActiveModal('potions')}
+            onOpenDeck={() => openModal('deck')}
+            onOpenRelics={() => openModal('relics')}
+            onOpenPotions={() => openModal('potions')}
           />
         );
 
@@ -301,7 +316,7 @@ function AppInner({ onLangChange }: AppInnerProps) {
         </div>
       )}
       {!combatOverlayOpen && (
-        <button className={styles.globalSettingsBtn} aria-label={t('settings')} onClick={() => setActiveModal('settings')}>⚙</button>
+        <button className={styles.globalSettingsBtn} aria-label={t('settings')} onClick={() => openModal('settings')}>⚙</button>
       )}
       {activeModal === 'settings' && (
         <SettingsModal

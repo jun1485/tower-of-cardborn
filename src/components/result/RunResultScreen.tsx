@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from '../../i18n';
 import { calculateRunScore, loadMeta } from '../../utils/meta';
 import { calculateShardReward } from '../../utils/equipment';
+import { playSfx } from '../../utils/sound';
 import styles from '../../styles/app.module.css';
 
 interface RunResultScreenProps {
@@ -50,6 +51,7 @@ export function RunResultScreen({
 
   /** 런 결과 텍스트 공유 (미지원 시 클립보드 복사) */
   const handleShare = async () => {
+    playSfx('button_click');
     const parts = [
       'Tower of Cardborn',
       isDaily ? t('dailyChallenge') : null,

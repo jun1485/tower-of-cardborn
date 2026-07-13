@@ -215,7 +215,7 @@ function MapNodeButton({ node, floors, isAvailable, isVisited, isCurrent, onSele
       disabled={!isAvailable}
       data-focus-node={isAvailable ? '' : undefined}
       aria-current={isCurrent ? 'location' : undefined}
-      aria-label={`${t(NODE_LABEL_KEY[node.type])} · ${t('floor', node.floor)}`}
+      aria-label={`${t(NODE_LABEL_KEY[node.type])} · ${node.floor}${t('floor')}`}
       onClick={() => onSelect(node.id)}
     >
       <span className={styles.nodeCircle}>{NODE_ICON[node.type]}</span>

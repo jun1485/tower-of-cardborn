@@ -9,10 +9,23 @@ const cardsSourcePath = path.join(projectRoot, 'packages', 'game-core', 'src', '
 const outputDirectory = path.join(projectRoot, 'public', 'assets', 'cards');
 const defaultModel = 'gemini-3.1-flash-image-preview';
 const defaultDelayMs = 1200;
-const defaultStylePreset = 'painterly-dark';
+const defaultStylePreset = 'polished-pixel';
 const supportedClasses = ['warrior', 'archer', 'mage', 'assassin'];
 
 const stylePresets = {
+  'polished-pixel': {
+    label: '고해상도 도트',
+    lines: [
+      'Polished modern pixel-art card illustration for a fantasy deckbuilding roguelike game.',
+      'Use large deliberate pixel clusters, crisp dark outlines, expressive chibi JRPG proportions, and a detailed tower dungeon environment.',
+      'Make the card name and gameplay effect the dominant unique visual motif, readable at small thumbnail size.',
+      'Vary the camera angle, location, pose, effect silhouette, and accent color from every other card of the same class.',
+      'Full-bleed composition required: fill the entire canvas edge-to-edge with environment and action.',
+      'No smooth digital painting, photorealism, 3D rendering, anti-aliased anime illustration, or generic standing pose.',
+      'No UI frame, no border, no text, no letters, no numbers, no watermark.',
+      'Portrait composition suitable for card artwork.',
+    ],
+  },
   'cute-pixel': {
     label: '귀여운 도트',
     lines: [
@@ -42,7 +55,7 @@ const stylePresets = {
 };
 
 const cardPattern =
-  /id:\s*'(?<id>[^']+)',\s*name:\s*'(?<name>[^']+)',\s*description:\s*'(?<description>[^']+)',\s*type:\s*'(?<type>attack|skill|power)'/gms;
+  /id:\s*'(?<id>[^']+)',\s*name:\s*(?<nameQuote>['"])(?<name>.*?)\k<nameQuote>,\s*description:\s*'(?<description>[^']+)',\s*type:\s*'(?<type>attack|skill|power|curse)'/gms;
 
 void main();
 
@@ -346,7 +359,7 @@ function createPrompt(card, stylePreset, cardClass) {
 }
 
 function mapCardTypeToTone(type, stylePreset) {
-  if (stylePreset === 'cute-pixel') {
+  if (stylePreset === 'cute-pixel' || stylePreset === 'polished-pixel') {
     if (type === 'attack') return 'cute energetic strike with playful impact effect';
     if (type === 'skill') return 'cute tactical move with clear defensive motion';
     return 'cute magical empowerment aura with sparkly charm';
@@ -423,7 +436,7 @@ function resolveBaseCardId(cardId) {
 
 function resolveHeroIdentity(cardClass, stylePreset) {
   const className = cardClass ?? 'warrior';
-  if (stylePreset === 'cute-pixel') {
+  if (stylePreset === 'cute-pixel' || stylePreset === 'polished-pixel') {
     if (className === 'archer') {
       return 'same chibi archer heroine across all archer cards: short light-brown hair, green hooded cloak, leather tunic, wooden bow, warm brown eyes.';
     }

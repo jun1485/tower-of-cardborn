@@ -184,6 +184,7 @@ export function useGame() {
   const startNewGame = useCallback((characterClass: CharacterClass, ascension = 0, seed = generateRandomSeed(), isDaily = false) => {
     if (runStartLockRef.current) return;
     runStartLockRef.current = true;
+    playSfx('map_select');
     const normalizedAscension = Number.isFinite(ascension)
       ? Math.max(0, Math.min(MAX_ASCENSION, Math.floor(ascension)))
       : 0;
@@ -315,6 +316,7 @@ export function useGame() {
   }, []);
 
   const finishEvent = useCallback(() => {
+    playSfx('map_select');
     setGameState(finishEventState);
   }, []);
   // #endregion
@@ -384,9 +386,9 @@ export function useGame() {
   const skipReward = useCallback(() => {
     if (gameState.screen !== 'combat_reward' || rewardSelectionLockRef.current) return;
     rewardSelectionLockRef.current = true;
-    if (gameState.rewardRelic || gameState.rewardPotion) playSfx('reward_pick');
+    playSfx('reward_pick');
     afterCombatEnd();
-  }, [afterCombatEnd, gameState.rewardPotion, gameState.rewardRelic, gameState.screen]);
+  }, [afterCombatEnd, gameState.screen]);
   // #endregion
 
   // #region 휴식 / 강화 / 카드 제거
@@ -396,11 +398,13 @@ export function useGame() {
   }, []);
 
   const goToUpgrade = useCallback(() => {
+    playSfx('button_click');
     setGameState(enterUpgradeState);
   }, []);
 
   // 상점 카드 강화 진입 (골드는 강화 확정 시 차감)
   const goToShopUpgrade = useCallback(() => {
+    playSfx('button_click');
     setGameState(enterShopUpgradeState);
   }, []);
 
@@ -410,15 +414,18 @@ export function useGame() {
   }, []);
 
   const skipUpgrade = useCallback(() => {
+    playSfx('button_click');
     setGameState(skipUpgradeState);
   }, []);
 
   const skipRest = useCallback(() => {
+    playSfx('map_select');
     setGameState(skipRestState);
   }, []);
 
   // 카드 제거 화면 진입 (휴식: 무료 / 상점: 골드 소모)
   const goToRemove = useCallback(() => {
+    playSfx('button_click');
     setGameState(enterRemoveState);
   }, []);
 
@@ -429,6 +436,7 @@ export function useGame() {
   }, []);
 
   const skipRemove = useCallback(() => {
+    playSfx('button_click');
     setGameState(skipRemoveState);
   }, []);
   // #endregion
@@ -460,11 +468,13 @@ export function useGame() {
   }, []);
 
   const leaveShop = useCallback(() => {
+    playSfx('map_select');
     setGameState(leaveShopState);
   }, []);
   // #endregion
 
   const goToTitle = useCallback(() => {
+    playSfx('button_click');
     // 미기록 런 포기 기록
     if (!recordUnfinishedRun(stateRef.current)) setSaveError(true);
     clearCombat();

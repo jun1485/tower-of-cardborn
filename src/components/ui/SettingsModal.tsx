@@ -36,6 +36,7 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
 
   /** 언어 변경 시 settings 저장 + 상위 컴포넌트 알림 */
   const handleLangChange = useCallback((lang: Language) => {
+    playSfx('button_click');
     updateSetting('language', lang);
     onLangChange(lang);
   }, [updateSetting, onLangChange]);
@@ -80,6 +81,7 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
 
   // 설정 초기화
   const handleResetSettings = useCallback(() => {
+    playSfx('button_click');
     if (!resetSettings()) {
       setSaveFailed(true);
       return;
@@ -170,7 +172,10 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
               className={`${styles.toggle} ${settings.confirmOnExit ? styles.toggleOn : ''}`}
               aria-pressed={settings.confirmOnExit}
               aria-label={t('confirmOnExit')}
-              onClick={() => updateSetting('confirmOnExit', !settings.confirmOnExit)}
+              onClick={() => {
+                playSfx('button_click');
+                updateSetting('confirmOnExit', !settings.confirmOnExit);
+              }}
             >
               <span className={styles.toggleKnob} />
             </button>
@@ -198,6 +203,7 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
             <button
               className={styles.dangerBtn}
               onClick={() => {
+                playSfx('button_click');
                 setShowResetConfirm(false);
                 setShowQuitConfirm(true);
               }}
@@ -209,7 +215,15 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
               <p className={styles.resetWarning}>{t('backToTitleConfirm')}</p>
               <div className={styles.resetActions}>
                 <button className={styles.dangerBtn} onClick={handleQuitRun}>{t('confirm')}</button>
-                <button className={styles.cancelBtn} onClick={() => setShowQuitConfirm(false)}>{t('cancel')}</button>
+                <button
+                  className={styles.cancelBtn}
+                  onClick={() => {
+                    playSfx('button_click');
+                    setShowQuitConfirm(false);
+                  }}
+                >
+                  {t('cancel')}
+                </button>
               </div>
             </div>
           ))}
@@ -219,6 +233,7 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
             <button
               className={styles.dangerBtn}
               onClick={() => {
+                playSfx('button_click');
                 setShowQuitConfirm(false);
                 setShowResetConfirm(true);
               }}
@@ -230,7 +245,15 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
               <p className={styles.resetWarning}>{t('resetSaveWarning')}</p>
               <div className={styles.resetActions}>
                 <button className={styles.dangerBtn} onClick={handleResetSave}>{t('deleteSave')}</button>
-                <button className={styles.cancelBtn} onClick={() => setShowResetConfirm(false)}>{t('cancel')}</button>
+                <button
+                  className={styles.cancelBtn}
+                  onClick={() => {
+                    playSfx('button_click');
+                    setShowResetConfirm(false);
+                  }}
+                >
+                  {t('cancel')}
+                </button>
               </div>
             </div>
           )}

@@ -140,6 +140,7 @@ button:focus-visible {
 }
 
 .error-fallback button {
+  min-height: 44px;
   padding: 0.875rem 1.5rem;
   border-radius: 0.75rem;
   background: var(--color-primary);
@@ -278,5 +279,19 @@ textarea:focus {
     opacity: 0;
     translate: 0 0.625rem;
     scale: 0.97;
+  }
+}
+
+/* 동작 줄이기 전환 최소화 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
   }
 }
