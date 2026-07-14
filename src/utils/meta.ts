@@ -94,6 +94,7 @@ const DEFAULT_META: MetaState = {
 
 /** 순위표 보관 상한 */
 const BEST_RUNS_LIMIT = 10;
+const BEST_RUNS_STORAGE_LIMIT = BEST_RUNS_LIMIT * 2;
 
 /** 런 종합 점수 산정 */
 export function calculateRunScore(run: { floor: number; kills: number; won: boolean; ascension: number }): number {
@@ -162,6 +163,20 @@ function normalizeRunList(value: unknown, limit: number): readonly RunSummary[] 
   });
 }
 
+/** 전체·일일 상위 기록 동시 보존 */
+function selectBestRuns(runs: readonly RunSummary[]): readonly RunSummary[] {
+  const sorted = [...runs].sort((a, b) => b.score - a.score);
+  const overall = sorted.slice(0, BEST_RUNS_LIMIT);
+  const daily = sorted.filter((run) => run.isDaily).slice(0, BEST_RUNS_LIMIT);
+  return [...overall, ...daily.filter((run) => !overall.some((entry) => entry.finishedAt === run.finishedAt))]
+    .sort((a, b) => b.score - a.score);
+}
+
+/** 순위표 필터별 상위 기록 조회 */
+export function getRankedRuns(runs: readonly RunSummary[], dailyOnly = false): readonly RunSummary[] {
+  return runs.filter((run) => !dailyOnly || run.isDaily).slice(0, BEST_RUNS_LIMIT);
+}
+
 /** 손상된 메타 데이터 정리 */
 function removeInvalidMeta(): void {
   try {
@@ -189,9 +204,9 @@ export function loadMeta(): MetaState {
       ? parsed.stats
       : migrateMeta(parsed.version, parsed.stats);
     const stats: Record<string, unknown> = isRecord(migrated) ? migrated : {};
-    const totalRuns = mergeCount(stats.totalRuns);
     const recentRuns = normalizeRunList(stats.recentRuns, 10);
-    const bestRuns = [...normalizeRunList(stats.bestRuns, BEST_RUNS_LIMIT)].sort((a, b) => b.score - a.score);
+    const totalRuns = Math.max(mergeCount(stats.totalRuns), recentRuns.length);
+    const bestRuns = selectBestRuns(normalizeRunList(stats.bestRuns, BEST_RUNS_STORAGE_LIMIT));
     const recentHighestWonAscension = recentRuns.reduce(
       (highest, run) => run.won ? Math.max(highest, run.ascension) : highest,
       0,
@@ -279,8 +294,9 @@ export function recordRunEnd({
     ? Math.max(prev.ascensionUnlocked, Math.min(normalizedAscension + 1, MAX_ASCENSION))
     : prev.ascensionUnlocked;
   const today = getUTCDateString();
+  const latestFinishedAt = prev.recentRuns.reduce((latest, run) => Math.max(latest, run.finishedAt), -1);
   const summary: RunSummary = {
-    finishedAt: Date.now(),
+    finishedAt: Math.max(Date.now(), latestFinishedAt + 1),
     won,
     floor: normalizedFloor,
     kills: normalizedKills,
@@ -293,7 +309,7 @@ export function recordRunEnd({
   const next: MetaState = {
     ...prev,
     // 종료 기록 단독 호출 시 도전 수 보정
-    totalRuns: Math.max(prev.totalRuns, prev.totalWins + (won ? 1 : 0)),
+    totalRuns: Math.max(prev.totalRuns, prev.recentRuns.length + 1),
     totalWins: prev.totalWins + (won ? 1 : 0),
     totalKills: prev.totalKills + normalizedKills,
     bestFloor: Math.max(prev.bestFloor, normalizedFloor),
@@ -307,12 +323,10 @@ export function recordRunEnd({
       ? { date: today, won: won || (prev.lastDaily?.date === today && prev.lastDaily.won) }
       : prev.lastDaily,
     recentRuns: [summary, ...prev.recentRuns].slice(0, 10),
-    bestRuns: [...prev.bestRuns, summary]
-      .sort((a, b) => b.score - a.score)
-      .slice(0, BEST_RUNS_LIMIT),
+    bestRuns: selectBestRuns([...prev.bestRuns, summary]),
   };
   // 런 종료 강화석 지급
-  const shardResult = addShards(calculateShardReward(normalizedFloor, won));
+  const shardResult = addShards(calculateShardReward(normalizedFloor, won, isDaily));
   const saved = saveMeta(next) && shardResult.saved;
   return {
     meta: next,
@@ -320,6 +334,11 @@ export function recordRunEnd({
     recordedAt: summary.finishedAt,
     saved,
   };
+}
+
+/** 이번 런 최고 기록 여부 판정 */
+export function isTopRunRecord(recordedAt: number | null | undefined, dailyOnly = false): boolean {
+  return recordedAt != null && getRankedRuns(loadMeta().bestRuns, dailyOnly)[0]?.finishedAt === recordedAt;
 }
 
 interface EndlessProgress {
@@ -359,9 +378,13 @@ export function updateRecordedRun(recordedAt: number, progress: EndlessProgress)
     ...prev,
     bestFloor: Math.max(prev.bestFloor, floor),
     recentRuns: replace(prev.recentRuns),
-    bestRuns: [...bestWithUpdate].sort((a, b) => b.score - a.score).slice(0, BEST_RUNS_LIMIT),
+    bestRuns: selectBestRuns(bestWithUpdate),
   };
   // 엔들리스 추가 층수만큼 강화석 지급
-  const shardResult = addShards(Math.max(0, floor - target.floor));
+  const shardResult = addShards(calculateShardReward(
+    Math.max(0, floor - target.floor),
+    false,
+    target.isDaily,
+  ));
   return saveMeta(next) && shardResult.saved;
 }

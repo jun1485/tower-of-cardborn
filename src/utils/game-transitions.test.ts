@@ -265,11 +265,12 @@ describe('전투 보상 전환', () => {
   });
 
   it('패배 전 처치한 적 수를 런 통계에 반영한다', () => {
-    const result = enterGameOverState({ ...MAP_STATE, screen: 'combat', kills: 2 }, 1);
+    const result = enterGameOverState({ ...MAP_STATE, screen: 'combat', kills: 2 }, 1, 1234);
 
     expect(result.screen).toBe('game_over');
     expect(result.kills).toBe(3);
     expect(result.runRecorded).toBe(true);
+    expect(result.recordedRunAt).toBe(1234);
   });
 
   it('보상 완료 시 골드를 지급하고 맵으로 복귀한다', () => {

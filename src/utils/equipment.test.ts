@@ -117,5 +117,6 @@ describe('강화석 보상', () => {
     upgradeEquipment('talisman');
 
     expect(calculateShardReward(20, true)).toBe(36);
+    expect(calculateShardReward(20, true, true)).toBe(35);
   });
 });

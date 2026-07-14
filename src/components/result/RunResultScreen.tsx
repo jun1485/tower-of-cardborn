@@ -1,8 +1,8 @@
 // 런 종료 결과 화면 (승리/패배 공용)
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from '../../i18n';
-import { calculateRunScore, loadMeta } from '../../utils/meta';
+import { calculateRunScore, isTopRunRecord } from '../../utils/meta';
 import { calculateShardReward } from '../../utils/equipment';
 import { playSfx } from '../../utils/sound';
 import styles from '../../styles/app.module.css';
@@ -19,6 +19,7 @@ interface RunResultScreenProps {
   readonly ascension: number;
   readonly runSeed: number | null;
   readonly isDaily: boolean;
+  readonly recordedRunAt: number | null;
   readonly onRestart: () => void;
   readonly onTitle: () => void;
   /** 승리 화면 전용: 엔들리스 등반 계속 */
@@ -37,6 +38,7 @@ export function RunResultScreen({
   ascension,
   runSeed,
   isDaily,
+  recordedRunAt,
   onRestart,
   onTitle,
   onContinueEndless,
@@ -45,9 +47,8 @@ export function RunResultScreen({
   const [copied, setCopied] = useState(false);
   const isVictory = variant === 'victory';
   const score = calculateRunScore({ floor: floorsClimbed, kills, won: isVictory, ascension });
-  const shardsEarned = calculateShardReward(floorsClimbed, isVictory);
-  // 이번 런이 순위표 1위 점수와 같으면 신기록 표시
-  const isNewRecord = useMemo(() => (loadMeta().bestRuns[0]?.score ?? -1) === score, [score]);
+  const shardsEarned = calculateShardReward(floorsClimbed, isVictory, isDaily);
+  const isNewRecord = isTopRunRecord(recordedRunAt, isDaily);
 
   /** 런 결과 텍스트 공유 (미지원 시 클립보드 복사) */
   const handleShare = async () => {
@@ -94,7 +95,7 @@ export function RunResultScreen({
         </button>
       )}
       <button className={styles.resultBtn} onClick={onRestart}>
-        {isVictory ? t('newGame') : t('retry')}
+        {isVictory && !isDaily ? t('newGame') : t('retry')}
       </button>
       <button className={styles.resultBtn} onClick={handleShare}>
         {copied ? t('shareCopied') : t('shareResult')}

@@ -1,8 +1,11 @@
 // 런 통계 정규화와 해금 규칙 검증
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { calculateRunScore, loadMeta, recordRunEnd, recordRunStart, updateRecordedRun } from './meta';
-import { loadEquipment } from './equipment';
+import {
+  calculateRunScore, getRankedRuns, isTopRunRecord, loadMeta,
+  recordRunEnd, recordRunStart, updateRecordedRun,
+} from './meta';
+import { addShards, loadEquipment, upgradeEquipment } from './equipment';
 
 const values = new Map<string, string>();
 const storage: Storage = {
@@ -43,6 +46,19 @@ describe('런 통계', () => {
     const result = recordRunEnd({ won: false, floor: 8, kills: 3, ascension: 5 });
 
     expect(result.meta.highestWonAscension).toBe(4);
+    expect(result.meta.totalRuns).toBe(2);
+  });
+
+  it('최근 종료 기록으로 누락된 도전 횟수를 복구한다', () => {
+    localStorage.setItem('tower-of-cardborn-meta', JSON.stringify({
+      version: 1,
+      stats: {
+        totalRuns: 0,
+        recentRuns: [{ finishedAt: 1, won: false, floor: 4, kills: 2, ascension: 0 }],
+      },
+    }));
+
+    expect(loadMeta().totalRuns).toBe(1);
   });
 
   it('종료한 런의 직업을 최근 기록에 보존한다', () => {
@@ -70,10 +86,71 @@ describe('런 통계', () => {
     expect(result.meta.bestRuns.map((run) => run.score)).toEqual([770, 210, 81]);
   });
 
+  it('이번 런이 최상단 순위 기록인 경우만 신기록으로 판정한다', () => {
+    localStorage.setItem('tower-of-cardborn-meta', JSON.stringify({
+      version: 1,
+      stats: {
+        bestRuns: [
+          { finishedAt: 100, won: true, floor: 30, kills: 20, ascension: 0, score: 610 },
+          { finishedAt: 200, won: true, floor: 30, kills: 20, ascension: 0, score: 610 },
+          { finishedAt: 300, won: true, floor: 20, kills: 10, ascension: 0, score: 430, isDaily: true },
+          { finishedAt: 400, won: true, floor: 20, kills: 10, ascension: 0, score: 430, isDaily: true },
+        ],
+      },
+    }));
+
+    expect(isTopRunRecord(100)).toBe(true);
+    expect(isTopRunRecord(200)).toBe(false);
+    expect(isTopRunRecord(300, true)).toBe(true);
+    expect(isTopRunRecord(400, true)).toBe(false);
+    expect(isTopRunRecord(null)).toBe(false);
+  });
+
+  it('전체 상위권 밖의 일일 기록도 일일 순위표에 보존한다', () => {
+    const normalRuns = Array.from({ length: 10 }, (_, index) => ({
+      finishedAt: index + 1,
+      won: true,
+      floor: 30,
+      kills: 20,
+      ascension: 0,
+      score: 1000 - index,
+    }));
+    localStorage.setItem('tower-of-cardborn-meta', JSON.stringify({
+      version: 1,
+      stats: {
+        bestRuns: [
+          ...normalRuns,
+          { finishedAt: 100, won: false, floor: 3, kills: 1, ascension: 0, score: 48, isDaily: true },
+        ],
+      },
+    }));
+
+    const meta = loadMeta();
+
+    expect(getRankedRuns(meta.bestRuns)).toHaveLength(10);
+    expect(getRankedRuns(meta.bestRuns, true).map((run) => run.finishedAt)).toEqual([100]);
+  });
+
+  it('동일 시각에 종료한 런에도 고유 기록 시각을 부여한다', () => {
+    const first = recordRunEnd({ won: false, floor: 1, kills: 0, ascension: 0 });
+    const second = recordRunEnd({ won: false, floor: 1, kills: 0, ascension: 0 });
+
+    expect(second.recordedAt).toBeGreaterThan(first.recordedAt);
+  });
+
   it('일일 도전 여부를 순위 기록에 보존한다', () => {
     const result = recordRunEnd({ won: true, floor: 30, kills: 10, ascension: 0, isDaily: true });
 
     expect(result.meta.bestRuns[0].isDaily).toBe(true);
+  });
+
+  it('일일 도전 강화석 보상에서 부적 효과를 제외한다', () => {
+    addShards(15);
+    upgradeEquipment('talisman');
+
+    recordRunEnd({ won: true, floor: 20, kills: 10, ascension: 0, isDaily: true });
+
+    expect(loadEquipment().shards).toBe(35);
   });
 
   it('런 종료 시 층수 기반 강화석을 지급한다', () => {

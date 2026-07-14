@@ -149,10 +149,10 @@ export function applyEquipmentCombatBonuses(bonuses: RelicCombatBonuses, isDaily
   };
 }
 
-/** 런 종료 강화석 획득량 산정 (부적 증가율 반영) */
-export function calculateShardReward(floor: number, won: boolean): number {
+/** 런 종료 강화석 획득량 산정 */
+export function calculateShardReward(floor: number, won: boolean, isDaily = false): number {
   const base = Math.max(0, Math.floor(floor)) + (won ? 15 : 0);
-  const { shardPercent } = getEquipmentBonuses();
+  const shardPercent = isDaily ? 0 : getEquipmentBonuses().shardPercent;
   return Math.floor(base * (1 + shardPercent / 100));
 }
 

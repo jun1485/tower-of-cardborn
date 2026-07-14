@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useLanguage, useTranslation } from '../../i18n';
 import type { Language } from '../../i18n';
 import { useModalKeyboard } from '../../hooks/use-modal-keyboard';
-import { loadMeta } from '../../utils/meta';
+import { getRankedRuns, loadMeta } from '../../utils/meta';
 import { playSfx } from '../../utils/sound';
 import styles from '../../styles/app.module.css';
 
@@ -35,7 +35,7 @@ export function RankingBoard({ onClose }: RankingBoardProps) {
   const modalRef = useModalKeyboard(onClose);
   const [filter, setFilter] = useState<RankingFilter>('all');
   const allRuns = useMemo(() => loadMeta().bestRuns, []);
-  const bestRuns = filter === 'daily' ? allRuns.filter((run) => run.isDaily) : allRuns;
+  const bestRuns = getRankedRuns(allRuns, filter === 'daily');
 
   return (
     <div className={styles.policyOverlay} onClick={onClose}>

@@ -99,6 +99,7 @@ export function useGame() {
       const encounterEnemyCount = findCurrentNode(current.map)?.enemyIds.length ?? finished.enemies.length;
       const defeatedEnemyCount = Math.max(0, encounterEnemyCount - finished.enemies.length);
       const totalKills = current.kills + defeatedEnemyCount;
+      let recordedRunAt = current.recordedRunAt ?? null;
       if (!current.runRecorded) {
         const recordResult = recordRunEnd({
           won: false,
@@ -109,6 +110,7 @@ export function useGame() {
           characterClass: current.characterClass,
           isDaily: current.isDaily ?? false,
         });
+        recordedRunAt = recordResult.recordedAt;
         if (!recordResult.saved) setSaveError(true);
       } else if (current.recordedRunAt != null) {
         // 엔들리스 사망: 승리 기록의 층·점수 상향
@@ -119,7 +121,7 @@ export function useGame() {
         });
         if (!updated) setSaveError(true);
       }
-      setGameState((prev) => enterGameOverState(prev, defeatedEnemyCount));
+      setGameState((prev) => enterGameOverState(prev, defeatedEnemyCount, recordedRunAt));
     }
   }, []);
 
@@ -531,6 +533,7 @@ export function useGame() {
     unlockedAscension: gameState.unlockedAscension,
     runSeed: gameState.runSeed,
     isDaily: gameState.isDaily ?? false,
+    recordedRunAt: gameState.recordedRunAt ?? null,
     restHealAmount: Math.floor(gameState.playerMaxHp
       * (getAscensionModifier(gameState.ascension).restHealRate + getRelicRestHealBonus(gameState.relics))),
     startNewGame,

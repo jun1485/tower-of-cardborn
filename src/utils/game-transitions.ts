@@ -313,8 +313,12 @@ export function enterCombatRewardState(
   };
 }
 
-/** 전투 패배 화면과 처치 수 반영 */
-export function enterGameOverState(state: GameState, defeatedEnemyCount = 0): GameState {
+/** 전투 패배 화면과 종료 기록 반영 */
+export function enterGameOverState(
+  state: GameState,
+  defeatedEnemyCount = 0,
+  recordedRunAt = state.recordedRunAt ?? null,
+): GameState {
   return {
     ...state,
     screen: 'game_over',
@@ -323,6 +327,7 @@ export function enterGameOverState(state: GameState, defeatedEnemyCount = 0): Ga
     rewardPotion: null,
     kills: state.kills + Math.max(0, defeatedEnemyCount),
     runRecorded: true,
+    recordedRunAt,
   };
 }
 

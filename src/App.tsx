@@ -72,7 +72,7 @@ function AppInner({ onLangChange }: AppInnerProps) {
     gold, rewardGold, rewardRelic, relics, rewardPotion, potions,
     shopCards, shopRelics, shopPotions, shopRelicPrice, shopPotionPrice, shopRemovePrice, shopUpgradePrice,
     kills, ascension, removeSource, upgradeSource,
-    eventId, eventResult, unlockedAscension, restHealAmount, runSeed, isDaily,
+    eventId, eventResult, unlockedAscension, restHealAmount, runSeed, isDaily, recordedRunAt,
     startNewGame, selectMapNode, handlePlayCard, handleEndTurn,
     pickRewardCard, skipReward, rest, goToUpgrade, goToShopUpgrade, upgradeCard, skipUpgrade, skipRest,
     goToRemove, removeCard, skipRemove, chooseEventOption, finishEvent, continueEndless,
@@ -297,10 +297,12 @@ function AppInner({ onLangChange }: AppInnerProps) {
             ascension={ascension}
             runSeed={runSeed}
             isDaily={isDaily}
+            recordedRunAt={recordedRunAt}
             onRestart={() => startNewGame(
               characterClass,
               ascension,
-              screen === 'game_over' ? runSeed ?? undefined : undefined,
+              screen === 'game_over' || isDaily ? runSeed ?? undefined : undefined,
+              isDaily,
             )}
             onTitle={goToTitle}
             onContinueEndless={screen === 'victory' ? continueEndless : undefined}
