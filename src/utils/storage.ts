@@ -7,7 +7,7 @@ import type { GameMap, MapNode, NodeType } from '@tower-of-cardborn/game-core/ty
 import { CARD_DEFINITIONS } from '@tower-of-cardborn/game-core/data/cards';
 import { ENEMY_DEFINITIONS } from '@tower-of-cardborn/game-core/data/enemies';
 import { EVENTS } from '@tower-of-cardborn/game-core/data/events';
-import { MAX_ASCENSION } from '@tower-of-cardborn/game-core/data/ascension';
+import { getAscensionModifier, MAX_ASCENSION } from '@tower-of-cardborn/game-core/data/ascension';
 import { RELIC_DEFINITIONS } from '@tower-of-cardborn/game-core/data/relics';
 import type { RelicId } from '@tower-of-cardborn/game-core/types/relic';
 import { MAX_POTION_SLOTS, POTION_DEFINITIONS } from '@tower-of-cardborn/game-core/data/potions';
@@ -16,32 +16,7 @@ import type { EventId } from '@tower-of-cardborn/game-core/types/event';
 
 const SAVE_KEY = 'tower-of-cardborn-save';
 const SAVE_VERSION = 8;
-
-/** 저장 구조 버전 승격 함수 (fromVersion → fromVersion+1) */
-type SaveMigration = (state: unknown) => unknown;
-
-// 버전별 순차 마이그레이션 체인 — 저장 버전 상향 시 직전 버전 항목 등록 필수
-const SAVE_MIGRATIONS: Readonly<Record<number, SaveMigration>> = {
-  // v1~v7: 추가 필드가 전부 옵셔널이라 구조 변환 없이 현행 검증으로 승격
-  1: (state) => state,
-  2: (state) => state,
-  3: (state) => state,
-  4: (state) => state,
-  5: (state) => state,
-  6: (state) => state,
-  7: (state) => state,
-};
-
-/** 구버전 저장 데이터 현행 버전 승격 */
-function migrateSave(version: number, state: unknown): unknown {
-  let migrated = state;
-  for (let from = version; from < SAVE_VERSION; from += 1) {
-    const migrate = SAVE_MIGRATIONS[from];
-    if (!migrate) return null;
-    migrated = migrate(migrated);
-  }
-  return migrated;
-}
+const LEGACY_SAVE_VERSIONS: readonly number[] = [3, 5, 6];
 
 const GAME_SCREENS: readonly GameScreen[] = [
   'title', 'map', 'combat', 'combat_reward', 'rest', 'upgrade',
@@ -70,6 +45,70 @@ function isFiniteNumber(value: unknown): value is number {
 /** 0 이상 정수 확인 */
 function isNonNegativeInteger(value: unknown): value is number {
   return isFiniteNumber(value) && Number.isInteger(value) && value >= 0;
+}
+
+/** 레거시 맵 구조 현행화 */
+function migrateLegacyMap(value: unknown): unknown {
+  if (!isRecord(value) || !Array.isArray(value.nodes)) return value;
+  const legacyNodes = value.nodes;
+  const nodes = legacyNodes.map((node) => {
+    if (!isRecord(node) || node.pos !== undefined) return node;
+    const sameFloorNodes = legacyNodes.filter((candidate) => isRecord(candidate) && candidate.floor === node.floor);
+    const floorIndex = sameFloorNodes.indexOf(node);
+    return { ...node, pos: (floorIndex + 1) / (sameFloorNodes.length + 1) };
+  });
+  return {
+    ...value,
+    nodes,
+    mapIndex: value.mapIndex === undefined ? 1 : value.mapIndex,
+    totalMaps: value.totalMaps === undefined ? 1 : value.totalMaps,
+    totalFloorsPerMap: value.totalFloorsPerMap === undefined ? value.totalFloors : value.totalFloorsPerMap,
+  };
+}
+
+/** 레거시 전투 구조 현행화 */
+function migrateLegacyCombat(value: unknown, ascension: unknown, mapIndex: unknown): unknown {
+  return isRecord(value)
+    ? {
+        ...value,
+        ascension: value.ascension === undefined ? ascension : value.ascension,
+        mapIndex: value.mapIndex === undefined ? mapIndex : value.mapIndex,
+      }
+    : value;
+}
+
+/** 레거시 게임 상태 현행화 */
+function migrateLegacyState(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  const ascension = value.ascension === undefined ? 0 : value.ascension;
+  const map = migrateLegacyMap(value.map);
+  const mapIndex = isRecord(map) ? map.mapIndex : 1;
+  return {
+    ...value,
+    combatState: migrateLegacyCombat(value.combatState, ascension, mapIndex),
+    map,
+    gold: value.gold === undefined ? getAscensionModifier(0).startGold : value.gold,
+    rewardGold: value.rewardGold === undefined ? 0 : value.rewardGold,
+    shopCards: value.shopCards === undefined ? [] : value.shopCards,
+    removeSource: value.removeSource === undefined ? null : value.removeSource,
+    kills: value.kills === undefined ? 0 : value.kills,
+    ascension,
+    eventId: value.eventId === undefined ? null : value.eventId,
+    eventResult: value.eventResult === undefined ? null : value.eventResult,
+    seenEventIds: value.seenEventIds === undefined ? [] : value.seenEventIds,
+    pendingRemoveCount: value.pendingRemoveCount === undefined ? 0 : value.pendingRemoveCount,
+    pendingUpgradeCount: value.pendingUpgradeCount === undefined ? 0 : value.pendingUpgradeCount,
+    upgradeSource: value.upgradeSource === undefined ? null : value.upgradeSource,
+    runRecorded: value.runRecorded === undefined ? false : value.runRecorded,
+    unlockedAscension: value.unlockedAscension === undefined ? null : value.unlockedAscension,
+  };
+}
+
+/** 구버전 저장 데이터 현행 버전 승격 */
+function migrateSave(version: number, state: unknown): unknown {
+  return LEGACY_SAVE_VERSIONS.includes(version)
+    ? migrateLegacyState(state)
+    : null;
 }
 
 /** 런 시드 범위 확인 */

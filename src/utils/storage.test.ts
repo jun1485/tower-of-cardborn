@@ -126,13 +126,72 @@ describe('게임 저장', () => {
     expect(loadGame()).toBeNull();
   });
 
-  it('구버전 저장본을 마이그레이션하여 복원하고 현행 버전으로 재저장한다', () => {
-    localStorage.setItem('tower-of-cardborn-save', JSON.stringify({ version: 1, state: GAME_STATE }));
+  it('v6 저장본을 마이그레이션하여 복원하고 현행 버전으로 재저장한다', () => {
+    const legacyState = {
+      screen: 'map',
+      combatState: null,
+      deck: ['strike'],
+      playerHp: 80,
+      playerMaxHp: 80,
+      map: {
+        nodes: [{ id: 'rest-1', floor: 1, type: 'rest', nextNodeIds: [], enemyIds: [] }],
+        currentNodeId: 'rest-1',
+        visitedNodeIds: ['rest-1'],
+        mapIndex: 1,
+        totalMaps: 3,
+        totalFloorsPerMap: 10,
+      },
+      characterClass: 'warrior',
+      rewardCards: [],
+    };
+    localStorage.setItem('tower-of-cardborn-save', JSON.stringify({ version: 6, state: legacyState }));
 
-    expect(loadGame()).toEqual(GAME_STATE);
+    expect(loadGame()).toMatchObject({
+      ...legacyState,
+      gold: 60,
+      rewardGold: 0,
+      ascension: 0,
+      map: {
+        ...legacyState.map,
+        nodes: [{ ...legacyState.map.nodes[0], pos: 0.5 }],
+      },
+    });
 
     const raw = localStorage.getItem('tower-of-cardborn-save') ?? '';
     expect((JSON.parse(raw) as { version: number }).version).toBe(8);
+  });
+
+  it('v3 단일 맵 저장본에 현행 맵 메타데이터를 추가한다', () => {
+    const legacyState = {
+      screen: 'map',
+      combatState: null,
+      deck: ['strike'],
+      playerHp: 80,
+      playerMaxHp: 80,
+      map: {
+        nodes: [{ id: 'rest-1', floor: 1, type: 'rest', nextNodeIds: [], enemyIds: [] }],
+        currentNodeId: 'rest-1',
+        visitedNodeIds: ['rest-1'],
+        totalFloors: 10,
+      },
+      characterClass: 'warrior',
+      rewardCards: [],
+    };
+    localStorage.setItem('tower-of-cardborn-save', JSON.stringify({ version: 3, state: legacyState }));
+
+    expect(loadGame()?.map).toMatchObject({
+      mapIndex: 1,
+      totalMaps: 1,
+      totalFloorsPerMap: 10,
+      nodes: [{ ...legacyState.map.nodes[0], pos: 0.5 }],
+    });
+  });
+
+  it('배포 이력이 없는 구버전 저장본을 제거한다', () => {
+    localStorage.setItem('tower-of-cardborn-save', JSON.stringify({ version: 7, state: GAME_STATE }));
+
+    expect(loadGame()).toBeNull();
+    expect(localStorage.getItem('tower-of-cardborn-save')).toBeNull();
   });
 
   it('현행보다 높은 버전의 저장본을 제거한다', () => {
