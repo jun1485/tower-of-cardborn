@@ -1,4 +1,5 @@
 import { copyFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
@@ -22,6 +23,7 @@ const RELEASE_FILES = [
 // 릴리스 산출물 포함 확장자 (미포함 시 경고 대상)
 const RELEASE_EXTENSIONS = ['.webp', '.ogg', '.mp3', '.wav', '.woff2', '.webmanifest'] as const;
 const BUILD_ASSET_MARKER = '/* __BUILD_ASSETS__ */';
+const BUILD_CACHE_VERSION_MARKER = '__BUILD_CACHE_VERSION__';
 
 // 레거시 캐릭터·몬스터 자산 판별
 function isLegacyRuntimeAsset(file: string): boolean {
@@ -68,12 +70,28 @@ async function copyReleaseDirectory(
   return files;
 }
 
-// 앱 셸 번들 사전 캐시 목록 갱신
-async function injectBuildAssets(outputDirectory: string, buildAssets: readonly string[]): Promise<void> {
+// 릴리스 자산 기반 캐시 버전 생성
+async function createBuildCacheVersion(outputDirectory: string, assets: readonly string[]): Promise<string> {
+  const hash = createHash('sha256');
+  for (const file of [...assets].sort()) {
+    hash.update(file);
+    hash.update(await readFile(path.join(outputDirectory, file)));
+  }
+  return hash.digest('hex').slice(0, 12);
+}
+
+// 앱 셸 사전 캐시 정보 갱신
+async function injectBuildAssets(
+  outputDirectory: string,
+  buildAssets: readonly string[],
+  cacheVersion: string,
+): Promise<void> {
   const serviceWorkerPath = path.join(outputDirectory, 'sw.js');
   const source = await readFile(serviceWorkerPath, 'utf8');
   const entries = buildAssets.map((file) => `  '/${file}',`).join('\n');
-  await writeFile(serviceWorkerPath, source.replace(BUILD_ASSET_MARKER, entries));
+  await writeFile(serviceWorkerPath, source
+    .replace(BUILD_ASSET_MARKER, entries)
+    .replace(BUILD_CACHE_VERSION_MARKER, cacheVersion));
 }
 
 // 릴리스 필수 자산 선별 복사
@@ -98,7 +116,12 @@ function createReleaseAssetsPlugin(): Plugin {
         copyReleaseDirectory(publicDirectory, outputDirectory, 'assets/fonts'),
       ]);
       const copied = new Set<string>([...RELEASE_FILES, ...copiedDirectories.flat()]);
-      await injectBuildAssets(outputDirectory, Object.values(bundle).map((output) => output.fileName));
+      const buildAssets = [...new Set([
+        ...Object.values(bundle).map((output) => output.fileName),
+        ...copied,
+      ])].filter((file) => file !== 'sw.js');
+      const cacheVersion = await createBuildCacheVersion(outputDirectory, buildAssets);
+      await injectBuildAssets(outputDirectory, buildAssets, cacheVersion);
       await warnUncopiedAssets(publicDirectory, copied);
     },
   };

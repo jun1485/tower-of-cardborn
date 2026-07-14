@@ -1,21 +1,6 @@
-const CACHE_NAME = 'tower-of-cardborn-v2';
+const CACHE_NAME = 'tower-of-cardborn-__BUILD_CACHE_VERSION__';
 const CORE_ASSETS = [
   '/',
-  '/manifest.webmanifest',
-  '/assets/ui/app_icon_192.png',
-  '/assets/ui/app_icon_512.png',
-  '/assets/ui/cursor-hero.svg',
-  '/assets/ui/deck.png',
-  '/assets/ui/bg_combat_tower-v2.webp',
-  '/assets/ui/bg_map_1.webp',
-  '/assets/ui/bg_map_2.webp',
-  '/assets/ui/bg_map_3.webp',
-  '/assets/classes/warrior-v2.webp',
-  '/assets/classes/archer-v2.webp',
-  '/assets/classes/mage-v2.webp',
-  '/assets/classes/assassin-v2.webp',
-  '/assets/fonts/MaplestoryLight.woff2',
-  '/assets/fonts/MaplestoryBold.woff2',
   /* __BUILD_ASSETS__ */
 ];
 
