@@ -34,11 +34,17 @@ export function EquipmentModal({ onClose }: EquipmentModalProps) {
   const t = useTranslation();
   const modalRef = useModalKeyboard(onClose);
   const [equipment, setEquipment] = useState(loadEquipment);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   /** 슬롯 강화 실행 */
   const handleUpgrade = (slot: EquipmentSlot) => {
     const result = upgradeEquipment(slot);
     if (!result.upgraded) return;
+    if (!result.saved) {
+      setSaveFailed(true);
+      return;
+    }
+    setSaveFailed(false);
     playSfx('upgrade');
     setEquipment(result.state);
   };
@@ -58,6 +64,7 @@ export function EquipmentModal({ onClose }: EquipmentModalProps) {
           <button className={styles.policyCloseBtn} aria-label={t('close')} onClick={onClose}>×</button>
         </div>
         <div className={styles.policyContent}>
+          {saveFailed && <p className={styles.resetWarning} role="alert">{t('settingsSaveError')}</p>}
           <p className={styles.shardBadge}>💠 {t('shards')} {equipment.shards.toLocaleString()}</p>
           <ul className={styles.equipList}>
             {EQUIPMENT_SLOTS.map((slot) => {
