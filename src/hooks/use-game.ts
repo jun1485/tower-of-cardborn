@@ -20,6 +20,7 @@ import {
   enterRemoveState, enterShopUpgradeState, enterUpgradeState,
   completeCombatRewardState, enterCombatRewardState, enterGameOverState, finishEventState,
   getShopCardPrice, getShopPotionPrice, getShopRelicPrice,
+  getShopRemovePrice, getShopUpgradePrice,
   leaveShopState, removeCardState, restState, skipRemoveState, skipRestState,
   skipUpgradeState, upgradeCardState,
 } from '../utils/game-transitions';
@@ -519,6 +520,8 @@ export function useGame() {
     shopPotions: gameState.shopPotions ?? [],
     shopRelicPrice: getShopRelicPrice(gameState.relics, gameState.ascension),
     shopPotionPrice: getShopPotionPrice(gameState.relics, gameState.ascension),
+    shopRemovePrice: getShopRemovePrice(gameState.relics, gameState.ascension),
+    shopUpgradePrice: getShopUpgradePrice(gameState.relics, gameState.ascension),
     removeSource: gameState.removeSource,
     upgradeSource: gameState.upgradeSource,
     kills: gameState.kills,

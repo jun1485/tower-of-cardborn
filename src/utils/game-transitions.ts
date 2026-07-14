@@ -20,19 +20,34 @@ export const REMOVE_PRICE = SHOP_BALANCE.removePrice;
 export const UPGRADE_PRICE = SHOP_BALANCE.upgradePrice;
 export const MIN_DECK_SIZE = 1;
 
+/** 상점 가격 보정 */
+function getAdjustedShopPrice(basePrice: number, relics: readonly RelicId[], ascension: number): number {
+  return Math.floor(applyShopDiscount(basePrice, relics) * getAscensionModifier(ascension).shopPriceMul);
+}
+
 /** 유물 할인·승천 배율 반영 상점 카드 가격 산정 */
 export function getShopCardPrice(cardId: string, relics: readonly RelicId[], ascension = 0): number {
-  return Math.floor(applyShopDiscount(getCardPrice(cardId), relics) * getAscensionModifier(ascension).shopPriceMul);
+  return getAdjustedShopPrice(getCardPrice(cardId), relics, ascension);
 }
 
 /** 유물 할인·승천 배율 반영 상점 유물 가격 산정 */
 export function getShopRelicPrice(relics: readonly RelicId[], ascension = 0): number {
-  return Math.floor(applyShopDiscount(SHOP_BALANCE.relicPrice, relics) * getAscensionModifier(ascension).shopPriceMul);
+  return getAdjustedShopPrice(SHOP_BALANCE.relicPrice, relics, ascension);
 }
 
 /** 유물 할인·승천 배율 반영 상점 포션 가격 산정 */
 export function getShopPotionPrice(relics: readonly RelicId[], ascension = 0): number {
-  return Math.floor(applyShopDiscount(SHOP_BALANCE.potionPrice, relics) * getAscensionModifier(ascension).shopPriceMul);
+  return getAdjustedShopPrice(SHOP_BALANCE.potionPrice, relics, ascension);
+}
+
+/** 유물 할인·승천 배율 반영 카드 제거 가격 산정 */
+export function getShopRemovePrice(relics: readonly RelicId[], ascension = 0): number {
+  return getAdjustedShopPrice(REMOVE_PRICE, relics, ascension);
+}
+
+/** 유물 할인·승천 배율 반영 카드 강화 가격 산정 */
+export function getShopUpgradePrice(relics: readonly RelicId[], ascension = 0): number {
+  return getAdjustedShopPrice(UPGRADE_PRICE, relics, ascension);
 }
 
 /** 보물 상자 보상 묶음 */
@@ -136,7 +151,7 @@ export function finishEventState(state: GameState): GameState {
 
 /** 휴식 회복 상태 반영 (유물 회복률 가산 포함) */
 export function restState(state: GameState): GameState {
-  if (state.screen !== 'rest') return state;
+  if (state.screen !== 'rest' || state.playerHp >= state.playerMaxHp) return state;
   const healRate = getAscensionModifier(state.ascension).restHealRate + getRelicRestHealBonus(state.relics);
   const healAmount = Math.floor(state.playerMaxHp * healRate);
   return { ...state, screen: 'map', playerHp: Math.min(state.playerHp + healAmount, state.playerMaxHp) };
@@ -144,12 +159,16 @@ export function restState(state: GameState): GameState {
 
 /** 휴식 카드 강화 화면 진입 */
 export function enterUpgradeState(state: GameState): GameState {
-  return state.screen === 'rest' ? { ...state, screen: 'upgrade', upgradeSource: 'rest' } : state;
+  return state.screen === 'rest' && state.deck.some((id) => canUpgrade(id))
+    ? { ...state, screen: 'upgrade', upgradeSource: 'rest' }
+    : state;
 }
 
 /** 상점 카드 강화 화면 진입 (골드는 강화 확정 시 차감) */
 export function enterShopUpgradeState(state: GameState): GameState {
-  if (state.screen !== 'shop' || state.gold < UPGRADE_PRICE || !state.deck.some((id) => canUpgrade(id))) return state;
+  if (state.screen !== 'shop'
+    || state.gold < getShopUpgradePrice(state.relics, state.ascension)
+    || !state.deck.some((id) => canUpgrade(id))) return state;
   return { ...state, screen: 'upgrade', upgradeSource: 'shop' };
 }
 
@@ -161,11 +180,12 @@ export function upgradeCardState(state: GameState, deckIndex: number): GameState
   const upgradedId = getUpgradedId(cardId);
   if (upgradedId === cardId) return state;
   const fromShop = state.upgradeSource === 'shop';
-  if (fromShop && state.gold < UPGRADE_PRICE) return state;
+  const shopPrice = getShopUpgradePrice(state.relics, state.ascension);
+  if (fromShop && state.gold < shopPrice) return state;
   const deck = [...state.deck];
   deck[deckIndex] = upgradedId;
   if (fromShop) {
-    return { ...state, screen: 'shop', deck, gold: state.gold - UPGRADE_PRICE, upgradeSource: null };
+    return { ...state, screen: 'shop', deck, gold: state.gold - shopPrice, upgradeSource: null };
   }
   if (state.upgradeSource !== 'event') return { ...state, screen: 'map', deck, upgradeSource: null };
   const remaining = state.pendingUpgradeCount - 1;
@@ -189,7 +209,7 @@ export function skipRestState(state: GameState): GameState {
 /** 카드 제거 화면 진입 */
 export function enterRemoveState(state: GameState): GameState {
   if ((state.screen !== 'rest' && state.screen !== 'shop') || state.deck.length <= MIN_DECK_SIZE) return state;
-  return state.screen === 'shop' && state.gold < REMOVE_PRICE
+  return state.screen === 'shop' && state.gold < getShopRemovePrice(state.relics, state.ascension)
     ? state
     : { ...state, screen: 'remove_card', removeSource: state.screen };
 }
@@ -198,7 +218,8 @@ export function enterRemoveState(state: GameState): GameState {
 export function removeCardState(state: GameState, deckIndex: number): GameState {
   if (state.screen !== 'remove_card' || !state.removeSource || state.deck.length <= MIN_DECK_SIZE || !state.deck[deckIndex]) return state;
   const fromShop = state.removeSource === 'shop';
-  if (fromShop && state.gold < REMOVE_PRICE) return state;
+  const shopPrice = getShopRemovePrice(state.relics, state.ascension);
+  if (fromShop && state.gold < shopPrice) return state;
   const deck = state.deck.filter((_, index) => index !== deckIndex);
   if (state.removeSource === 'event') {
     const remaining = state.pendingRemoveCount - 1;
@@ -210,7 +231,7 @@ export function removeCardState(state: GameState, deckIndex: number): GameState 
     ...state,
     screen: fromShop ? 'shop' : 'map',
     deck,
-    gold: fromShop ? state.gold - REMOVE_PRICE : state.gold,
+    gold: fromShop ? state.gold - shopPrice : state.gold,
     removeSource: null,
   };
 }

@@ -8,6 +8,7 @@ interface RestScreenProps {
   readonly playerHp: number;
   readonly playerMaxHp: number;
   readonly deckSize: number;
+  readonly upgradableCount: number;
   readonly healAmount: number;
   readonly onRest: () => void;
   readonly onUpgrade: () => void;
@@ -15,7 +16,9 @@ interface RestScreenProps {
   readonly onSkip: () => void;
 }
 
-export function RestScreen({ playerHp, playerMaxHp, deckSize, healAmount, onRest, onUpgrade, onRemove, onSkip }: RestScreenProps) {
+export function RestScreen({
+  playerHp, playerMaxHp, deckSize, upgradableCount, healAmount, onRest, onUpgrade, onRemove, onSkip,
+}: RestScreenProps) {
   const t = useTranslation();
   const actualHeal = Math.min(healAmount, playerMaxHp - playerHp);
 
@@ -23,10 +26,10 @@ export function RestScreen({ playerHp, playerMaxHp, deckSize, healAmount, onRest
     <div className={styles.resultScreen}>
       <h1 className={styles.resultTitle}>{t('restTitle')}</h1>
       <p className={styles.subtitle}>HP {playerHp}/{playerMaxHp}</p>
-      <button className={styles.startBtn} onClick={onRest}>
+      <button className={styles.startBtn} disabled={playerHp >= playerMaxHp} onClick={onRest}>
         {t('restHeal', String(actualHeal))}
       </button>
-      <button className={styles.startBtn} onClick={onUpgrade}>
+      <button className={styles.startBtn} disabled={upgradableCount === 0} onClick={onUpgrade}>
         {t('upgradeOption')}
       </button>
       <button className={styles.startBtn} disabled={deckSize <= MIN_DECK_SIZE} onClick={onRemove}>

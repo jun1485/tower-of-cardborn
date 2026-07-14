@@ -9,7 +9,7 @@ import { useTranslation, useLanguage } from '../../i18n';
 import { getCardName, generateCardDescription, getCardRarityName, getCardTypeName } from '../../i18n/card-text';
 import { getRelicDescription, getRelicName } from '../../i18n/relic-text';
 import { getPotionDescription, getPotionName } from '../../i18n/potion-text';
-import { MIN_DECK_SIZE, REMOVE_PRICE, UPGRADE_PRICE, getShopCardPrice } from '../../utils/game-transitions';
+import { MIN_DECK_SIZE, getShopCardPrice } from '../../utils/game-transitions';
 import styles from '../../styles/app.module.css';
 import cardStyles from '../../styles/card.module.css';
 import { CardArtwork } from '../card/CardArtwork';
@@ -21,6 +21,8 @@ interface ShopScreenProps {
   readonly shopPotions: readonly PotionId[];
   readonly relicPrice: number;
   readonly potionPrice: number;
+  readonly removePrice: number;
+  readonly upgradePrice: number;
   readonly relics: readonly RelicId[];
   readonly ascension: number;
   readonly potionCount: number;
@@ -36,7 +38,7 @@ interface ShopScreenProps {
 }
 
 export function ShopScreen({
-  shopCards, shopRelics, shopPotions, relicPrice, potionPrice, relics, ascension, potionCount,
+  shopCards, shopRelics, shopPotions, relicPrice, potionPrice, removePrice, upgradePrice, relics, ascension, potionCount,
   gold, deckSize, upgradableCount, onBuy, onBuyRelic, onBuyPotion, onRemoveService, onUpgradeService, onLeave,
 }: ShopScreenProps) {
   const t = useTranslation();
@@ -110,17 +112,17 @@ export function ShopScreen({
 
       <button
         className={styles.resultBtn}
-        disabled={gold < UPGRADE_PRICE || upgradableCount === 0}
+        disabled={gold < upgradePrice || upgradableCount === 0}
         onClick={onUpgradeService}
       >
-        {t('shopUpgradeService', UPGRADE_PRICE)}
+        {t('shopUpgradeService', upgradePrice)}
       </button>
       <button
         className={styles.resultBtn}
-        disabled={gold < REMOVE_PRICE || deckSize <= MIN_DECK_SIZE}
+        disabled={gold < removePrice || deckSize <= MIN_DECK_SIZE}
         onClick={onRemoveService}
       >
-        {t('shopRemoveService', REMOVE_PRICE)}
+        {t('shopRemoveService', removePrice)}
       </button>
       <button className={styles.resultBtn} onClick={onLeave}>
         {t('shopLeave')}

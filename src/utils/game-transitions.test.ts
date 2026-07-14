@@ -3,9 +3,9 @@
 import { describe, expect, it } from 'vitest';
 import type { GameState } from '@tower-of-cardborn/game-core/types/game';
 import {
-  applyEventOutcome, buyCardState, enterMapNode, enterShopUpgradeState, finishEventState,
+  applyEventOutcome, buyCardState, enterMapNode, enterShopUpgradeState, enterUpgradeState, finishEventState,
   completeCombatRewardState, enterCombatRewardState, removeCardState,
-  enterGameOverState, restState, upgradeCardState,
+  enterGameOverState, getShopRemovePrice, getShopUpgradePrice, restState, upgradeCardState,
 } from './game-transitions';
 
 const MAP_STATE: GameState = {
@@ -146,6 +146,12 @@ describe('덱 관리 전환', () => {
     expect(result.playerHp).toBe(80);
   });
 
+  it('체력이 가득 차면 회복으로 휴식처를 소모하지 않는다', () => {
+    const state: GameState = { ...MAP_STATE, screen: 'rest' };
+
+    expect(restState(state)).toBe(state);
+  });
+
   it('이벤트 다중 강화 잔여 횟수를 감소한다', () => {
     const result = upgradeCardState({
       ...MAP_STATE,
@@ -173,10 +179,21 @@ describe('덱 관리 전환', () => {
     expect(result.gold).toBe(0);
   });
 
+  it('상인의 반지와 승천 배율을 상점 서비스 가격에 함께 반영한다', () => {
+    expect(getShopRemovePrice(['merchants_ring'], 5)).toBe(57);
+    expect(getShopUpgradePrice(['merchants_ring'], 5)).toBe(72);
+  });
+
   it('마지막 카드는 제거하지 않는다', () => {
     const state: GameState = { ...MAP_STATE, screen: 'remove_card', removeSource: 'rest' };
 
     expect(removeCardState(state, 0)).toBe(state);
+  });
+
+  it('강화 가능한 카드가 없으면 휴식처 강화 진입을 차단한다', () => {
+    const state: GameState = { ...MAP_STATE, screen: 'rest', deck: ['strike+'] };
+
+    expect(enterUpgradeState(state)).toBe(state);
   });
 
   it('상점 카드 강화는 골드를 차감하고 상점으로 복귀한다', () => {
@@ -189,6 +206,20 @@ describe('덱 관리 전환', () => {
     expect(result.screen).toBe('shop');
     expect(result.deck[0]).toBe('strike+');
     expect(result.gold).toBe(25);
+  });
+
+  it('할인된 상점 카드 강화 비용을 차감한다', () => {
+    const shopState: GameState = {
+      ...MAP_STATE,
+      screen: 'shop',
+      gold: 60,
+      deck: ['strike', 'defend'],
+      relics: ['merchants_ring'],
+    };
+    const result = upgradeCardState(enterShopUpgradeState(shopState), 0);
+
+    expect(result.screen).toBe('shop');
+    expect(result.gold).toBe(0);
   });
 
   it('골드가 부족하면 상점 강화 진입을 차단한다', () => {

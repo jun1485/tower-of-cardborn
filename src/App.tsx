@@ -70,7 +70,7 @@ function AppInner({ onLangChange }: AppInnerProps) {
   const {
     screen, combat, deck, playerHp, playerMaxHp, map, characterClass, rewardCards,
     gold, rewardGold, rewardRelic, relics, rewardPotion, potions,
-    shopCards, shopRelics, shopPotions, shopRelicPrice, shopPotionPrice,
+    shopCards, shopRelics, shopPotions, shopRelicPrice, shopPotionPrice, shopRemovePrice, shopUpgradePrice,
     kills, ascension, removeSource, upgradeSource,
     eventId, eventResult, unlockedAscension, restHealAmount, runSeed, isDaily,
     startNewGame, selectMapNode, handlePlayCard, handleEndTurn,
@@ -212,6 +212,7 @@ function AppInner({ onLangChange }: AppInnerProps) {
             playerHp={playerHp}
             playerMaxHp={playerMaxHp}
             deckSize={deck.length}
+            upgradableCount={deck.filter((cardId) => canUpgrade(cardId)).length}
             healAmount={restHealAmount}
             onRest={rest}
             onUpgrade={goToUpgrade}
@@ -264,6 +265,8 @@ function AppInner({ onLangChange }: AppInnerProps) {
             shopPotions={shopPotions}
             relicPrice={shopRelicPrice}
             potionPrice={shopPotionPrice}
+            removePrice={shopRemovePrice}
+            upgradePrice={shopUpgradePrice}
             relics={relics}
             ascension={ascension}
             potionCount={potions.length}
