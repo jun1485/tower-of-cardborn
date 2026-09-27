@@ -165,6 +165,7 @@ export interface Translations {
   musicVolume: string;
   confirmOnExit: string;
   reduceMotion: string;
+  srCombatStatus: string;
   resetSave: string;
   resetSaveWarning: string;
   deleteSave: string;

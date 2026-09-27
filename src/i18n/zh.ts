@@ -147,6 +147,7 @@ export const zh: Translations = {
   musicVolume: '背景音乐音量',
   confirmOnExit: '退出时确认',
   reduceMotion: '减少动态效果',
+  srCombatStatus: '第{0}回合。生命 {1}/{2}。格挡 {3}。能量 {4}。手牌 {5}张。',
   resetSave: '重置存档',
   resetSaveWarning: '所有游戏进度、统计、解锁和装备数据都将被删除。',
   deleteSave: '删除',

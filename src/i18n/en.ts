@@ -147,6 +147,7 @@ export const en: Translations = {
   musicVolume: 'Music Volume',
   confirmOnExit: 'Confirm on exit',
   reduceMotion: 'Reduce motion',
+  srCombatStatus: 'Turn {0}. HP {1}/{2}. Block {3}. Energy {4}. {5} cards in hand.',
   resetSave: 'Reset save data',
   resetSaveWarning: 'All game progress, statistics, unlocks, and equipment will be deleted.',
   deleteSave: 'Delete',

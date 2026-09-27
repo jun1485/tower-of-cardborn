@@ -521,6 +521,11 @@ export function CombatScreen({
         </div>
       </div>
 
+      {/* 스크린리더 전투 상태 안내 (턴·피해·드로우 변화 시 갱신) */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {t('srCombatStatus', combat.turn, combat.player.hp, combat.player.maxHp, combat.player.block, combat.player.energy, combat.hand.length)}
+      </div>
+
       {combat.result === 'victory' && (
         <div className={styles.combatResultCue} role="status" aria-live="assertive">
           {t('victory')}
