@@ -78,7 +78,7 @@ function AppInner({ onLangChange }: AppInnerProps) {
     goToRemove, removeCard, skipRemove, chooseEventOption, finishEvent, continueEndless,
     buyCard, buyRelic, buyPotion, leaveShop, usePotion, goToTitle,
     resetProgress,
-    saveError, dismissSaveError,
+    saveError, dismissSaveError, restoreFailed, dismissRestoreFailed,
   } = useGame();
 
   // 타이틀 승천 레벨 선택값 (해금 범위 클램프)
@@ -319,10 +319,17 @@ function AppInner({ onLangChange }: AppInnerProps) {
   return (
     <>
       {renderScreen()}
-      {saveError && (
+      {/* 복원 실패 안내 우선 노출 (같은 위치 배너 겹침 방지) */}
+      {saveError && !restoreFailed && (
         <div className={styles.saveError} role="alert">
           <span>{t('saveError')}</span>
           <button type="button" aria-label={t('close')} onClick={dismissSaveError}>×</button>
+        </div>
+      )}
+      {restoreFailed && (
+        <div className={styles.saveError} role="alert">
+          <span>{t('saveRestoreFailed')}</span>
+          <button type="button" aria-label={t('close')} onClick={dismissRestoreFailed}>×</button>
         </div>
       )}
       {!combatOverlayOpen && (

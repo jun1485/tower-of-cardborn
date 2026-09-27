@@ -151,6 +151,7 @@ export const ko: Translations = {
   resetSettings: '설정 초기화',
   language: '언어',
   saveError: '게임 진행 상태를 저장하지 못했습니다.',
+  saveRestoreFailed: '이전 진행 데이터를 이 버전에서 불러올 수 없어 새로 시작합니다.',
   settingsSaveError: '게임 설정을 저장하지 못했습니다.',
 
   exhaust: '소멸',

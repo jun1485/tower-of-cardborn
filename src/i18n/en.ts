@@ -151,6 +151,7 @@ export const en: Translations = {
   resetSettings: 'Reset settings',
   language: 'Language',
   saveError: 'The game could not save your progress.',
+  saveRestoreFailed: 'Your previous run could not be loaded in this version, so a new game will start.',
   settingsSaveError: 'The game could not save your settings.',
 
   exhaust: 'Exhaust',

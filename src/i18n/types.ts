@@ -169,6 +169,7 @@ export interface Translations {
   resetSettings: string;
   language: string;
   saveError: string;
+  saveRestoreFailed: string;
   settingsSaveError: string;
 
   // 카드 공통

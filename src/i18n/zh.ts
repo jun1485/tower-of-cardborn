@@ -151,6 +151,7 @@ export const zh: Translations = {
   resetSettings: '重置设置',
   language: '语言',
   saveError: '无法保存游戏进度。',
+  saveRestoreFailed: '此版本无法读取之前的游戏进度，将重新开始。',
   settingsSaveError: '无法保存游戏设置。',
 
   exhaust: '消耗',

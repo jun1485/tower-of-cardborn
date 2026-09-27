@@ -7,7 +7,7 @@ import { getStarterDeck, getRewardCards, canUpgrade } from '@tower-of-cardborn/g
 import { getAscensionModifier, MAX_ASCENSION } from '@tower-of-cardborn/game-core/data/ascension';
 import { getEventById } from '@tower-of-cardborn/game-core/data/events';
 import { isChoiceAvailable, resolveEventChoice, pickRandomEvent } from '@tower-of-cardborn/game-core/game/event-engine';
-import { saveGame, clearSave } from '../utils/storage';
+import { saveGame, clearSave, consumeRestoreFailure } from '../utils/storage';
 import { clearMeta, loadMeta, recordRunStart, recordRunEnd, updateRecordedRun } from '../utils/meta';
 import { playSfx } from '../utils/sound';
 import { DEFAULT_TOTAL_MAPS, generateMap, getAvailableNodeIds, getFloorsClimbed } from '@tower-of-cardborn/game-core/game/map-generator';
@@ -51,6 +51,8 @@ function rollShopPotions(): PotionId[] {
 export function useGame() {
   const [gameState, setGameState] = useState<GameState>(loadValidGameState);
   const [saveError, setSaveError] = useState(false);
+  // 저장본 복원 실패 안내 (초기 로드 결과)
+  const [restoreFailed, setRestoreFailed] = useState(consumeRestoreFailure);
   const stateRef = useRef(gameState);
   const rewardSelectionLockRef = useRef(false);
   const pendingPotionUseRef = useRef(false);
@@ -518,6 +520,11 @@ export function useGame() {
     setSaveError(false);
   }, []);
 
+  /** 저장본 복원 실패 안내 닫기 */
+  const dismissRestoreFailed = useCallback(() => {
+    setRestoreFailed(false);
+  }, []);
+
   return {
     screen: gameState.screen,
     combat,
@@ -579,5 +586,7 @@ export function useGame() {
     resetProgress,
     saveError,
     dismissSaveError,
+    restoreFailed,
+    dismissRestoreFailed,
   };
 }

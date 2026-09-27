@@ -15,7 +15,10 @@ import type { PotionId } from '@tower-of-cardborn/game-core/types/potion';
 import type { EventId } from '@tower-of-cardborn/game-core/types/event';
 
 const SAVE_KEY = 'tower-of-cardborn-save';
+// 복원 불가 저장본 원문 보관 (수동 복구용)
+const SAVE_BACKUP_KEY = 'tower-of-cardborn-save-backup';
 const SAVE_VERSION = 8;
+let restoreFailed = false;
 const LEGACY_SAVE_VERSIONS: readonly number[] = [3, 5, 6];
 
 const GAME_SCREENS: readonly GameScreen[] = [
@@ -342,13 +345,26 @@ function isGameState(value: unknown): value is GameState {
     && (value.recordedRunAt === undefined || value.recordedRunAt === null || isNonNegativeInteger(value.recordedRunAt));
 }
 
-/** 손상 저장 데이터 정리 */
-function removeInvalidSave(): void {
+/** 복원 불가 저장본 원문 백업 후 정리 (복원 실패 안내 대상 표시) */
+function discardInvalidSave(raw: string): void {
+  restoreFailed = true;
+  try {
+    localStorage.setItem(SAVE_BACKUP_KEY, raw);
+  } catch {
+    console.error('복원할 수 없는 게임 저장 데이터를 백업하지 못했습니다.');
+  }
   try {
     localStorage.removeItem(SAVE_KEY);
   } catch {
     console.error('손상된 게임 저장 데이터를 정리하지 못했습니다.');
   }
+}
+
+/** 저장본 복원 실패 여부 1회 조회 */
+export function consumeRestoreFailure(): boolean {
+  const failed = restoreFailed;
+  restoreFailed = false;
+  return failed;
 }
 
 /** 게임 상태 저장 */
@@ -365,29 +381,35 @@ export function saveGame(state: GameState): boolean {
 
 /** 게임 상태 복원 (구버전 저장본 마이그레이션 포함) */
 export function loadGame(): GameState | null {
+  let raw: string | null;
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return null;
+    raw = localStorage.getItem(SAVE_KEY);
+  } catch {
+    console.error('게임 저장 데이터를 읽지 못했습니다.');
+    return null;
+  }
+  if (!raw) return null;
+  try {
     const parsed: unknown = JSON.parse(raw);
     if (!isRecord(parsed)
       || !isNonNegativeInteger(parsed.version)
       || parsed.version < 1
       || parsed.version > SAVE_VERSION) {
-      removeInvalidSave();
+      discardInvalidSave(raw);
       return null;
     }
     const migrated = parsed.version === SAVE_VERSION
       ? parsed.state
       : migrateSave(parsed.version, parsed.state);
     if (!isGameState(migrated)) {
-      removeInvalidSave();
+      discardInvalidSave(raw);
       return null;
     }
     // 승격된 저장본 현행 버전 재저장
     if (parsed.version !== SAVE_VERSION) saveGame(migrated);
     return migrated;
   } catch {
-    removeInvalidSave();
+    discardInvalidSave(raw);
     return null;
   }
 }

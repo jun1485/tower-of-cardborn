@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { GameState } from '@tower-of-cardborn/game-core/types/game';
-import { clearSave, loadGame, saveGame } from './storage';
+import { clearSave, consumeRestoreFailure, loadGame, saveGame } from './storage';
 
 const values = new Map<string, string>();
 const storage: Storage = {
@@ -199,5 +199,23 @@ describe('게임 저장', () => {
 
     expect(loadGame()).toBeNull();
     expect(localStorage.getItem('tower-of-cardborn-save')).toBeNull();
+  });
+
+  it('복원할 수 없는 저장본 원문을 백업하고 실패를 1회 알린다', () => {
+    const raw = JSON.stringify({ version: 8, state: { ...GAME_STATE, deck: ['removed_card'] } });
+    localStorage.setItem('tower-of-cardborn-save', raw);
+    consumeRestoreFailure();
+
+    expect(loadGame()).toBeNull();
+    expect(localStorage.getItem('tower-of-cardborn-save-backup')).toBe(raw);
+    expect(consumeRestoreFailure()).toBe(true);
+    expect(consumeRestoreFailure()).toBe(false);
+  });
+
+  it('저장본이 없으면 복원 실패로 알리지 않는다', () => {
+    consumeRestoreFailure();
+
+    expect(loadGame()).toBeNull();
+    expect(consumeRestoreFailure()).toBe(false);
   });
 });
