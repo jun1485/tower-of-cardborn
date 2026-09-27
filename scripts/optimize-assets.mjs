@@ -1,11 +1,13 @@
-// 릴리스 이미지 WebP 파생본 생성
+// 릴리스 이미지 WebP 파생본 생성 (원본보다 오래된 파생본만 갱신, --force 시 전량)
 
-import { mkdir, readdir } from 'node:fs/promises';
+import { mkdir, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 
 const ROOT = process.cwd();
 const ASSET_ROOT = path.join(ROOT, 'public', 'assets');
+const FORCE = process.argv.includes('--force');
+let skipped = 0;
 
 /** PNG 목록 조회 */
 async function getPngFiles(directory) {
@@ -14,12 +16,33 @@ async function getPngFiles(directory) {
     .map((entry) => path.join(directory, entry.name));
 }
 
+/** 파생본 최신 여부 확인 (원본 수정 시각 이후 생성) */
+async function isUpToDate(source, target) {
+  if (FORCE) return false;
+  try {
+    const [sourceStat, targetStat] = await Promise.all([stat(source), stat(target)]);
+    return targetStat.mtimeMs >= sourceStat.mtimeMs;
+  } catch {
+    return false;
+  }
+}
+
+/** 원본 변경분만 파생본 생성 */
+async function convert(source, target, build) {
+  if (await isUpToDate(source, target)) {
+    skipped += 1;
+    return;
+  }
+  await build(source).toFile(target);
+}
+
 /** 카드 이미지 최적화 */
 async function optimizeCards() {
   const files = await getPngFiles(path.join(ASSET_ROOT, 'cards'));
   for (const source of files) {
-    const target = source.replace(/\.png$/i, '.webp');
-    await sharp(source).resize(448, 600, { fit: 'cover' }).webp({ quality: 82, effort: 6 }).toFile(target);
+    await convert(source, source.replace(/\.png$/i, '.webp'), (input) => sharp(input)
+      .resize(448, 600, { fit: 'cover' })
+      .webp({ quality: 82, effort: 6 }));
   }
   return files.length;
 }
@@ -28,8 +51,9 @@ async function optimizeCards() {
 async function optimizeClasses() {
   const files = await getPngFiles(path.join(ASSET_ROOT, 'classes'));
   for (const source of files) {
-    const target = source.replace(/\.png$/i, '.webp');
-    await sharp(source).resize({ height: 720, withoutEnlargement: true }).webp({ quality: 84, effort: 6 }).toFile(target);
+    await convert(source, source.replace(/\.png$/i, '.webp'), (input) => sharp(input)
+      .resize({ height: 720, withoutEnlargement: true })
+      .webp({ quality: 84, effort: 6 }));
   }
   return files.length;
 }
@@ -39,11 +63,9 @@ async function optimizeMonsters() {
   const files = (await getPngFiles(path.join(ASSET_ROOT, 'monsters')))
     .filter((source) => source.endsWith('_hd.png'));
   for (const source of files) {
-    const target = source.replace(/\.png$/i, '.webp');
-    await sharp(source)
+    await convert(source, source.replace(/\.png$/i, '.webp'), (input) => sharp(input)
       .resize(640, 640, { fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 84, alphaQuality: 90, effort: 6 })
-      .toFile(target);
+      .webp({ quality: 84, alphaQuality: 90, effort: 6 }));
   }
   return files.length;
 }
@@ -54,10 +76,10 @@ async function optimizeBackgrounds() {
   const names = ['bg_combat_hd.svg', 'bg_map_1.svg', 'bg_map_2.svg', 'bg_map_3.svg'];
   await mkdir(uiDirectory, { recursive: true });
   for (const name of names) {
-    await sharp(path.join(uiDirectory, name), { density: 144 })
+    const source = path.join(uiDirectory, name);
+    await convert(source, path.join(uiDirectory, name.replace(/\.svg$/i, '.webp')), (input) => sharp(input, { density: 144 })
       .resize({ width: 1280 })
-      .webp({ quality: 80, effort: 6 })
-      .toFile(path.join(uiDirectory, name.replace(/\.svg$/i, '.webp')));
+      .webp({ quality: 80, effort: 6 }));
   }
   return names.length;
 }
@@ -68,10 +90,9 @@ async function optimizeAppIcons() {
   const source = path.join(uiDirectory, 'app_icon.png');
   const sizes = [180, 192, 512];
   for (const size of sizes) {
-    await sharp(source)
+    await convert(source, path.join(uiDirectory, `app_icon_${size}.png`), (input) => sharp(input)
       .resize(size, size)
-      .png({ compressionLevel: 9, palette: true, quality: 90 })
-      .toFile(path.join(uiDirectory, `app_icon_${size}.png`));
+      .png({ compressionLevel: 9, palette: true, quality: 90 }));
   }
   return sizes.length;
 }
@@ -85,7 +106,8 @@ async function main() {
     optimizeBackgrounds(),
     optimizeAppIcons(),
   ]);
-  console.log(`이미지 최적화 완료: ${counts.reduce((sum, count) => sum + count, 0)}개`);
+  const total = counts.reduce((sum, count) => sum + count, 0);
+  console.log(`이미지 최적화 완료: 대상 ${total}개 중 갱신 ${total - skipped}개, 최신 유지 ${skipped}개`);
 }
 
 main().catch((error) => {
