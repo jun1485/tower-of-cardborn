@@ -79,7 +79,10 @@ function groupDrawPile(drawPile: readonly CardInstance[], lang: import('../../i1
     const name = def ? getCardName(def.id, lang) : card.definitionId;
     counts.set(name, (counts.get(name) ?? 0) + 1);
   }
-  return Array.from(counts.entries()).map(([name, count]) => `${name} x${count}`);
+  // 이름순 정렬 (드로우 순서 노출 방지)
+  return Array.from(counts.entries())
+    .sort(([a], [b]) => a.localeCompare(b, lang))
+    .map(([name, count]) => `${name} x${count}`);
 }
 
 export function CombatScreen({
@@ -113,6 +116,8 @@ export function CombatScreen({
   const combatResolved = combat.result !== 'ongoing';
   const inputLocked = turnEnding || combatResolved;
   const endTurnLockRef = useRef(false);
+  // 카드 놓기 연출 진행 여부 (완료 전 턴 종료 차단)
+  const cardReleasingRef = useRef(false);
   const endTurnTimerRef = useRef<number | null>(null);
   const attackTimerRef = useRef<number | null>(null);
 
@@ -135,7 +140,7 @@ export function CombatScreen({
 
   /** 적 공격 돌진 애니메이션 후 실제 턴 종료 처리 */
   const handleEndTurnWithAnimation = useCallback(() => {
-    if (endTurnLockRef.current || combat.result !== 'ongoing') return;
+    if (endTurnLockRef.current || cardReleasingRef.current || combat.result !== 'ongoing') return;
     endTurnLockRef.current = true;
     setEndTurnPendingTurn(combat.turn);
     const attackerIds = combat.enemies
@@ -328,8 +333,10 @@ export function CombatScreen({
         const targetEnemyId = pointTargetEnemyId ?? aliveHoveredEnemyId ?? fallbackEnemyId;
         const singleTarget = hasSingleTargetEffect(def);
 
+        cardReleasingRef.current = true;
         await animateGhostRelease(false);
         onPlayCard(current.instanceId, singleTarget ? targetEnemyId : undefined);
+        cardReleasingRef.current = false;
         // 공격 카드 → 사용 후 돌진 애니메이션 유지
         if (def.type === 'attack' && !reducedMotion) {
           setAttacking(true);
@@ -387,7 +394,11 @@ export function CombatScreen({
 
   const getPileData = (): { title: string; pile: readonly CardInstance[] } => {
     switch (viewingPile) {
-      case 'draw': return { title: t('drawPile'), pile: combat.drawPile };
+      // 뽑을 카드 더미는 정의 순 정렬 (드로우 순서 노출 방지)
+      case 'draw': return {
+        title: t('drawPile'),
+        pile: [...combat.drawPile].sort((a, b) => a.definitionId.localeCompare(b.definitionId)),
+      };
       case 'discard': return { title: t('discardPile'), pile: combat.discardPile };
       case 'exhaust': return { title: t('exhaustPile'), pile: combat.exhaustPile };
       default: return { title: '', pile: [] };
