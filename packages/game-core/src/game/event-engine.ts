@@ -8,6 +8,9 @@ import { getRewardCards } from '../data/cards';
 import { getRelicReward } from '../data/relics';
 import { random } from '../utils/random';
 
+// 액트 지정 이벤트의 최대 액트 (초과 시 엔들리스)
+const MAX_EVENT_ACT = 3;
+
 export interface EventChoiceContext {
   readonly hp: number;
   readonly maxHp: number;
@@ -187,9 +190,10 @@ export function resolveEventChoice(
   };
 }
 
-/** 미열람 우선 이벤트 추첨 (액트 전용 풀 + 풀 소진 시 리셋) */
+/** 미열람 우선 이벤트 추첨 (액트 전용 풀 + 엔들리스 전체 풀 + 풀 소진 시 리셋) */
 export function pickRandomEvent(seenEventIds: readonly string[], mapIndex = 1): GameEvent {
-  const actPool = EVENTS.filter((event) => !event.acts || event.acts.includes(mapIndex));
+  const endless = mapIndex > MAX_EVENT_ACT;
+  const actPool = EVENTS.filter((event) => endless || !event.acts || event.acts.includes(mapIndex));
   const unseen = actPool.filter((event) => !seenEventIds.includes(event.id));
   const pool = unseen.length > 0 ? unseen : actPool;
   return pool[Math.floor(random() * pool.length)];

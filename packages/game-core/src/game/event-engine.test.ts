@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { EVENTS, getEventById } from '../data/events';
 import { resetRandomSource, setRandomSource } from '../utils/random';
-import { isChoiceAvailable, resolveEventChoice } from './event-engine';
+import { isChoiceAvailable, pickRandomEvent, resolveEventChoice } from './event-engine';
 
 afterEach(() => {
   resetRandomSource();
@@ -27,6 +27,25 @@ describe('이벤트 선택 조건', () => {
     const choice = event?.choices[0];
 
     expect(choice && isChoiceAvailable(choice, { hp: 80, maxHp: 80, gold: 0, deckSize: 10, upgradableCount: 1 })).toBe(false);
+  });
+});
+
+describe('이벤트 추첨', () => {
+  it('엔들리스 액트에서는 액트 지정 이벤트까지 전체 풀에서 추첨한다', () => {
+    const actLimited = EVENTS.filter((event) => event.acts);
+    const seenAllButLast = EVENTS.filter((event) => event.id !== actLimited.at(-1)?.id).map((event) => event.id);
+
+    expect(actLimited.length).toBeGreaterThan(0);
+    expect(pickRandomEvent(seenAllButLast, 4).id).toBe(actLimited.at(-1)?.id);
+  });
+
+  it('일반 액트에서는 다른 액트 전용 이벤트를 제외한다', () => {
+    const actOneOnly = EVENTS.filter((event) => event.acts && !event.acts.includes(3));
+
+    for (let index = 0; index < 50; index++) {
+      setRandomSource(() => index / 50);
+      expect(actOneOnly.map((event) => event.id)).not.toContain(pickRandomEvent([], 3).id);
+    }
   });
 });
 
