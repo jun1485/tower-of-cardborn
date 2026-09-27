@@ -89,7 +89,8 @@ export function TitleScreen({
   const [seedInput, setSeedInput] = useState('');
 
   const meta = useMemo(() => loadMeta(), []);
-  const dailySeed = useMemo(() => getDailySeed(), []);
+  // 렌더 시점 날짜 기준 일일 시드 (자정 경과 후 재렌더 시 갱신)
+  const dailySeed = getDailySeed();
   // 일일 도전 직업·난이도는 날짜 시드로 고정
   const dailyClass = CLASS_LIST[dailySeed % CLASS_LIST.length];
   const dailyCompleted = meta.lastDaily?.date === getUTCDateString();
@@ -162,7 +163,7 @@ export function TitleScreen({
           {t('dailyChallenge')}
           {dailyCompleted && <span className={styles.dailyDoneBadge}>✓ {t('dailyCompleted')}</span>}
         </strong>
-        <span>{t('dailyChallengeDesc')}</span>
+        <span>{dailyCompleted ? t('dailyRetryUnranked') : t('dailyChallengeDesc')}</span>
       </button>
       {!dailyChallenge && (
         <label className={styles.seedRow}>

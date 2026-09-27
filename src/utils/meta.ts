@@ -71,6 +71,8 @@ export interface RunSummary {
   readonly score: number;
   /** 일일 도전 런 여부 */
   readonly isDaily: boolean;
+  /** 순위표 제외 여부 (같은 날 일일 도전 재시도) */
+  readonly unranked?: boolean;
 }
 
 interface MetaData {
@@ -159,13 +161,14 @@ function normalizeRunList(value: unknown, limit: number): readonly RunSummary[] 
         ? mergeCount(run.score)
         : calculateRunScore({ floor, kills, won, ascension }),
       isDaily: run.isDaily === true,
+      ...(run.unranked === true ? { unranked: true } : {}),
     };
   });
 }
 
-/** 전체·일일 상위 기록 동시 보존 */
+/** 전체·일일 상위 기록 동시 보존 (순위표 제외 런 제외) */
 function selectBestRuns(runs: readonly RunSummary[]): readonly RunSummary[] {
-  const sorted = [...runs].sort((a, b) => b.score - a.score);
+  const sorted = runs.filter((run) => !run.unranked).sort((a, b) => b.score - a.score);
   const overall = sorted.slice(0, BEST_RUNS_LIMIT);
   const daily = sorted.filter((run) => run.isDaily).slice(0, BEST_RUNS_LIMIT);
   return [...overall, ...daily.filter((run) => !overall.some((entry) => entry.finishedAt === run.finishedAt))]
@@ -294,6 +297,8 @@ export function recordRunEnd({
     ? Math.max(prev.ascensionUnlocked, Math.min(normalizedAscension + 1, MAX_ASCENSION))
     : prev.ascensionUnlocked;
   const today = getUTCDateString();
+  // 같은 날 일일 도전 재시도는 순위표·일일 승리 수 제외
+  const dailyRetry = isDaily && prev.lastDaily?.date === today;
   const latestFinishedAt = prev.recentRuns.reduce((latest, run) => Math.max(latest, run.finishedAt), -1);
   const summary: RunSummary = {
     finishedAt: Math.max(Date.now(), latestFinishedAt + 1),
@@ -305,6 +310,7 @@ export function recordRunEnd({
     characterClass,
     score: calculateRunScore({ floor: normalizedFloor, kills: normalizedKills, won, ascension: normalizedAscension }),
     isDaily,
+    ...(dailyRetry ? { unranked: true } : {}),
   };
   const next: MetaState = {
     ...prev,
@@ -317,7 +323,7 @@ export function recordRunEnd({
     highestWonAscension: won
       ? Math.max(prev.highestWonAscension, normalizedAscension)
       : prev.highestWonAscension,
-    totalDailyWins: prev.totalDailyWins + (isDaily && won ? 1 : 0),
+    totalDailyWins: prev.totalDailyWins + (isDaily && won && !dailyRetry ? 1 : 0),
     // 같은 날 재도전 시 승리 기록 유지
     lastDaily: isDaily
       ? { date: today, won: won || (prev.lastDaily?.date === today && prev.lastDaily.won) }

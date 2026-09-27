@@ -24,6 +24,7 @@ export const zh: Translations = {
   assassinDesc: '叠加中毒 · 快速连击',
   dailyChallenge: '每日挑战',
   dailyChallengeDesc: '使用所有玩家相同的每日种子挑战',
+  dailyRetryUnranked: '今日重新挑战不计入排行榜',
   howToPlay: '游戏方法',
   privacyPolicy: '隐私政策',
   relicReward: '获得遗物',

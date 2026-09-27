@@ -152,6 +152,16 @@ describe('런 통계', () => {
     expect(second.recordedAt).toBeGreaterThan(first.recordedAt);
   });
 
+  it('같은 날 일일 도전 재시도는 순위표와 일일 승리 수에서 제외한다', () => {
+    const first = recordRunEnd({ won: false, floor: 5, kills: 2, ascension: 0, isDaily: true });
+    const retry = recordRunEnd({ won: true, floor: 30, kills: 10, ascension: 0, isDaily: true });
+
+    expect(retry.meta.bestRuns.map((run) => run.finishedAt)).toEqual([first.recordedAt]);
+    expect(retry.meta.recentRuns[0]).toMatchObject({ finishedAt: retry.recordedAt, unranked: true });
+    expect(retry.meta.totalDailyWins).toBe(0);
+    expect(isTopRunRecord(retry.recordedAt, true)).toBe(false);
+  });
+
   it('일일 도전 여부를 순위 기록에 보존한다', () => {
     const result = recordRunEnd({ won: true, floor: 30, kills: 10, ascension: 0, isDaily: true });
 

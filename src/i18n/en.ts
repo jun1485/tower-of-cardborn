@@ -24,6 +24,7 @@ export const en: Translations = {
   assassinDesc: 'Poison stacks · Rapid strikes',
   dailyChallenge: 'Daily Challenge',
   dailyChallengeDesc: 'Play the same daily seed as every other player',
+  dailyRetryUnranked: 'Retries today do not count toward the ranking',
   howToPlay: 'How to Play',
   privacyPolicy: 'Privacy Policy',
   relicReward: 'Relic Acquired',

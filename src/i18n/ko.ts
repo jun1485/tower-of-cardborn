@@ -24,6 +24,7 @@ export const ko: Translations = {
   assassinDesc: '독 중첩 · 빠른 연속 공격',
   dailyChallenge: '일일 도전',
   dailyChallengeDesc: '모든 플레이어가 같은 날짜 시드로 도전',
+  dailyRetryUnranked: '오늘 재도전은 순위표에 반영되지 않습니다',
   howToPlay: '게임 방법',
   privacyPolicy: '개인정보 처리방침',
   relicReward: '유물 획득',

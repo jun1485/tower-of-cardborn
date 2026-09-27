@@ -27,6 +27,7 @@ export interface Translations {
   assassinDesc: string;
   dailyChallenge: string;
   dailyChallengeDesc: string;
+  dailyRetryUnranked: string;
   howToPlay: string;
   privacyPolicy: string;
   relicReward: string;
