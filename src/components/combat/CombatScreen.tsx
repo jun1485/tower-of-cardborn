@@ -7,6 +7,7 @@ import type { CharacterClass } from '@tower-of-cardborn/game-core/types/game';
 import { CARD_DEFINITIONS, getCardRarity } from '@tower-of-cardborn/game-core/data/cards';
 import { useTranslation, useLanguage } from '../../i18n';
 import { getCardName, getCardRarityName, getCardTypeName, generatePreviewDescription } from '../../i18n/card-text';
+import { getCardKeywords } from '../../i18n/card-keywords';
 import { PlayerArea } from './PlayerArea';
 import { EnemyArea } from './EnemyArea';
 import { HandArea } from './HandArea';
@@ -391,6 +392,7 @@ export function CombatScreen({
   const draggedDescription = draggedDef
     ? generatePreviewDescription(draggedDef, t, combat.player.statusEffects, combat.enemies, aliveSelectedEnemyId ?? undefined)
     : '';
+  const draggedKeywords = draggedDef ? getCardKeywords(draggedDef, t) : [];
 
   const getPileData = (): { title: string; pile: readonly CardInstance[] } => {
     switch (viewingPile) {
@@ -541,6 +543,12 @@ export function CombatScreen({
           <div className={cardStyles.cardType}>
             {getCardTypeName(draggedDef.type, t)} · {getCardRarityName(getCardRarity(draggedDef.id), t)}
           </div>
+          {/* 드래그 중 키워드 설명 (터치 환경 확인 수단) */}
+          {draggedKeywords.length > 0 && (
+            <div className={cardStyles.cardTooltip}>
+              {draggedKeywords.map((keyword) => <div key={keyword}>{keyword}</div>)}
+            </div>
+          )}
         </div>
       )}
 

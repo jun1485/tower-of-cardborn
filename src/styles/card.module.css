@@ -271,15 +271,21 @@
   line-height: 1.8;
 }
 
-.card:hover:not(.cardDragging) .cardTooltip {
+.card:hover:not(.cardDragging) .cardTooltip,
+.card:focus-visible:not(.cardDragging) .cardTooltip {
   display: block;
 }
 
-/* 터치 환경: 호버 키워드 툴팁 비활성 */
+/* 터치 환경: 호버 키워드 툴팁 비활성 (드래그 고스트에서 표시) */
 @media (hover: none) {
   .card:hover:not(.cardDragging) .cardTooltip {
     display: none;
   }
+}
+
+/* 드래그 고스트 키워드 툴팁 상시 표시 */
+.cardGhost .cardTooltip {
+  display: block;
 }
 
 /* 저높이 가로 화면: 카드 축소 (rem 하한 7px 구간이라 px 고정) */
