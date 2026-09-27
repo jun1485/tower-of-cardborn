@@ -112,8 +112,8 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
           {saveFailed && <p className={styles.resetWarning} role="alert">{t('settingsSaveError')}</p>}
           {/* 언어 선택 */}
           <div className={styles.settingsRow}>
-            <label className={styles.settingsLabel}>{t('language')}</label>
-            <div className={styles.langGroup}>
+            <span className={styles.settingsLabel} id="settings-language-label">{t('language')}</span>
+            <div className={styles.langGroup} role="group" aria-labelledby="settings-language-label">
               {LANGUAGES.map((lang) => (
                 <button
                   key={lang}
@@ -167,11 +167,11 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
 
           {/* 종료 확인 토글 */}
           <div className={styles.settingsRow}>
-            <label className={styles.settingsLabel}>{t('confirmOnExit')}</label>
+            <span className={styles.settingsLabel} id="settings-confirm-exit-label">{t('confirmOnExit')}</span>
             <button
               className={`${styles.toggle} ${settings.confirmOnExit ? styles.toggleOn : ''}`}
               aria-pressed={settings.confirmOnExit}
-              aria-label={t('confirmOnExit')}
+              aria-labelledby="settings-confirm-exit-label"
               onClick={() => {
                 playSfx('button_click');
                 updateSetting('confirmOnExit', !settings.confirmOnExit);
