@@ -12,6 +12,11 @@ const activeMusicSources = new Set<OscillatorNode>();
 const MUSIC_PHRASE_INTERVAL_MS = 8_000;
 const sfxBuffers = new Map<string, AudioBuffer>();
 const sfxLoading = new Map<string, Promise<AudioBuffer | null>>();
+const sfxFailed = new Set<string>();
+// 앱 백그라운드 전환으로 일시정지된 상태
+let lifecycleSuspended = false;
+// 효과음 볼륨 캐시 (재생마다 설정 재조회 방지)
+let sfxVolumeCache: number | null = null;
 
 export type MusicScene = 'title' | 'map' | 'combat' | 'result';
 
@@ -57,10 +62,10 @@ interface NoiseOptions {
   readonly type?: BiquadFilterType;
 }
 
-/** AudioContext 지연 생성 */
+/** AudioContext 지연 생성 (백그라운드 일시정지 중에는 재개 금지) */
 function getCtx(): AudioContext {
   ctx = ctx || new AudioContext();
-  if (ctx.state === 'suspended') void ctx.resume().catch(() => undefined);
+  if (ctx.state === 'suspended' && !lifecycleSuspended) void ctx.resume().catch(() => undefined);
   return ctx;
 }
 
@@ -83,6 +88,8 @@ function loadSfxBuffer(context: AudioContext, name: SfxName): Promise<AudioBuffe
   const loading = sfxLoading.get(fileName);
   if (loading) return loading;
 
+  if (sfxFailed.has(fileName)) return Promise.resolve(null);
+
   const request = fetch(`/assets/audio/${fileName}`)
     .then((response) => {
       if (!response.ok) throw new Error(`효과음 파일을 불러오지 못했습니다. (${response.status})`);
@@ -93,7 +100,11 @@ function loadSfxBuffer(context: AudioContext, name: SfxName): Promise<AudioBuffe
       sfxBuffers.set(fileName, buffer);
       return buffer;
     })
-    .catch(() => null)
+    // 실패 파일은 세션 동안 재요청하지 않고 합성음으로 대체
+    .catch(() => {
+      sfxFailed.add(fileName);
+      return null;
+    })
     .finally(() => sfxLoading.delete(fileName));
   sfxLoading.set(fileName, request);
   return request;
@@ -421,6 +432,7 @@ function playDefeat(context: AudioContext, volume: number): void {
 
 /** AudioContext 활성화 */
 export function resumeAudioContext(): void {
+  lifecycleSuspended = false;
   try {
     const context = getCtx();
     if (context.state === 'suspended') void context.resume().catch(() => undefined);
@@ -453,12 +465,20 @@ export function refreshMusicVolume(volume = loadSettings().musicVolume): void {
 
 /** AudioContext 일시 중지 */
 export function suspendAudioContext(): void {
+  lifecycleSuspended = true;
   if (ctx?.state === 'running') void ctx.suspend().catch(() => undefined);
 }
 
-/** 설정 볼륨 기준 효과음 재생 */
+/** 효과음 볼륨 캐시 갱신 */
+export function refreshSfxVolume(volume = loadSettings().sfxVolume): void {
+  sfxVolumeCache = volume;
+}
+
+/** 설정 볼륨 기준 효과음 재생 (백그라운드 중 지연 효과음 무시) */
 export function playSfx(name: SfxName): void {
-  const { sfxVolume } = loadSettings();
+  if (lifecycleSuspended) return;
+  sfxVolumeCache ??= loadSettings().sfxVolume;
+  const sfxVolume = sfxVolumeCache;
   if (sfxVolume <= 0) return;
   const volume = sfxVolume / 100;
 

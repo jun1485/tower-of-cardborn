@@ -135,11 +135,19 @@ function AppInner({ onLangChange }: AppInnerProps) {
     setTitleRevision((revision) => revision + 1);
   };
 
-  // 첫 사용자 제스처 시 AudioContext 활성화
+  // 첫 사용자 제스처(포인터·키보드) 시 AudioContext 활성화
   useEffect(() => {
-    const handler = () => { resumeAudioContext(); window.removeEventListener('pointerdown', handler); };
+    const handler = () => {
+      resumeAudioContext();
+      window.removeEventListener('pointerdown', handler);
+      window.removeEventListener('keydown', handler);
+    };
     window.addEventListener('pointerdown', handler);
-    return () => window.removeEventListener('pointerdown', handler);
+    window.addEventListener('keydown', handler);
+    return () => {
+      window.removeEventListener('pointerdown', handler);
+      window.removeEventListener('keydown', handler);
+    };
   }, []);
 
   const confirmMessage = screen === 'title' ? t('exitConfirm') : t('backToTitleConfirm');

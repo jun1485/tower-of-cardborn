@@ -7,7 +7,7 @@ import { useTranslation, LANGUAGES, LANGUAGE_LABELS } from '../../i18n';
 import type { Language } from '../../i18n';
 import { useModalKeyboard } from '../../hooks/use-modal-keyboard';
 import { applyMotionSetting } from '../../hooks/use-reduced-motion';
-import { playSfx, refreshMusicVolume } from '../../utils/sound';
+import { playSfx, refreshMusicVolume, refreshSfxVolume } from '../../utils/sound';
 import styles from '../../styles/app.module.css';
 
 interface SettingsModalProps {
@@ -92,6 +92,7 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
     setSaveFailed(false);
     onLangChange(fresh.language);
     refreshMusicVolume(fresh.musicVolume);
+    refreshSfxVolume(fresh.sfxVolume);
     applyMotionSetting(fresh.reduceMotion);
   }, [onLangChange]);
 
@@ -157,7 +158,10 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
                 max={100}
                 value={settings.sfxVolume}
                 className={styles.slider}
-                onChange={(e) => updateSetting('sfxVolume', Number(e.target.value))}
+                onChange={(e) => {
+                  updateSetting('sfxVolume', Number(e.target.value));
+                  refreshSfxVolume(Number(e.target.value));
+                }}
                 onPointerUp={() => playSfx('reward_pick')}
                 onKeyUp={(event) => {
                   if (event.key.startsWith('Arrow')) playSfx('reward_pick');
