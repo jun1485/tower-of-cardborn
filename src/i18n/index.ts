@@ -23,7 +23,7 @@ function createT(lang: Language) {
   return (key: keyof Translations, ...args: (string | number)[]): string => {
     let text = dict[key];
     for (let i = 0; i < args.length; i++) {
-      text = text.replace(`{${i}}`, String(args[i]));
+      text = text.replaceAll(`{${i}}`, String(args[i]));
     }
     return text;
   };
