@@ -30,7 +30,8 @@
 - 타입 검사: `npm run typecheck`
 - 단위 테스트: `npm test`
 - 웹 빌드: `npm run build`
-- Android 동기화: `npm run cap:sync`
+- Android 웹 빌드 + 동기화: `npm run cap:build`
+- Android 동기화만 (기존 `dist` 사용): `npm run cap:sync`
 - Android Studio 실행: `npm run cap:open`
 
 ## 프로젝트 구조
@@ -78,6 +79,7 @@
 - 월드 이미지: `npm run generate:world-art`
 - 효과음: `npm run generate:sfx`
 - 릴리스 이미지 최적화: `npm run optimize:assets`
-- 웹 빌드 전 카드·캐릭터·몬스터·배경 WebP 파생본 자동 갱신
+- 웹 빌드 전 원본보다 오래된 WebP 파생본만 자동 갱신
 - 프로덕션 산출물에는 실제 사용하는 최적화 자산만 포함
-- 생성 API 키는 환경 변수로만 전달하고 저장소에 포함하지 않음
+- 생성 API 키: 환경 변수 또는 git 제외 대상인 `.env`·`.env.local` (`.env.example` 참고)
+- 직업·월드 이미지 배경 제거: Python `rembg` CLI 필요 (`pip install "rembg[cli]"`)
