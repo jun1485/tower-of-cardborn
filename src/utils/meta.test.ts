@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
-  calculateRunScore, getRankedRuns, isTopRunRecord, loadMeta,
+  calculateRunScore, findRecordedRun, getRankedRuns, isTopRunRecord, loadMeta,
   recordRunEnd, recordRunStart, updateRecordedRun,
 } from './meta';
 import { addShards, loadEquipment, upgradeEquipment } from './equipment';
@@ -20,6 +20,20 @@ const storage: Storage = {
 beforeEach(() => {
   values.clear();
   Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: storage });
+});
+
+describe('기록 런 조회', () => {
+  it('엔들리스 사망 후에도 클리어 기록의 승리 점수를 조회한다', () => {
+    const { recordedAt } = recordRunEnd({ won: true, floor: 30, kills: 10, ascension: 2 });
+    updateRecordedRun(recordedAt, { floor: 34, kills: 12, ascension: 2 });
+
+    expect(findRecordedRun(recordedAt)).toMatchObject({
+      won: true,
+      floor: 34,
+      score: calculateRunScore({ floor: 34, kills: 12, won: true, ascension: 2 }),
+    });
+    expect(findRecordedRun(null)).toBeNull();
+  });
 });
 
 describe('런 통계', () => {

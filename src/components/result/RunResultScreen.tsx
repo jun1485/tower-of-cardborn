@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslation } from '../../i18n';
-import { calculateRunScore, isTopRunRecord } from '../../utils/meta';
+import { calculateRunScore, findRecordedRun, isTopRunRecord } from '../../utils/meta';
 import { calculateShardReward } from '../../utils/equipment';
 import { playSfx } from '../../utils/sound';
 import styles from '../../styles/app.module.css';
@@ -46,8 +46,11 @@ export function RunResultScreen({
   const t = useTranslation();
   const [copied, setCopied] = useState(false);
   const isVictory = variant === 'victory';
-  const score = calculateRunScore({ floor: floorsClimbed, kills, won: isVictory, ascension });
-  const shardsEarned = calculateShardReward(floorsClimbed, isVictory, isDaily);
+  // 엔들리스 사망은 클리어 기록 기준 점수·강화석 표시
+  const recordedRun = findRecordedRun(recordedRunAt);
+  const runWon = isVictory || (recordedRun?.won ?? false);
+  const score = recordedRun?.score ?? calculateRunScore({ floor: floorsClimbed, kills, won: runWon, ascension });
+  const shardsEarned = calculateShardReward(floorsClimbed, runWon, isDaily);
   const isNewRecord = isTopRunRecord(recordedRunAt, isDaily);
 
   /** 런 결과 텍스트 공유 (미지원 시 클립보드 복사) */

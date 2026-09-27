@@ -336,6 +336,15 @@ export function recordRunEnd({
   };
 }
 
+/** 기록된 종료 런 조회 */
+export function findRecordedRun(recordedAt: number | null | undefined): RunSummary | null {
+  if (recordedAt == null) return null;
+  const meta = loadMeta();
+  return meta.recentRuns.find((run) => run.finishedAt === recordedAt)
+    ?? meta.bestRuns.find((run) => run.finishedAt === recordedAt)
+    ?? null;
+}
+
 /** 이번 런 최고 기록 여부 판정 */
 export function isTopRunRecord(recordedAt: number | null | undefined, dailyOnly = false): boolean {
   return recordedAt != null && getRankedRuns(loadMeta().bestRuns, dailyOnly)[0]?.finishedAt === recordedAt;
