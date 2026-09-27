@@ -12,6 +12,11 @@ on:
 permissions:
   contents: read
 
+# 같은 PR 연속 푸시 시 이전 실행 취소 (main·태그는 유지)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -23,7 +28,7 @@ jobs:
       - name: Node.js 설정
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
 
       - name: 의존성 설치
@@ -52,7 +57,7 @@ jobs:
       - name: Node.js 설정
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
 
       - name: JDK 설정
@@ -60,6 +65,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+          cache: gradle
 
       - name: 의존성 설치
         run: npm ci
