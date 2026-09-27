@@ -3,6 +3,8 @@
 /** 전투 규칙 상수 */
 export const COMBAT_BALANCE = {
   handSize: 5,
+  /** 손패 최대 장수 (초과 드로우는 드로우 더미에 유지) */
+  maxHandSize: 10,
   startingEnergy: 3,
   weakMultiplier: 0.75,
   vulnerableMultiplier: 1.5,

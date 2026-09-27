@@ -61,6 +61,13 @@ describe('드로우', () => {
     expect(result.discardPile).toHaveLength(0);
   });
 
+  it('손패 10장 상한에 도달하면 남은 카드는 드로우 파일에 둔다', () => {
+    const result = drawCards(createCards(5, 'draw'), createCards(8, 'hand'), [], 5);
+
+    expect(result.hand).toHaveLength(10);
+    expect(result.drawPile).toHaveLength(3);
+  });
+
   it('기존 패를 유지한 채 드로우를 누적한다', () => {
     const result = drawCards(createCards(2, 'draw'), createCards(2, 'hand'), [], 1);
 

@@ -2,6 +2,7 @@
 
 import type { CardInstance } from '../types/card';
 import { generateId, shuffle } from '../utils/random';
+import { COMBAT_BALANCE } from '../data/balance';
 
 /** 카드 정의 ID 목록 → 셔플된 CardInstance 배열 생성 */
 export function createDrawPile(deckIds: readonly string[]): CardInstance[] {
@@ -18,7 +19,7 @@ interface DrawResult {
   readonly discardPile: readonly CardInstance[];
 }
 
-/** 드로우 파일에서 count장 드로우 (부족 시 버린 카드 리셔플) */
+/** 드로우 파일에서 count장 드로우 (부족 시 버린 카드 리셔플, 손패 상한 도달 시 중단) */
 export function drawCards(
   drawPile: readonly CardInstance[],
   hand: readonly CardInstance[],
@@ -29,7 +30,7 @@ export function drawCards(
   let currentDiscard = [...discardPile];
   const currentHand = [...hand];
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < count && currentHand.length < COMBAT_BALANCE.maxHandSize; i++) {
     // 드로우 파일 소진 시 리셔플
     if (currentDraw.length === 0) {
       if (currentDiscard.length === 0) break;
