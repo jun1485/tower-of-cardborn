@@ -404,6 +404,19 @@
   text-shadow: 0 3px 8px rgba(0, 0, 0, 0.86);
 }
 
+/* 동작 줄이기: 이동 없이 고정 표시 (소멸은 컴포넌트 타이머) */
+@media (prefers-reduced-motion: reduce) {
+  .floatingNumber {
+    animation: none !important;
+    transform: translateX(-50%) translateY(-1rem);
+  }
+}
+
+:global(:root[data-reduced-motion]) .floatingNumber {
+  animation: none !important;
+  transform: translateX(-50%) translateY(-1rem);
+}
+
 .floatingDamage {
   color: #ff6a6a;
 }

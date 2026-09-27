@@ -146,6 +146,7 @@ export const zh: Translations = {
   sfxVolume: '音效音量',
   musicVolume: '背景音乐音量',
   confirmOnExit: '退出时确认',
+  reduceMotion: '减少动态效果',
   resetSave: '重置存档',
   resetSaveWarning: '所有游戏进度、统计、解锁和装备数据都将被删除。',
   deleteSave: '删除',

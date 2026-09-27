@@ -164,6 +164,7 @@ export interface Translations {
   sfxVolume: string;
   musicVolume: string;
   confirmOnExit: string;
+  reduceMotion: string;
   resetSave: string;
   resetSaveWarning: string;
   deleteSave: string;

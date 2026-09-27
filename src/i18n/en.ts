@@ -146,6 +146,7 @@ export const en: Translations = {
   sfxVolume: 'SFX Volume',
   musicVolume: 'Music Volume',
   confirmOnExit: 'Confirm on exit',
+  reduceMotion: 'Reduce motion',
   resetSave: 'Reset save data',
   resetSaveWarning: 'All game progress, statistics, unlocks, and equipment will be deleted.',
   deleteSave: 'Delete',

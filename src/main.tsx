@@ -4,6 +4,11 @@ import { Capacitor } from '@capacitor/core'
 import './styles/global.css'
 import App from './App.tsx'
 import { ErrorBoundary } from './components/ui/ErrorBoundary.tsx'
+import { applyMotionSetting } from './hooks/use-reduced-motion.ts'
+import { loadSettings } from './utils/settings.ts'
+
+// 저장된 게임 내 모션 줄이기 설정 첫 렌더 전 적용
+applyMotionSetting(loadSettings().reduceMotion)
 
 /** 네이티브 앱 기존 서비스 워커·캐시 정리 */
 function unregisterNativeServiceWorker(): void {

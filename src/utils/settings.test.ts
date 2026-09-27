@@ -36,9 +36,15 @@ describe('게임 설정', () => {
   });
 
   it('설정 저장과 초기화를 반영한다', () => {
-    expect(saveSettings({ musicVolume: 45, sfxVolume: 60, confirmOnExit: false, language: 'zh' })).toBe(true);
-    expect(loadSettings()).toMatchObject({ musicVolume: 45, sfxVolume: 60, confirmOnExit: false, language: 'zh' });
+    expect(saveSettings({ musicVolume: 45, sfxVolume: 60, confirmOnExit: false, language: 'zh', reduceMotion: true })).toBe(true);
+    expect(loadSettings()).toMatchObject({ musicVolume: 45, sfxVolume: 60, confirmOnExit: false, language: 'zh', reduceMotion: true });
     expect(resetSettings()).toBe(true);
-    expect(loadSettings()).toMatchObject({ musicVolume: 30, sfxVolume: 80 });
+    expect(loadSettings()).toMatchObject({ musicVolume: 30, sfxVolume: 80, reduceMotion: false });
+  });
+
+  it('모션 줄이기 설정이 없거나 잘못된 값이면 끔으로 복원한다', () => {
+    localStorage.setItem('tower-of-cardborn-settings', JSON.stringify({ reduceMotion: 'yes' }));
+
+    expect(loadSettings().reduceMotion).toBe(false);
   });
 });

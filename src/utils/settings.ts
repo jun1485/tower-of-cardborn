@@ -9,11 +9,13 @@ export interface GameSettings {
   readonly musicVolume: number;
   readonly confirmOnExit: boolean;
   readonly language: Language;
+  /** 게임 내 모션 줄이기 (시스템 설정과 별개) */
+  readonly reduceMotion: boolean;
 }
 
 // 기본 설정값 반환
 function getDefaultSettings(): GameSettings {
-  return { sfxVolume: 80, musicVolume: 30, confirmOnExit: true, language: 'ko' };
+  return { sfxVolume: 80, musicVolume: 30, confirmOnExit: true, language: 'ko', reduceMotion: false };
 }
 
 /** 볼륨 범위 정규화 */
@@ -43,6 +45,7 @@ export function loadSettings(): GameSettings {
       language: parsed.language === 'ko' || parsed.language === 'en' || parsed.language === 'zh'
         ? parsed.language
         : defaults.language,
+      reduceMotion: typeof parsed.reduceMotion === 'boolean' ? parsed.reduceMotion : defaults.reduceMotion,
     };
   } catch {
     return getDefaultSettings();

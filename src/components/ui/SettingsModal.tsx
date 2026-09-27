@@ -6,6 +6,7 @@ import { loadSettings, saveSettings, resetSettings } from '../../utils/settings'
 import { useTranslation, LANGUAGES, LANGUAGE_LABELS } from '../../i18n';
 import type { Language } from '../../i18n';
 import { useModalKeyboard } from '../../hooks/use-modal-keyboard';
+import { applyMotionSetting } from '../../hooks/use-reduced-motion';
 import { playSfx, refreshMusicVolume } from '../../utils/sound';
 import styles from '../../styles/app.module.css';
 
@@ -91,6 +92,7 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
     setSaveFailed(false);
     onLangChange(fresh.language);
     refreshMusicVolume(fresh.musicVolume);
+    applyMotionSetting(fresh.reduceMotion);
   }, [onLangChange]);
 
   return (
@@ -175,6 +177,23 @@ export function SettingsModal({ onClose, onLangChange, onResetSave, onQuitRun, o
               onClick={() => {
                 playSfx('button_click');
                 updateSetting('confirmOnExit', !settings.confirmOnExit);
+              }}
+            >
+              <span className={styles.toggleKnob} />
+            </button>
+          </div>
+
+          {/* 모션 줄이기 토글 */}
+          <div className={styles.settingsRow}>
+            <span className={styles.settingsLabel} id="settings-reduce-motion-label">{t('reduceMotion')}</span>
+            <button
+              className={`${styles.toggle} ${settings.reduceMotion ? styles.toggleOn : ''}`}
+              aria-pressed={settings.reduceMotion}
+              aria-labelledby="settings-reduce-motion-label"
+              onClick={() => {
+                playSfx('button_click');
+                updateSetting('reduceMotion', !settings.reduceMotion);
+                applyMotionSetting(!settings.reduceMotion);
               }}
             >
               <span className={styles.toggleKnob} />

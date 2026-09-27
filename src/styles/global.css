@@ -282,6 +282,18 @@ textarea:focus {
   }
 }
 
+/* 게임 설정 동작 줄이기 전환 최소화 */
+:root[data-reduced-motion] *,
+:root[data-reduced-motion] *::before,
+:root[data-reduced-motion] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.01ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0ms !important;
+}
+
 /* 동작 줄이기 전환 최소화 */
 @media (prefers-reduced-motion: reduce) {
   *,

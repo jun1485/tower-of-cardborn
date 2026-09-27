@@ -146,6 +146,7 @@ export const ko: Translations = {
   sfxVolume: '효과음 볼륨',
   musicVolume: '배경음악 볼륨',
   confirmOnExit: '종료 시 확인',
+  reduceMotion: '모션 줄이기',
   resetSave: '세이브 데이터 초기화',
   resetSaveWarning: '모든 게임 진행도·통계·해금·장비 데이터가 삭제됩니다.',
   deleteSave: '삭제',
