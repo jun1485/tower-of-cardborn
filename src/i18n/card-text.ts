@@ -2,7 +2,7 @@
 
 import type { CardDefinition, CardEffect, CardRarity } from '@tower-of-cardborn/game-core/types/card';
 import type { Enemy, StatusEffect } from '@tower-of-cardborn/game-core/types/character';
-import { COMBAT_BALANCE } from '@tower-of-cardborn/game-core/data/balance';
+import { calculateDamage } from '@tower-of-cardborn/game-core/game/combat-engine';
 import type { TFunction } from './index';
 import type { Language } from './types';
 
@@ -295,19 +295,6 @@ function getStatusAmount(statusEffects: readonly StatusEffect[], type: StatusEff
   return status ? status.duration : 0;
 }
 
-/** 프리뷰 데미지 계산 (힘/약화/취약 반영) */
-function calculatePreviewDamage(
-  baseDamage: number,
-  strength: number,
-  attackerWeak: boolean,
-  targetVulnerable: boolean,
-): number {
-  let total = baseDamage + strength;
-  if (attackerWeak) total = Math.floor(total * COMBAT_BALANCE.weakMultiplier);
-  if (targetVulnerable) total = Math.floor(total * COMBAT_BALANCE.vulnerableMultiplier);
-  return Math.max(0, total);
-}
-
 /** 대상 적 결정 */
 function resolveTargetEnemy(enemies: readonly Enemy[], targetEnemyId?: string): Enemy | null {
   if (enemies.length === 0) return null;
@@ -343,7 +330,7 @@ export function generatePreviewDescription(
     const effect = effects[i];
     if (effect.type === 'damage') {
       const targetVulnerable = targetEnemy ? hasActiveStatus(targetEnemy.statusEffects, 'vulnerable') : false;
-      const preview = calculatePreviewDamage(effect.value, strength, attackerWeak, targetVulnerable);
+      const preview = calculateDamage(effect.value, strength, attackerWeak, targetVulnerable);
       const dmg = formatDamageValue(effect.value, preview);
       const hitCount = countConsecutiveSame(effects, i);
 

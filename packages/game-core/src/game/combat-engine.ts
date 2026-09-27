@@ -352,8 +352,8 @@ function addStatusEffect(
     : [...effects, { type: statusType, duration: value }];
 }
 
-/** 데미지 계산 (힘 + 약화 + 취약 반영) */
-function calculateDamage(baseDamage: number, strength: number, attackerWeak: boolean, targetVulnerable: boolean): number {
+/** 데미지 계산 (힘 + 약화 + 취약 반영, 카드 설명 미리보기와 공용) */
+export function calculateDamage(baseDamage: number, strength: number, attackerWeak: boolean, targetVulnerable: boolean): number {
   let total = baseDamage + strength;
   if (attackerWeak) total = Math.floor(total * COMBAT_BALANCE.weakMultiplier);
   if (targetVulnerable) total = Math.floor(total * COMBAT_BALANCE.vulnerableMultiplier);

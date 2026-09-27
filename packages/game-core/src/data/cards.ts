@@ -1944,7 +1944,7 @@ export function getRewardCards(
 /** 상점 카드 가격 산정 */
 export function getCardPrice(cardId: string): number {
   const def = CARD_DEFINITIONS[cardId];
-  if (!def) return 50;
+  if (!def) return SHOP_BALANCE.cardBasePrice;
   const rarity = getCardRarity(cardId);
   const rarityPrice = rarity === 'rare'
     ? SHOP_BALANCE.rareSurcharge
