@@ -200,6 +200,54 @@ describe('지속 파워', () => {
   });
 });
 
+describe('사용 카드 이동 시점', () => {
+  it('드로우 효과 리셔플에 방금 사용한 카드를 섞지 않는다', () => {
+    const state: CombatState = {
+      ...createCombatState({ type: 'attack', value: 5 }),
+      hand: [{ instanceId: 'surge-1', definitionId: 'mana_surge' }],
+    };
+    const result = playCard(state, 'surge-1');
+
+    expect(result.hand).toEqual([]);
+    expect(result.discardPile).toEqual([{ instanceId: 'surge-1', definitionId: 'mana_surge' }]);
+    expect(result.player.energy).toBe(4);
+  });
+});
+
+describe('유물 지속 파워 첫 턴', () => {
+  it('매 턴 방어·회복·드로우 파워를 1턴에도 발동한다', () => {
+    const result = initCombat(
+      Array.from({ length: 10 }, () => 'strike'),
+      ['jaw_worm'],
+      50,
+      80,
+      0,
+      1,
+      {
+        energy: 0, strength: 0, block: 0, dexterity: 0,
+        powers: [
+          { type: 'turn_start_block', value: 2 },
+          { type: 'turn_start_heal', value: 2 },
+          { type: 'turn_start_draw', value: 1 },
+        ],
+      },
+    );
+
+    expect(result.player.block).toBe(2);
+    expect(result.player.hp).toBe(52);
+    expect(result.hand).toHaveLength(6);
+  });
+});
+
+describe('전투 초기화 방어', () => {
+  it('정의 없는 적 id는 제외하고 전투를 생성한다', () => {
+    const result = initCombat(['strike'], ['jaw_worm', 'removed_enemy']);
+
+    expect(result.enemies).toHaveLength(1);
+    expect(result.enemies[0].definitionId).toBe('jaw_worm');
+  });
+});
+
 describe('저주 카드', () => {
   it('저주 카드는 사용할 수 없다', () => {
     const base = createCombatState({ type: 'attack', value: 5 });

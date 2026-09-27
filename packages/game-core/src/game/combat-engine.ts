@@ -35,7 +35,8 @@ export function initCombat(
   relicBonuses: RelicCombatBonuses = NO_RELIC_BONUSES,
 ): CombatState {
   const drawPile = createDrawPile(deckIds);
-  const enemies: Enemy[] = enemyIds.map((id) => {
+  // 정의 없는 적 id 제외 (구버전 저장본 복원 대비)
+  const enemies: Enemy[] = enemyIds.filter((id) => ENEMY_DEFINITIONS[id]).map((id) => {
     const def = ENEMY_DEFINITIONS[id];
     const enemy: Enemy = {
       id: generateId(),
@@ -51,20 +52,26 @@ export function initCombat(
     return { ...enemy, intent: decideIntent(enemy, ascension, mapIndex) };
   });
 
+  // 첫 턴 지속 파워 발동 (유물 보유 파워)
+  const powers = [...(relicBonuses.powers ?? [])];
+  const startStrength = relicBonuses.strength + getPowerValue(powers, 'turn_start_strength');
+
   const startStatusEffects: StatusEffect[] = [];
-  if (relicBonuses.strength > 0) startStatusEffects.push({ type: 'strength', duration: relicBonuses.strength });
+  if (startStrength > 0) startStatusEffects.push({ type: 'strength', duration: startStrength });
   if (relicBonuses.dexterity > 0) startStatusEffects.push({ type: 'dexterity', duration: relicBonuses.dexterity });
 
   const player: Player = {
-    hp: playerHp,
+    hp: Math.min(playerMaxHp, playerHp + getPowerValue(powers, 'turn_start_heal')),
     maxHp: playerMaxHp,
-    block: relicBonuses.block,
+    block: relicBonuses.block + getPowerValue(powers, 'turn_start_block'),
     energy: STARTING_ENERGY + relicBonuses.energy,
     maxEnergy: STARTING_ENERGY + relicBonuses.energy,
     statusEffects: startStatusEffects,
   };
 
-  const { hand, drawPile: remainingDraw, discardPile } = drawCards(drawPile, [], [], HAND_SIZE);
+  const { hand, drawPile: remainingDraw, discardPile } = drawCards(
+    drawPile, [], [], HAND_SIZE + getPowerValue(powers, 'turn_start_draw'),
+  );
 
   return {
     player,
@@ -73,7 +80,7 @@ export function initCombat(
     hand,
     discardPile,
     exhaustPile: [],
-    powers: [...(relicBonuses.powers ?? [])],
+    powers,
     turn: 1,
     phase: 'player_turn',
     result: 'ongoing',
@@ -119,13 +126,6 @@ export function playCard(
   let enemies = [...state.enemies];
   let drawPile = [...state.drawPile];
 
-  // exhaust 또는 power → 소멸 파일, 일반 → 버린 카드
-  if (definition.exhaust || definition.type === 'power') {
-    newExhaustPile = [...newExhaustPile, cardInstance];
-  } else {
-    newDiscardPile = [...newDiscardPile, cardInstance];
-  }
-
   // 효과 적용 (지속 파워는 파워 목록 누적)
   let currentHand = [...newHand];
   let powers = [...(state.powers ?? [])];
@@ -140,6 +140,13 @@ export function playCard(
     currentHand = result.hand;
     drawPile = result.drawPile;
     newDiscardPile = result.discardPile;
+  }
+
+  // 효과 완료 후 사용 카드 이동 (exhaust·power → 소멸 파일, 일반 → 버린 카드)
+  if (definition.exhaust || definition.type === 'power') {
+    newExhaustPile = [...newExhaustPile, cardInstance];
+  } else {
+    newDiscardPile = [...newDiscardPile, cardInstance];
   }
 
   // 사망한 적 제거
@@ -486,18 +493,16 @@ export function endPlayerTurn(state: CombatState): CombatState {
   const drawResult = drawCards(state.drawPile, [], newDiscard, HAND_SIZE + powerDraw);
 
   return {
+    ...state,
     player: nextPlayer,
     enemies,
     drawPile: drawResult.drawPile,
     hand: drawResult.hand,
     discardPile: drawResult.discardPile,
-    exhaustPile: state.exhaustPile,
     powers,
     turn: state.turn + 1,
     phase: 'player_turn',
     result: 'ongoing',
-    ascension: state.ascension,
-    mapIndex: state.mapIndex,
   };
 }
 
