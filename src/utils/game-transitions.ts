@@ -214,9 +214,10 @@ export function enterRemoveState(state: GameState): GameState {
     : { ...state, screen: 'remove_card', removeSource: state.screen };
 }
 
-/** 카드 제거 상태 반영 */
-export function removeCardState(state: GameState, deckIndex: number): GameState {
-  if (state.screen !== 'remove_card' || !state.removeSource || state.deck.length <= MIN_DECK_SIZE || !state.deck[deckIndex]) return state;
+/** 카드 제거 상태 반영 (선택 시점 덱 크기와 다르면 연타 중복 제거로 무시) */
+export function removeCardState(state: GameState, deckIndex: number, expectedDeckSize = state.deck.length): GameState {
+  if (state.screen !== 'remove_card' || !state.removeSource || state.deck.length !== expectedDeckSize) return state;
+  if (state.deck.length <= MIN_DECK_SIZE || !state.deck[deckIndex]) return state;
   const fromShop = state.removeSource === 'shop';
   const shopPrice = getShopRemovePrice(state.relics, state.ascension);
   if (fromShop && state.gold < shopPrice) return state;

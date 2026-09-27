@@ -435,7 +435,8 @@ export function useGame() {
   // 덱에서 카드 제거 후 출처 화면 복귀
   const removeCard = useCallback((deckIndex: number) => {
     playSfx('button_click');
-    setGameState((prev) => removeCardState(prev, deckIndex));
+    const expectedDeckSize = stateRef.current.deck.length;
+    setGameState((prev) => removeCardState(prev, deckIndex, expectedDeckSize));
   }, []);
 
   const skipRemove = useCallback(() => {

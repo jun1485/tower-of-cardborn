@@ -190,6 +190,22 @@ describe('덱 관리 전환', () => {
     expect(removeCardState(state, 0)).toBe(state);
   });
 
+  it('이벤트 다중 제거에서 같은 선택 시점의 연타는 한 장만 제거한다', () => {
+    const state: GameState = {
+      ...MAP_STATE,
+      screen: 'remove_card',
+      removeSource: 'event',
+      pendingRemoveCount: 2,
+      deck: ['strike', 'defend', 'bash', 'strike', 'defend', 'bash'],
+    };
+    const expectedDeckSize = state.deck.length;
+    const first = removeCardState(state, 2, expectedDeckSize);
+    const second = removeCardState(first, 2, expectedDeckSize);
+
+    expect(first.deck).toEqual(['strike', 'defend', 'strike', 'defend', 'bash']);
+    expect(second).toBe(first);
+  });
+
   it('강화 가능한 카드가 없으면 휴식처 강화 진입을 차단한다', () => {
     const state: GameState = { ...MAP_STATE, screen: 'rest', deck: ['strike+'] };
 
