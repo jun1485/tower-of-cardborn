@@ -6,6 +6,8 @@ on:
     branches:
       - main
       - master
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
@@ -65,32 +67,68 @@ jobs:
       - name: 웹 빌드 + Capacitor 동기화
         run: npm run cap:build
 
+      # 태그(vX.Y.Z)는 package.json 버전과 일치 강제, 그 외는 CI 빌드 번호 사용
+      - name: 버전 산출
+        id: version
+        run: |
+          package_version=$(node -p "require('./package.json').version")
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            name="${GITHUB_REF_NAME#v}"
+            if [[ ! "$name" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              echo "::error::태그 형식은 vX.Y.Z 여야 합니다: $GITHUB_REF_NAME"
+              exit 1
+            fi
+            if [ "$name" != "$package_version" ]; then
+              echo "::error::태그 버전($name)과 package.json 버전($package_version)이 다릅니다."
+              exit 1
+            fi
+            code=$(( BASH_REMATCH[1] * 1000000 + BASH_REMATCH[2] * 1000 + BASH_REMATCH[3] ))
+          else
+            name="${package_version}-ci.${GITHUB_RUN_NUMBER}"
+            code="${GITHUB_RUN_NUMBER}"
+          fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
+      # 서명 시크릿 4종이 모두 있을 때만 서명, 태그 릴리스는 서명 필수
       - name: 릴리스 키스토어 복원
+        id: signing
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASSWORD" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > android/release.keystore
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "::error::태그 릴리스에는 서명 시크릿 4종이 모두 필요합니다."
+            exit 1
+          else
+            echo "::warning::서명 시크릿이 없어 미서명 산출물로 빌드합니다."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Android 릴리스 빌드
         working-directory: android
         env:
-          ANDROID_KEYSTORE_FILE: release.keystore
+          ANDROID_KEYSTORE_FILE: ${{ steps.signing.outputs.signed == 'true' && 'release.keystore' || '' }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x gradlew
           ./gradlew bundleRelease assembleRelease --no-daemon \
-            -PVERSION_CODE=${{ github.run_number }} \
-            -PVERSION_NAME=1.0.${{ github.run_number }}
+            -PVERSION_CODE=${{ steps.version.outputs.code }} \
+            -PVERSION_NAME=${{ steps.version.outputs.name }}
 
       - name: 릴리스 산출물 업로드
         uses: actions/upload-artifact@v4
         with:
-          name: android-release
+          name: android-release-${{ steps.version.outputs.name }}${{ steps.signing.outputs.signed == 'true' && '' || '-unsigned' }}
           path: |
             android/app/build/outputs/bundle/release/*.aab
             android/app/build/outputs/apk/release/*.apk
-          retention-days: 14
+            android/app/build/outputs/mapping/release/mapping.txt
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && 90 || 14 }}

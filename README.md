@@ -62,10 +62,13 @@
 
 ## Android 릴리스
 
-- 버전 코드: Gradle `VERSION_CODE` 속성
-- 버전 이름: Gradle `VERSION_NAME` 속성
-- 기본 빌드값: `versionCode 1`, `versionName 1.0.0`
-- 릴리스 전 Node.js 22 환경에서 lint·타입 검사·테스트·웹 빌드·Capacitor 동기화 필요
+- 스토어 배포본: `package.json` 버전과 같은 `vX.Y.Z` 태그 푸시 시 CI 가 서명 빌드 생성
+- 태그 빌드 버전: `versionName X.Y.Z`, `versionCode X×1000000 + Y×1000 + Z`
+- 태그 빌드 서명 시크릿 필수: `ANDROID_KEYSTORE_BASE64`·`ANDROID_KEYSTORE_PASSWORD`·`ANDROID_KEY_ALIAS`·`ANDROID_KEY_PASSWORD`
+- 브랜치·PR 빌드: `versionName <버전>-ci.<실행번호>`, 시크릿 미설정 시 `-unsigned` 산출물
+- 산출물 보관: 태그 빌드 90일, 그 외 14일 (`mapping.txt` 포함)
+- 로컬 릴리스 빌드: `./gradlew bundleRelease -PVERSION_CODE=<코드> -PVERSION_NAME=<이름>` (미지정 시 `versionCode 1`)
+- 릴리스 전 Node.js 22 환경에서 lint·타입 검사·테스트·웹 빌드·Capacitor 동기화(`npm run cap:build`) 필요
 
 ## 에셋 생성
 
