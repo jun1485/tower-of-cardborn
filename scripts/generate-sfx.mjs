@@ -90,6 +90,12 @@ const SFX_PROMPTS = {
 };
 // #endregion
 
+// 로컬 환경 파일 키 로드 (기존 환경 변수 우선)
+for (const envFile of ['.env.local', '.env']) {
+  const envPath = path.join(process.cwd(), envFile);
+  if (existsSync(envPath)) process.loadEnvFile(envPath);
+}
+
 const apiKey = process.env.ELEVENLABS_API_KEY;
 if (!apiKey) {
   console.error('ELEVENLABS_API_KEY 환경변수가 필요합니다.');
