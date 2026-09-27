@@ -1,6 +1,6 @@
 // 데미지/방어 플로팅 숫자 컴포넌트 (자동 소멸)
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styles from '../../styles/combat.module.css';
 
 interface FloatingEntry {
@@ -26,35 +26,30 @@ function resolveFloatingClass(type: FloatingEntry['type']): string {
 
 export function FloatingNumber({ currentValue, previousValue, mode }: FloatingNumberProps) {
   const [entries, setEntries] = useState<FloatingEntry[]>([]);
+  // 엔트리별 소멸 타이머 (무관한 리렌더에 취소되지 않도록 언마운트 시에만 정리)
+  const timersRef = useRef(new Set<number>());
 
   useEffect(() => {
-    if (mode === 'hp') {
-      if (previousValue === currentValue) return;
-      const hpDiff = currentValue - previousValue;
-      const entry: FloatingEntry = {
-        id: nextId++,
-        value: Math.abs(hpDiff),
-        type: hpDiff > 0 ? 'heal' : 'damage',
-      };
-      setEntries((prev) => [...prev, entry]);
+    const timers = timersRef.current;
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, []);
 
-      const timer = setTimeout(() => {
-        setEntries((prev) => prev.filter((e) => e.id !== entry.id));
-      }, 800);
-      return () => clearTimeout(timer);
-    }
+  useEffect(() => {
+    const diff = mode === 'hp' ? currentValue - previousValue : previousValue - currentValue;
+    if (mode === 'hp' ? diff === 0 : diff <= 0) return;
 
-    const diff = previousValue - currentValue;
-    if (diff <= 0) return;
-
-    const entry: FloatingEntry = { id: nextId++, value: diff, type: mode };
+    const entry: FloatingEntry = {
+      id: nextId++,
+      value: Math.abs(diff),
+      type: mode === 'hp' ? (diff > 0 ? 'heal' : 'damage') : mode,
+    };
     setEntries((prev) => [...prev, entry]);
 
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
+      timersRef.current.delete(timer);
       setEntries((prev) => prev.filter((e) => e.id !== entry.id));
     }, 800);
-
-    return () => clearTimeout(timer);
+    timersRef.current.add(timer);
   }, [currentValue, previousValue, mode]);
 
   return (
