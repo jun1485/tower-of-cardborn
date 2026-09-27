@@ -194,10 +194,12 @@ export function loadValidGameState(): GameState {
     }
   }
 
+  // 저장된 보상 유지 (재추첨 방지), 카드 보상 없는 구버전 전투 보상 저장본만 산출
   if (baseState.screen === 'combat_reward') {
+    const needsRoll = baseState.rewardCards.length === 0 && findCurrentNode(baseState.map)?.type !== 'treasure';
     return {
       ...baseState,
-      ...rollCombatRewards(baseState),
+      ...(needsRoll ? rollCombatRewards(baseState) : {}),
       combatState: null,
     };
   }
