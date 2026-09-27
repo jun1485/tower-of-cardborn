@@ -140,6 +140,17 @@ export function useGame() {
 
   // #region 자동 저장 (연속 액션 디바운스 + 화면 이탈 시 즉시 기록)
   const pendingSaveRef = useRef<GameState | null>(null);
+  // 사용자가 닫은 자동 저장 실패 안내 (다음 저장 성공 전까지 재노출 억제)
+  const saveErrorDismissedRef = useRef(false);
+
+  /** 대기 중 자동 저장 기록 및 실패 안내 갱신 */
+  const writePendingSave = useCallback(() => {
+    if (!pendingSaveRef.current) return;
+    const saved = saveGame(pendingSaveRef.current);
+    pendingSaveRef.current = null;
+    if (saved) saveErrorDismissedRef.current = false;
+    else if (!saveErrorDismissedRef.current) setSaveError(true);
+  }, []);
 
   useEffect(() => {
     if (gameState.screen === 'title') {
@@ -149,10 +160,7 @@ export function useGame() {
       return;
     }
     pendingSaveRef.current = { ...gameState, combatState: combat, randomState: getRandomState() };
-    const flushSave = () => {
-      if (pendingSaveRef.current && !saveGame(pendingSaveRef.current)) setSaveError(true);
-      pendingSaveRef.current = null;
-    };
+    const flushSave = writePendingSave;
     // 런 종료 화면은 메타 기록 직후 즉시 저장 (강제 종료 시 중복 기록 방지)
     if (gameState.screen === 'game_over' || gameState.screen === 'victory') {
       queueMicrotask(flushSave);
@@ -160,21 +168,17 @@ export function useGame() {
     }
     const timer = window.setTimeout(flushSave, 400);
     return () => window.clearTimeout(timer);
-  }, [gameState, combat]);
+  }, [gameState, combat, writePendingSave]);
 
   // 백그라운드 전환/종료 시 대기 저장 즉시 기록
   useEffect(() => {
-    const flushPendingSave = () => {
-      if (pendingSaveRef.current && !saveGame(pendingSaveRef.current)) setSaveError(true);
-      pendingSaveRef.current = null;
-    };
-    document.addEventListener('visibilitychange', flushPendingSave);
-    window.addEventListener('pagehide', flushPendingSave);
+    document.addEventListener('visibilitychange', writePendingSave);
+    window.addEventListener('pagehide', writePendingSave);
     return () => {
-      document.removeEventListener('visibilitychange', flushPendingSave);
-      window.removeEventListener('pagehide', flushPendingSave);
+      document.removeEventListener('visibilitychange', writePendingSave);
+      window.removeEventListener('pagehide', writePendingSave);
     };
-  }, []);
+  }, [writePendingSave]);
   // #endregion
 
   // #region 포션 사용
@@ -517,6 +521,7 @@ export function useGame() {
 
   /** 저장 오류 안내 닫기 */
   const dismissSaveError = useCallback(() => {
+    saveErrorDismissedRef.current = true;
     setSaveError(false);
   }, []);
 
