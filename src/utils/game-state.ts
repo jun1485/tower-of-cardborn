@@ -107,13 +107,15 @@ export function recordUnfinishedRun(state: GameState): boolean {
         });
   }
   const currentNode = findCurrentNode(state.map);
-  const finalBossCleared = state.screen === 'combat_reward'
+  // 승리 연출 중 이탈은 보상 화면 진입과 동일 취급
+  const pendingVictory = state.screen === 'combat' && state.combatState?.result === 'victory';
+  const finalBossCleared = (state.screen === 'combat_reward' || pendingVictory)
     && currentNode?.type === 'boss'
     && state.map.mapIndex >= state.map.totalMaps;
   return recordRunEnd({
     won: state.screen === 'victory' || finalBossCleared,
     floor: getFloorsClimbed(state.map),
-    kills: state.kills,
+    kills: state.kills + (pendingVictory ? currentNode?.enemyIds.length ?? 0 : 0),
     ascension: state.ascension,
     runSeed: state.runSeed,
     characterClass: state.characterClass,

@@ -130,6 +130,12 @@ export function useGame() {
     handleUsePotion: applyCombatPotion, clearCombat,
   } = useCombat(gameState.combatState, handleCombatResult);
 
+  // 이탈 기록용 최신 전투 상태 참조
+  const combatRef = useRef(combat);
+  useEffect(() => {
+    combatRef.current = combat;
+  }, [combat]);
+
   // #region 자동 저장 (연속 액션 디바운스 + 화면 이탈 시 즉시 기록)
   const pendingSaveRef = useRef<GameState | null>(null);
 
@@ -141,10 +147,16 @@ export function useGame() {
       return;
     }
     pendingSaveRef.current = { ...gameState, combatState: combat, randomState: getRandomState() };
-    const timer = window.setTimeout(() => {
+    const flushSave = () => {
       if (pendingSaveRef.current && !saveGame(pendingSaveRef.current)) setSaveError(true);
       pendingSaveRef.current = null;
-    }, 400);
+    };
+    // 런 종료 화면은 메타 기록 직후 즉시 저장 (강제 종료 시 중복 기록 방지)
+    if (gameState.screen === 'game_over' || gameState.screen === 'victory') {
+      queueMicrotask(flushSave);
+      return;
+    }
+    const timer = window.setTimeout(flushSave, 400);
     return () => window.clearTimeout(timer);
   }, [gameState, combat]);
 
@@ -367,7 +379,9 @@ export function useGame() {
   // #region 엔들리스 등반 계속 (클리어 후 다음 액트 생성)
   const continueEndless = useCallback(() => {
     const current = stateRef.current;
-    if (current.screen !== 'victory' || !current.map) return;
+    if (current.screen !== 'victory' || !current.map || runStartLockRef.current) return;
+    // 연타 시 맵 이중 생성(난수 추가 소모) 차단
+    runStartLockRef.current = true;
     playSfx('map_select');
     const nextIndex = current.map.mapIndex + 1;
     const nextMap = generateMap(nextIndex, nextIndex, current.ascension);
@@ -479,8 +493,8 @@ export function useGame() {
 
   const goToTitle = useCallback(() => {
     playSfx('button_click');
-    // 미기록 런 포기 기록
-    if (!recordUnfinishedRun(stateRef.current)) setSaveError(true);
+    // 미기록 런 포기 기록 (승리 연출 중 이탈 판정 위해 최신 전투 상태 포함)
+    if (!recordUnfinishedRun({ ...stateRef.current, combatState: combatRef.current })) setSaveError(true);
     clearCombat();
     if (!clearSave()) setSaveError(true);
     resetRandomSource();
