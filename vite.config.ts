@@ -127,9 +127,22 @@ function createReleaseAssetsPlugin(): Plugin {
   };
 }
 
+// 프로덕션 CSP 개발용 WebSocket 허용 제거 (HMR 전용)
+function createProductionCspPlugin(): Plugin {
+  return {
+    name: 'production-csp',
+    apply: 'build',
+    transformIndexHtml(html) {
+      const stripped = html.replace("connect-src 'self' ws: wss:", "connect-src 'self'");
+      if (stripped === html) throw new Error('[production-csp] index.html CSP connect-src 형식이 달라 치환하지 못했습니다.');
+      return stripped;
+    },
+  };
+}
+
 export default defineConfig(({ command }) => ({
   publicDir: command === 'build' ? false : 'public',
-  plugins: [react(), createReleaseAssetsPlugin()],
+  plugins: [react(), createReleaseAssetsPlugin(), createProductionCspPlugin()],
   build: {
     rollupOptions: {
       output: {
