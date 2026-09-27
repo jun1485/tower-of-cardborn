@@ -78,7 +78,8 @@ export function EnemyArea({
 }: EnemyAreaProps) {
   const reducedMotion = useReducedMotion();
   const previousEnemiesRef = useRef(enemies);
-  const ghostTimersRef = useRef<number[]>([]);
+  const ghostTimersRef = useRef(new Set<number>());
+  const ghostFramesRef = useRef(new Set<number>());
   const [dyingEnemies, setDyingEnemies] = useState<readonly Enemy[]>([]);
 
   // 처치된 적 잔상 유지 (사망 연출 후 제거)
@@ -90,20 +91,30 @@ export function EnemyArea({
     const killed = previous.filter((enemy) => !aliveIds.has(enemy.id));
     if (killed.length === 0) return;
     const killedIds = new Set(killed.map((enemy) => enemy.id));
-    window.requestAnimationFrame(() => {
+    const frame = window.requestAnimationFrame(() => {
+      ghostFramesRef.current.delete(frame);
       setDyingEnemies((current) => [
         ...current.filter((enemy) => !killedIds.has(enemy.id)),
         ...killed.map((enemy) => ({ ...enemy, hp: 0 })),
       ]);
     });
-    ghostTimersRef.current.push(window.setTimeout(() => {
+    ghostFramesRef.current.add(frame);
+    // 완료 타이머는 목록에서 제거 (전투 중 누적 방지)
+    const timer = window.setTimeout(() => {
+      ghostTimersRef.current.delete(timer);
       setDyingEnemies((current) => current.filter((enemy) => !killedIds.has(enemy.id)));
-    }, DEATH_GHOST_DURATION));
+    }, DEATH_GHOST_DURATION);
+    ghostTimersRef.current.add(timer);
   }, [enemies, reducedMotion]);
 
-  // 잔상 타이머 일괄 정리
-  useEffect(() => () => {
-    ghostTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+  // 잔상 프레임·타이머 일괄 정리
+  useEffect(() => {
+    const timers = ghostTimersRef.current;
+    const frames = ghostFramesRef.current;
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      frames.forEach((frame) => window.cancelAnimationFrame(frame));
+    };
   }, []);
 
   return (
