@@ -125,10 +125,14 @@ function AppInner({ onLangChange }: AppInnerProps) {
     preloadCardArt([...deck, ...rewardCards, ...shopCards]);
   }, [deck, rewardCards, shopCards]);
 
+  // 타이틀 통계·해금 재조회 트리거 (진행도 초기화 시 재마운트)
+  const [titleRevision, setTitleRevision] = useState(0);
+
   /** 진행도와 승천 선택값 초기화 */
   const handleResetProgress = () => {
     resetProgress();
     setSelectedAscension(0);
+    setTitleRevision((revision) => revision + 1);
   };
 
   // 첫 사용자 제스처 시 AudioContext 활성화
@@ -148,6 +152,7 @@ function AppInner({ onLangChange }: AppInnerProps) {
       case 'title':
         return (
           <TitleScreen
+            key={titleRevision}
             selectedAscension={selectedAscension}
             onAscensionChange={setSelectedAscension}
             onStart={startNewGame}

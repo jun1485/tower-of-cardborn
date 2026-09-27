@@ -8,7 +8,7 @@ import { getAscensionModifier, MAX_ASCENSION } from '@tower-of-cardborn/game-cor
 import { getEventById } from '@tower-of-cardborn/game-core/data/events';
 import { isChoiceAvailable, resolveEventChoice, pickRandomEvent } from '@tower-of-cardborn/game-core/game/event-engine';
 import { saveGame, clearSave } from '../utils/storage';
-import { clearMeta, recordRunStart, recordRunEnd, updateRecordedRun } from '../utils/meta';
+import { clearMeta, loadMeta, recordRunStart, recordRunEnd, updateRecordedRun } from '../utils/meta';
 import { playSfx } from '../utils/sound';
 import { DEFAULT_TOTAL_MAPS, generateMap, getAvailableNodeIds, getFloorsClimbed } from '@tower-of-cardborn/game-core/game/map-generator';
 import {
@@ -200,8 +200,9 @@ export function useGame() {
     if (runStartLockRef.current) return;
     runStartLockRef.current = true;
     playSfx('map_select');
+    // 해금 범위 밖 승천 레벨 차단
     const normalizedAscension = Number.isFinite(ascension)
-      ? Math.max(0, Math.min(MAX_ASCENSION, Math.floor(ascension)))
+      ? Math.max(0, Math.min(MAX_ASCENSION, loadMeta().ascensionUnlocked, Math.floor(ascension)))
       : 0;
     const normalizedSeed = seed >>> 0;
     // 미기록 이전 런 종료 반영 (복원된 결과 화면 경유 포함)
